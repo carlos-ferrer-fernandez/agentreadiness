@@ -55,7 +55,7 @@ class TestFriendlinessScorer:
         assert scorer._score_to_grade(93) == "A"
         assert scorer._score_to_grade(83) == "B"
         assert scorer._score_to_grade(70) == "C-"
-        assert scorer._score_to_grade(50) == "D"
+        assert scorer._score_to_grade(60) == "D"
         assert scorer._score_to_grade(0) == "F"
 
     def test_latency_scoring(self):

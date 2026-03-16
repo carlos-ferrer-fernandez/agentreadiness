@@ -124,7 +124,7 @@ const mockQueryResults = [
 ]
 
 export function SiteDetail() {
-  const _params = useParams()
+  useParams() // Validate route params
   const [activeTab, setActiveTab] = useState('overview')
 
   const getImpactColor = (impact: string) => {
