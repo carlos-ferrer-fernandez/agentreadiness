@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { analysesApi } from '@/lib/api'
+import { analysesApi, sitesApi } from '@/lib/api'
 import { useAnalysisStore, useUIStore } from '@/store'
 import type { FriendlinessScore, AnalysisProgress } from '@/types'
 
@@ -119,6 +119,3 @@ export function useAnalysis(analysisId: string | null) {
     cancelAnalysis,
   }
 }
-
-// Import sitesApi for startAnalysis
-import { sitesApi } from '@/lib/api'

@@ -7,7 +7,6 @@ import {
   ArrowRight,
   Download,
   Sparkles,
-  Clock,
   Shield,
   ChevronDown,
   ChevronUp,

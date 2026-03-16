@@ -5,7 +5,6 @@ import {
   Lock,
   Unlock,
   CheckCircle2,
-  ArrowRight,
   Zap,
   ChevronDown,
   ChevronUp,

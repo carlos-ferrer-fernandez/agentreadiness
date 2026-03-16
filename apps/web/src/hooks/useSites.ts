@@ -1,7 +1,6 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useEffect, useCallback } from 'react'
 import { sitesApi } from '@/lib/api'
 import { useSitesStore, useUIStore } from '@/store'
-import type { DocumentationSite } from '@/types'
 
 export function useSites() {
   const { sites, setSites, isLoading, setLoading, error, setError } = useSitesStore()

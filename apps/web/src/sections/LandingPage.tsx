@@ -64,7 +64,6 @@ export function LandingPage() {
     isAssessing,
     assessmentStage,
     startAssessment,
-    setAssessmentStage,
     setAssessmentResult,
     setAssessmentError,
   } = useAssessmentStore()

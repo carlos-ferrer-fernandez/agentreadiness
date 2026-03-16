@@ -306,6 +306,18 @@ class DocumentationOptimizer:
             'concepts': 'Explain underlying concepts clearly'
         }
         
+        newline = chr(10)
+        code_examples = newline.join(
+            ["```" + cb['language'] + newline + cb['code'][:500] + newline + "```"
+             for cb in page.code_blocks[:3]]
+        )
+        focus_areas = newline.join(
+            [priority_sections.get(p, p) for p in self.config.priorities]
+        )
+        issues_list = newline.join(
+            ['- ' + issue for issue in analysis['issues']]
+        )
+
         prompt = f"""Optimize the following documentation page for AI agent consumption.
 
 ## Original Content
@@ -314,10 +326,10 @@ Title: {page.title}
 URL: {page.url}
 
 Content:
-{page.content[:3000]}  # Truncate for token limit
+{page.content[:3000]}
 
 ## Existing Code Examples
-{chr(10).join([f"```{cb['language']}\n{cb['code'][:500]}\n```" for cb in page.code_blocks[:3]])}
+{code_examples}
 
 ## Configuration
 
@@ -328,10 +340,10 @@ Tone: {self.config.tone}
 Guidance: {tone_guidance.get(self.config.tone, 'Neutral')}
 
 Priorities: {', '.join(self.config.priorities)}
-Focus Areas: {chr(10).join([priority_sections.get(p, p) for p in self.config.priorities])}
+Focus Areas: {focus_areas}
 
 ## Issues Identified
-{chr(10).join(['- ' + issue for issue in analysis['issues']])}
+{issues_list}
 
 ## Instructions
 
@@ -352,7 +364,7 @@ Focus Areas: {chr(10).join([priority_sections.get(p, p) for p in self.config.pri
 3. At the end, add a section "## Improvements Made" listing what was changed.
 
 Return ONLY the optimized markdown content."""
-        
+
         return prompt
     
     def _extract_improvements(self, content: str) -> List[str]:

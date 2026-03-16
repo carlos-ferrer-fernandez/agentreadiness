@@ -1,14 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import { 
-  Plus, 
-  ExternalLink, 
-  TrendingUp, 
+  Plus,
+  TrendingUp,
   TrendingDown,
   MoreVertical,
   Search,
   Bell,
-  Settings,
   Loader2,
   Zap,
   Globe,
@@ -24,8 +22,7 @@ import { ScoreTrend } from '@/components/score/ScoreTrend'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { DocumentationSite, FriendlinessScore } from '@/types'
 import { scoreToGrade } from '@/lib/utils'
-import { sitesApi } from '@/lib/api'
-import { useSitesStore, useUIStore } from '@/store'
+import { useUIStore } from '@/store'
 
 interface DashboardProps {
   isAuthenticated?: boolean
@@ -110,7 +107,7 @@ const mockTrendData = [
   { date: '2025-03-15', score: 92, grade: 'A-' },
 ]
 
-export function Dashboard({ isAuthenticated, onAuthChange }: DashboardProps) {
+export function Dashboard(_props: DashboardProps) {
   const [sites, setSites] = useState<DocumentationSite[]>(mockSites)
   const [searchQuery, setSearchQuery] = useState('')
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
@@ -236,7 +233,7 @@ export function Dashboard({ isAuthenticated, onAuthChange }: DashboardProps) {
           </div>
           
           <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-            <DialogTrigger asChild>
+            <DialogTrigger>
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
                 Add Documentation Site
