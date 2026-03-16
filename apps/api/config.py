@@ -16,6 +16,7 @@ class Settings(BaseSettings):
     allowed_origins: list[str] = [
         "http://localhost:3000",
         "http://localhost:5173",
+        "https://agentreadiness-web.onrender.com",
     ]
 
     # Database
