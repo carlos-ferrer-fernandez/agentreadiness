@@ -5,7 +5,7 @@ SQLAlchemy ORM models for AgentReadiness.
 import uuid
 from datetime import datetime, timezone
 from sqlalchemy import (
-    String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON, Enum as SAEnum
+    String, Integer, Float, Boolean, Text, DateTime, ForeignKey, JSON
 )
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 from database import Base
