@@ -309,7 +309,7 @@ class DocumentationCrawler:
         try:
             parsed = urlparse(url)
             return parsed.netloc == self.domain
-        except:
+        except Exception:
             return False
     
     def _is_valid_path(self, url: str) -> bool:

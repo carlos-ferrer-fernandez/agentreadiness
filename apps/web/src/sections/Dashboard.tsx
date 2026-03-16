@@ -28,8 +28,8 @@ import { sitesApi } from '@/lib/api'
 import { useSitesStore, useUIStore } from '@/store'
 
 interface DashboardProps {
-  isAuthenticated: boolean
-  onAuthChange: (value: boolean) => void
+  isAuthenticated?: boolean
+  onAuthChange?: (value: boolean) => void
 }
 
 // Mock data for initial display

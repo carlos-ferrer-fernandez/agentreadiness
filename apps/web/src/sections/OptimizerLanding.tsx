@@ -1,10 +1,3 @@
-"""
-Documentation Optimizer Landing Page
-
-New service model: Sell the work, not the tool.
-Customers pay €49-199 and get optimized documentation delivered as a ZIP file.
-"""
-
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { 
@@ -30,7 +23,7 @@ import { Badge } from '@/components/ui/badge'
 import { Progress } from '@/components/ui/progress'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
-import { apiClient } from '@/lib/api'
+import apiClient from '@/lib/api'
 import { useUIStore } from '@/store'
 
 const features = [
