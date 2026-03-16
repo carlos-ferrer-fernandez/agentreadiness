@@ -1,0 +1,7 @@
+[build]
+builder = "nixpacks"
+
+# This tells Railway this is a monorepo
+# You'll need to configure services separately in the dashboard
+[deploy]
+startCommand = "echo 'Please configure web and api services separately in Railway dashboard'"

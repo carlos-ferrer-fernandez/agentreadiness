@@ -1,0 +1,85 @@
+"""
+Test fixtures and configuration.
+Uses an in-memory SQLite database for fast, isolated tests.
+"""
+
+import pytest
+import pytest_asyncio
+from httpx import AsyncClient, ASGITransport
+from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
+from unittest.mock import patch
+
+from database import Base, get_db
+from models import User, Organization
+from auth import create_access_token
+
+# Use SQLite for tests (fast, no external deps)
+TEST_DATABASE_URL = "sqlite+aiosqlite:///file::memory:?cache=shared"
+
+
+@pytest_asyncio.fixture
+async def db_engine():
+    engine = create_async_engine(TEST_DATABASE_URL, echo=False)
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    yield engine
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.drop_all)
+    await engine.dispose()
+
+
+@pytest_asyncio.fixture
+async def db_session(db_engine):
+    session_factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
+    async with session_factory() as session:
+        yield session
+
+
+@pytest_asyncio.fixture
+async def test_user(db_session: AsyncSession):
+    """Create a test user with organization."""
+    org = Organization(name="Test Org", tier="free")
+    db_session.add(org)
+    await db_session.flush()
+
+    user = User(
+        email="test@example.com",
+        name="Test User",
+        organization_id=org.id,
+    )
+    db_session.add(user)
+    await db_session.flush()
+    await db_session.refresh(user)
+    return user
+
+
+@pytest_asyncio.fixture
+async def auth_token(test_user: User):
+    """Create a valid JWT token for the test user."""
+    return create_access_token(test_user.id, test_user.email)
+
+
+@pytest_asyncio.fixture
+async def client(db_engine, test_user, auth_token):
+    """Create a test HTTP client with auth and a test database."""
+    from main import app
+
+    session_factory = async_sessionmaker(db_engine, class_=AsyncSession, expire_on_commit=False)
+
+    async def override_get_db():
+        async with session_factory() as session:
+            try:
+                yield session
+                await session.commit()
+            except Exception:
+                await session.rollback()
+                raise
+
+    app.dependency_overrides[get_db] = override_get_db
+
+    transport = ASGITransport(app=app)
+    async with AsyncClient(transport=transport, base_url="http://test") as ac:
+        ac.headers["Authorization"] = f"Bearer {auth_token}"
+        yield ac
+
+    app.dependency_overrides.clear()
