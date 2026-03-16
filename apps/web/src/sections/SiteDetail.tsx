@@ -9,7 +9,6 @@ import {
   Trash2,
   CheckCircle2,
   AlertCircle,
-  Clock,
   FileText,
   BarChart3
 } from 'lucide-react'
@@ -125,7 +124,7 @@ const mockQueryResults = [
 ]
 
 export function SiteDetail() {
-  const { siteId } = useParams()
+  const _params = useParams()
   const [activeTab, setActiveTab] = useState('overview')
 
   const getImpactColor = (impact: string) => {

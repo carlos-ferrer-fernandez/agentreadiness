@@ -7,11 +7,9 @@ import {
   ArrowRight,
   Download,
   Sparkles,
-  Shield,
   ChevronDown,
   ChevronUp,
   Loader2,
-  Mail,
   Settings,
   Package
 } from 'lucide-react'
@@ -24,29 +22,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { cn } from '@/lib/utils'
 import apiClient from '@/lib/api'
 import { useUIStore } from '@/store'
-
-const features = [
-  {
-    icon: FileText,
-    title: 'AI-Powered Rewrite',
-    description: 'Your docs rewritten by GPT-4 for maximum AI agent compatibility.',
-  },
-  {
-    icon: Zap,
-    title: 'Code Examples Added',
-    description: 'Missing code examples generated and validated automatically.',
-  },
-  {
-    icon: CheckCircle2,
-    title: 'Structure Improved',
-    description: 'Clear headings, cross-links, and logical flow for easy navigation.',
-  },
-  {
-    icon: Download,
-    title: 'Ready to Deploy',
-    description: 'Get optimized markdown files in a ZIP. Upload and go live.',
-  },
-]
 
 const pricingTiers = [
   {
@@ -103,7 +78,7 @@ export function OptimizerLanding() {
   const [email, setEmail] = useState('')
   const [targetAudience, setTargetAudience] = useState('mixed')
   const [tone, setTone] = useState('friendly')
-  const [priorities, setPriorities] = useState<string[]>(['code_examples'])
+  const [priorities] = useState<string[]>(['code_examples'])
   
   // Pricing state
   const [estimatedPrice, setEstimatedPrice] = useState<number | null>(null)

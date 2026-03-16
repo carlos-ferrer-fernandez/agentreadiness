@@ -95,7 +95,7 @@ class FriendlinessScorer:
             for k in components
         )
         
-        overall = round(composite)
+        overall = round(composite * 100)
         grade = self._score_to_grade(overall)
         
         # Calculate pass rate
@@ -108,7 +108,7 @@ class FriendlinessScorer:
         return FriendlinessScore(
             overall=overall,
             grade=grade,
-            components={k: round(v * 100) for k, v in components.items()},
+            components={k: round(v * 100) for k, v in components.items()},  # 0-100
             query_count=len(results),
             pass_rate=pass_rate,
             avg_latency_ms=avg_latency,
