@@ -2,13 +2,11 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
 import {
-  Lock,
   Unlock,
   CheckCircle2,
   Zap,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   CreditCard,
   Shield,
   Clock,
@@ -33,7 +31,7 @@ import { Progress } from '@/components/ui/progress'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog'
 import { ScoreCard } from '@/components/score/ScoreCard'
 import { cn, getScoreInterpretation } from '@/lib/utils'
-import { useAssessmentStore, RuleResult } from '@/store/assessment'
+import { useAssessmentStore } from '@/store/assessment'
 import { useUIStore } from '@/store'
 import { assessmentsApi, paymentsApi } from '@/lib/api'
 
@@ -223,7 +221,6 @@ export function AssessmentResults() {
     siteName,
     url,
     pageCount,
-    topIssues,
     estimatedPriceEur,
     hasPaid,
     optimizationStatus,
