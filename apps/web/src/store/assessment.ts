@@ -123,7 +123,7 @@ export const useAssessmentStore = create<AssessmentState>()(
         }
       },
 
-      setOptimizationStatus: (status, progress = 0, stage = undefined) => {
+      setOptimizationStatus: (status, progress = 0, stage) => {
         const current = get().currentAssessment
         if (current) {
           set({
@@ -131,7 +131,7 @@ export const useAssessmentStore = create<AssessmentState>()(
               ...current,
               optimizationStatus: status,
               optimizationProgress: progress,
-              optimizationStage: stage,
+              optimizationStage: stage ?? null,
             },
           })
         }
