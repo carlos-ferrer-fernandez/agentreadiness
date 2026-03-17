@@ -125,6 +125,18 @@ export const healthApi = {
 }
 
 // --- Types ---
+export interface RuleResult {
+  rule_id: number
+  name: string
+  short_name: string
+  category: string
+  score: number
+  status: 'pass' | 'warning' | 'fail'
+  finding: string
+  pages_checked: number
+  pages_passing: number
+}
+
 export interface AssessmentResult {
   id: string
   url: string
@@ -132,11 +144,12 @@ export interface AssessmentResult {
   score: number
   grade: string
   components: Record<string, number>
+  rule_results: RuleResult[]
   query_count: number
   pass_rate: number
   avg_latency_ms: number
   page_count: number
-  top_issues: Array<{ category: string; title: string; severity: string }>
+  top_issues: Array<{ category: string; title: string; severity: string; rule_id?: number; score?: number }>
   estimated_price_eur: number
   has_paid: boolean
   optimization_status: string | null

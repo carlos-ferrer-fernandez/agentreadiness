@@ -2,7 +2,8 @@
 Assessments Router
 
 Public endpoints for the free assessment flow (no auth required).
-This is the main entry point for new users landing on the site.
+Evaluates documentation against the 20 agent-readiness rules derived
+from a multi-agent benchmark (Claude, GPT, Kimi, Grok, Deepseek, etc.).
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
@@ -12,6 +13,7 @@ from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import os
+import logging
 
 from database import get_db
 from models import Assessment
@@ -20,6 +22,7 @@ from pricing import calculate_report_price
 
 router = APIRouter()
 settings = get_settings()
+logger = logging.getLogger(__name__)
 
 
 class AssessmentRequest(BaseModel):
@@ -34,6 +37,7 @@ class AssessmentResponse(BaseModel):
     score: int
     grade: str
     components: dict
+    rule_results: list[dict]  # Per-rule breakdown (20 rules)
     query_count: int
     pass_rate: float
     avg_latency_ms: int
@@ -63,20 +67,21 @@ async def run_assessment(
 ):
     """
     Run a free public assessment on a documentation URL.
-    Crawls the site, scores it, and returns results.
+
+    Crawls the site and evaluates it against the 20 agent-readiness rules
+    derived from benchmarking 8 major AI agents. Returns per-rule scores,
+    component scores, and an overall grade.
     """
     from services.crawler.crawler import DocumentationCrawler
-    from services.evaluator.scorer import FriendlinessScorer, QueryResult
+    from services.evaluator.rule_analyzer import AgentReadinessAnalyzer
     from urllib.parse import urlparse
-    import logging
 
-    logger = logging.getLogger(__name__)
     url = str(request.url)
     parsed = urlparse(url)
     site_name = parsed.netloc.replace("www.", "")
 
     try:
-        # Crawl (limited to 30 pages for free assessment)
+        # Step 1: Crawl (limited to 30 pages for free assessment)
         async with DocumentationCrawler(
             start_url=url,
             max_pages=30,
@@ -90,52 +95,31 @@ async def run_assessment(
                 detail="Could not crawl the provided URL. Please check the URL and try again.",
             )
 
-        # Generate synthetic query results from crawled content
-        query_results = []
-        for page in pages:
-            content_length = len(page.content) if page.content else 0
-            has_code = bool(page.code_blocks)
-            has_headings = bool(page.heading_hierarchy and len(page.heading_hierarchy) >= 2)
+        # Step 2: Analyze against 20 agent-readiness rules
+        analyzer = AgentReadinessAnalyzer()
+        analysis = analyzer.analyze(pages)
 
-            accuracy = min(1.0, 0.5 + (content_length / 5000) * 0.3 + (0.2 if has_code else 0))
-            precision = min(1.0, 0.4 + (0.3 if has_headings else 0) + (content_length / 8000) * 0.3)
-            latency = 800 + max(0, content_length // 10)
-            citation = min(1.0, 0.7 + (0.2 if has_headings else 0) + (0.1 if page.links else 0))
-
-            query_results.append(QueryResult(
-                query=f"Query about: {page.title or page.url}",
-                passed=accuracy > 0.6,
-                confidence=accuracy,
-                accuracy_score=accuracy,
-                retrieval_precision=precision,
-                latency_ms=min(latency, 5000),
-                citation_accuracy=citation,
-                code_valid=has_code,
-            ))
-
-        # Score
-        scorer = FriendlinessScorer()
-        score = scorer.calculate_score(query_results)
-
-        # Generate top issues
-        top_issues = _generate_top_issues(score)
-
-        # Calculate dynamic price based on doc size
+        # Step 3: Calculate dynamic price based on doc size
         report_price = calculate_report_price(len(pages))
 
-        # Persist assessment
+        # Step 4: Compute query-equivalent stats (for backward compat)
+        rules_passing = sum(1 for r in analysis.rule_results if r.status == 'pass')
+        pass_rate = rules_passing / len(analysis.rule_results) if analysis.rule_results else 0.0
+
+        # Step 5: Persist assessment
         assessment = Assessment(
             url=url,
             site_name=site_name,
             email=request.email,
-            score=score.overall,
-            grade=score.grade,
-            components=score.components,
-            query_count=score.query_count,
-            pass_rate=score.pass_rate,
-            avg_latency_ms=score.avg_latency_ms,
+            score=analysis.overall_score,
+            grade=analysis.grade,
+            components=analysis.components,
+            rule_results=[r.to_dict() for r in analysis.rule_results],
+            query_count=len(analysis.rule_results),  # 20 rules evaluated
+            pass_rate=pass_rate,
+            avg_latency_ms=0,  # Not applicable for rule-based analysis
             page_count=len(pages),
-            top_issues=top_issues,
+            top_issues=analysis.top_issues,
             estimated_price_eur=report_price,
         )
         db.add(assessment)
@@ -159,22 +143,7 @@ async def get_assessment(assessment_id: str, db: AsyncSession = Depends(get_db))
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
 
-    return AssessmentResponse(
-        id=assessment.id,
-        url=assessment.url,
-        site_name=assessment.site_name,
-        score=assessment.score,
-        grade=assessment.grade,
-        components=assessment.components,
-        query_count=assessment.query_count,
-        pass_rate=assessment.pass_rate,
-        avg_latency_ms=assessment.avg_latency_ms,
-        page_count=assessment.page_count,
-        top_issues=assessment.top_issues,
-        estimated_price_eur=assessment.estimated_price_eur,
-        has_paid=assessment.has_paid,
-        created_at=assessment.created_at.isoformat(),
-    )
+    return _build_response(assessment)
 
 
 @router.post("/{assessment_id}/verify-promo")
@@ -183,13 +152,12 @@ async def verify_promo_code(
     request: PromoCodeRequest,
     db: AsyncSession = Depends(get_db),
 ):
-    """Verify a promo code and unlock the assessment. Code is validated server-side only."""
+    """Verify a promo code and unlock the assessment."""
     result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
     assessment = result.scalar_one_or_none()
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
 
-    # Promo codes are stored server-side, not exposed to the client
     valid_promos = {"AGENT2025", "LAUNCH2025", "BETA2025"}
     if request.code.upper() not in valid_promos:
         raise HTTPException(status_code=400, detail="Invalid promo code")
@@ -256,6 +224,7 @@ def _build_response(assessment: Assessment) -> AssessmentResponse:
         score=assessment.score,
         grade=assessment.grade,
         components=assessment.components,
+        rule_results=assessment.rule_results or [],
         query_count=assessment.query_count,
         pass_rate=assessment.pass_rate,
         avg_latency_ms=assessment.avg_latency_ms,
@@ -269,49 +238,3 @@ def _build_response(assessment: Assessment) -> AssessmentResponse:
         optimization_metadata=assessment.optimization_metadata,
         created_at=assessment.created_at.isoformat(),
     )
-
-
-def _generate_top_issues(score) -> list[dict]:
-    """Generate top 3 issues based on component scores."""
-    issues = []
-    components = score.components
-
-    if components.get("accuracy", 100) < 70:
-        issues.append({
-            "category": "content",
-            "title": "Documentation lacks sufficient detail for accurate AI responses",
-            "severity": "high",
-        })
-    if components.get("code_executability", 100) < 70:
-        issues.append({
-            "category": "code",
-            "title": "Code examples are missing or contain errors",
-            "severity": "high",
-        })
-    if components.get("context_utilization", 100) < 80:
-        issues.append({
-            "category": "structure",
-            "title": "Documentation structure needs improvement for better AI context retrieval",
-            "severity": "medium",
-        })
-    if components.get("citation_quality", 100) < 80:
-        issues.append({
-            "category": "metadata",
-            "title": "Pages lack clear titles and descriptions for citation",
-            "severity": "medium",
-        })
-    if components.get("latency", 100) < 80:
-        issues.append({
-            "category": "performance",
-            "title": "Page content is too large, slowing agent response times",
-            "severity": "low",
-        })
-
-    if not issues:
-        issues.append({
-            "category": "optimization",
-            "title": "Minor optimizations available for a perfect score",
-            "severity": "low",
-        })
-
-    return issues[:3]

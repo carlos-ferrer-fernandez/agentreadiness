@@ -185,6 +185,7 @@ class Assessment(Base):
     score: Mapped[int] = mapped_column(Integer)
     grade: Mapped[str] = mapped_column(String(5))
     components: Mapped[dict] = mapped_column(JSON)
+    rule_results: Mapped[list | None] = mapped_column(JSON, nullable=True)  # Per-rule breakdown (20 rules)
     query_count: Mapped[int] = mapped_column(Integer, default=0)
     pass_rate: Mapped[float] = mapped_column(Float, default=0.0)
     avg_latency_ms: Mapped[int] = mapped_column(Integer, default=0)

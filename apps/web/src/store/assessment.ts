@@ -1,19 +1,26 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 
+export interface RuleResult {
+  rule_id: number
+  name: string
+  short_name: string
+  category: string
+  score: number
+  status: 'pass' | 'warning' | 'fail'
+  finding: string
+  pages_checked: number
+  pages_passing: number
+}
+
 export interface AssessmentResult {
   id: string
   url: string
   siteName: string
   score: number
   grade: string
-  components: {
-    accuracy: number
-    contextUtilization: number
-    latency: number
-    citationQuality: number
-    codeExecutability: number
-  }
+  components: Record<string, number>
+  ruleResults: RuleResult[]
   queryCount: number
   passRate: number
   avgLatencyMs: number
@@ -22,10 +29,12 @@ export interface AssessmentResult {
     category: string
     title: string
     severity: 'high' | 'medium' | 'low'
+    rule_id?: number
+    score?: number
   }>
   estimatedPriceEur: number
   hasPaid: boolean
-  optimizationStatus: string | null  // queued, running, complete, failed
+  optimizationStatus: string | null
   optimizationProgress: number
   optimizationStage: string | null
   optimizationMetadata: Record<string, any> | null
