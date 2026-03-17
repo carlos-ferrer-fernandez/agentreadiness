@@ -39,8 +39,7 @@ class AnalysisStatus(str, enum.Enum):
 
 class PlanTier(str, enum.Enum):
     FREE = "free"
-    STARTER = "starter"
-    GROWTH = "growth"
+    REPORT = "report"
 
 
 class RecommendationStatus(str, enum.Enum):
@@ -191,6 +190,7 @@ class Assessment(Base):
     avg_latency_ms: Mapped[int] = mapped_column(Integer, default=0)
     page_count: Mapped[int] = mapped_column(Integer, default=0)
     top_issues: Mapped[list] = mapped_column(JSON, default=list)
+    estimated_price_eur: Mapped[int] = mapped_column(Integer, default=49)
     has_paid: Mapped[bool] = mapped_column(Boolean, default=False)
     paid_plan: Mapped[str | None] = mapped_column(String(20), nullable=True)
     stripe_session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)

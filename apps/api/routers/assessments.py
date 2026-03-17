@@ -14,6 +14,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from database import get_db
 from models import Assessment
 from config import get_settings
+from pricing import calculate_report_price
 
 router = APIRouter()
 settings = get_settings()
@@ -36,6 +37,7 @@ class AssessmentResponse(BaseModel):
     avg_latency_ms: int
     page_count: int
     top_issues: list[dict]
+    estimated_price_eur: int
     has_paid: bool
     created_at: str
 
@@ -112,6 +114,9 @@ async def run_assessment(
         # Generate top issues
         top_issues = _generate_top_issues(score)
 
+        # Calculate dynamic price based on doc size
+        report_price = calculate_report_price(len(pages))
+
         # Persist assessment
         assessment = Assessment(
             url=url,
@@ -125,6 +130,7 @@ async def run_assessment(
             avg_latency_ms=score.avg_latency_ms,
             page_count=len(pages),
             top_issues=top_issues,
+            estimated_price_eur=report_price,
         )
         db.add(assessment)
         await db.flush()
@@ -142,6 +148,7 @@ async def run_assessment(
             avg_latency_ms=assessment.avg_latency_ms,
             page_count=assessment.page_count,
             top_issues=assessment.top_issues,
+            estimated_price_eur=assessment.estimated_price_eur,
             has_paid=assessment.has_paid,
             created_at=assessment.created_at.isoformat(),
         )
@@ -173,6 +180,7 @@ async def get_assessment(assessment_id: str, db: AsyncSession = Depends(get_db))
         avg_latency_ms=assessment.avg_latency_ms,
         page_count=assessment.page_count,
         top_issues=assessment.top_issues,
+        estimated_price_eur=assessment.estimated_price_eur,
         has_paid=assessment.has_paid,
         created_at=assessment.created_at.isoformat(),
     )

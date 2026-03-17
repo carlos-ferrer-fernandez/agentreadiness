@@ -35,8 +35,6 @@ services:
       - STRIPE_SECRET_KEY=${STRIPE_SECRET_KEY:-}
       - STRIPE_PUBLISHABLE_KEY=${STRIPE_PUBLISHABLE_KEY:-}
       - STRIPE_WEBHOOK_SECRET=${STRIPE_WEBHOOK_SECRET:-}
-      - STRIPE_STARTER_PRICE_ID=${STRIPE_STARTER_PRICE_ID:-price_starter}
-      - STRIPE_GROWTH_PRICE_ID=${STRIPE_GROWTH_PRICE_ID:-price_growth}
       - ALLOWED_ORIGINS=["http://localhost:3000","http://localhost:5173"]
       - DEBUG=${DEBUG:-false}
     depends_on:

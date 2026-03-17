@@ -2,7 +2,8 @@
 Payments Router
 
 Stripe integration for handling payments.
-Uses settings for configuration instead of raw os.getenv.
+Dynamic pricing model: price scales with documentation size (3x API cost, min €49).
+Uses Stripe's price_data for dynamic amounts — no pre-created Price objects needed.
 """
 
 from fastapi import APIRouter, HTTPException, Request, Header, Depends
@@ -25,38 +26,63 @@ router = APIRouter()
 settings = get_settings()
 stripe.api_key = settings.stripe_secret_key
 
-PRICE_IDS = {
-    "starter": settings.stripe_starter_price_id,
-    "growth": settings.stripe_growth_price_id,
-}
-
 
 class CreateCheckoutRequest(BaseModel):
-    plan: str  # 'starter' or 'growth'
     assessment_id: str
     success_url: str
     cancel_url: str
 
 
 @router.post("/create-checkout")
-async def create_checkout_session(request: CreateCheckoutRequest):
-    """Create a Stripe checkout session."""
+async def create_checkout_session(
+    request: CreateCheckoutRequest,
+    db: AsyncSession = Depends(get_db),
+):
+    """
+    Create a Stripe checkout session with dynamic pricing.
+    The price is determined by the assessment's page_count (stored at scan time).
+    """
     if not stripe.api_key:
         raise HTTPException(status_code=503, detail="Stripe is not configured")
 
-    price_id = PRICE_IDS.get(request.plan)
-    if not price_id:
-        raise HTTPException(status_code=400, detail="Invalid plan. Must be 'starter' or 'growth'.")
+    # Look up the assessment to get the calculated price
+    result = await db.execute(
+        select(Assessment).where(Assessment.id == request.assessment_id)
+    )
+    assessment = result.scalar_one_or_none()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    if assessment.has_paid:
+        raise HTTPException(status_code=400, detail="Report already purchased")
+
+    price_eur = assessment.estimated_price_eur
+    amount_cents = price_eur * 100  # Stripe uses cents
 
     try:
         checkout_session = stripe.checkout.Session.create(
-            line_items=[{"price": price_id, "quantity": 1}],
+            line_items=[{
+                "price_data": {
+                    "currency": "eur",
+                    "product_data": {
+                        "name": "Agent-Readiness Report",
+                        "description": (
+                            f"Complete playbook for {assessment.site_name} "
+                            f"({assessment.page_count} pages analysed)"
+                        ),
+                    },
+                    "unit_amount": amount_cents,
+                },
+                "quantity": 1,
+            }],
             mode="payment",
             success_url=request.success_url + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.cancel_url,
             metadata={
                 "assessment_id": request.assessment_id,
-                "plan": request.plan,
+                "plan": "report",
+                "page_count": str(assessment.page_count),
+                "price_eur": str(price_eur),
             },
         )
 
@@ -69,7 +95,7 @@ async def create_checkout_session(request: CreateCheckoutRequest):
 
 @router.get("/verify")
 async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
-    """Verify a payment was successful and unlock the assessment."""
+    """Verify a payment was successful and unlock the report."""
     if not stripe.api_key:
         raise HTTPException(status_code=503, detail="Stripe is not configured")
 
@@ -77,9 +103,7 @@ async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
         session = stripe.checkout.Session.retrieve(session_id)
 
         if session.payment_status == "paid":
-            # Update the assessment in the database
             assessment_id = session.metadata.get("assessment_id")
-            plan = session.metadata.get("plan")
 
             if assessment_id:
                 result = await db.execute(
@@ -88,7 +112,7 @@ async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
                 assessment = result.scalar_one_or_none()
                 if assessment:
                     assessment.has_paid = True
-                    assessment.paid_plan = plan
+                    assessment.paid_plan = "report"
                     assessment.stripe_session_id = session_id
                     await db.flush()
 
@@ -96,7 +120,7 @@ async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
                 "paid": True,
                 "amount": session.amount_total,
                 "currency": session.currency,
-                "plan": plan,
+                "plan": "report",
                 "assessment_id": assessment_id,
             }
 
@@ -131,7 +155,6 @@ async def stripe_webhook(
     if event["type"] == "checkout.session.completed":
         session = event["data"]["object"]
         assessment_id = session.get("metadata", {}).get("assessment_id")
-        plan = session.get("metadata", {}).get("plan")
 
         if assessment_id:
             result = await db.execute(
@@ -140,10 +163,10 @@ async def stripe_webhook(
             assessment = result.scalar_one_or_none()
             if assessment:
                 assessment.has_paid = True
-                assessment.paid_plan = plan
+                assessment.paid_plan = "report"
                 assessment.stripe_session_id = session.get("id")
                 await db.flush()
-                logger.info(f"Payment completed for assessment {assessment_id}, plan={plan}")
+                logger.info(f"Report unlocked for assessment {assessment_id}")
 
     elif event["type"] == "payment_intent.payment_failed":
         payment_intent = event["data"]["object"]
@@ -157,8 +180,4 @@ async def get_stripe_config():
     """Get Stripe publishable key for frontend."""
     return {
         "publishable_key": settings.stripe_publishable_key or None,
-        "prices": {
-            "starter": settings.stripe_starter_price_id,
-            "growth": settings.stripe_growth_price_id,
-        },
     }

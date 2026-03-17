@@ -23,6 +23,7 @@ export interface AssessmentResult {
     title: string
     severity: 'high' | 'medium' | 'low'
   }>
+  estimatedPriceEur: number
   hasPaid: boolean
   createdAt: string
 }
@@ -33,22 +34,20 @@ interface AssessmentState {
   isAssessing: boolean
   assessmentStage: number
   assessmentError: string | null
-  
-  // Payment state
+
+  // Payment state (single tier — no plan selection needed)
   showPaywall: boolean
-  selectedPlan: 'starter' | 'growth' | null
-  
+
   // Actions
   startAssessment: () => void
   setAssessmentStage: (stage: number) => void
   setAssessmentResult: (result: AssessmentResult) => void
   setAssessmentError: (error: string | null) => void
   clearAssessment: () => void
-  
+
   // Payment actions
   showPaywallModal: () => void
   hidePaywallModal: () => void
-  selectPlan: (plan: 'starter' | 'growth') => void
   markAsPaid: () => void
 }
 
@@ -60,7 +59,6 @@ export const useAssessmentStore = create<AssessmentState>()(
       assessmentStage: 0,
       assessmentError: null,
       showPaywall: false,
-      selectedPlan: null,
 
       startAssessment: () => set({
         isAssessing: true,
@@ -89,14 +87,11 @@ export const useAssessmentStore = create<AssessmentState>()(
         assessmentStage: 0,
         assessmentError: null,
         showPaywall: false,
-        selectedPlan: null,
       }),
 
       showPaywallModal: () => set({ showPaywall: true }),
       hidePaywallModal: () => set({ showPaywall: false }),
-      
-      selectPlan: (plan) => set({ selectedPlan: plan }),
-      
+
       markAsPaid: () => {
         const current = get().currentAssessment
         if (current) {

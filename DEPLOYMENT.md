@@ -160,31 +160,21 @@ To accept payments, you need a Stripe account:
 2. Copy the "Secret key" (starts with `sk_test_`)
 3. Copy the "Publishable key" (starts with `pk_test_`)
 
-### Step 3: Create Products
+### Step 3: No Product Creation Needed!
 
-1. In Stripe Dashboard, go to "Products"
-2. Click "Add product"
-3. Create two products:
+Pricing is **dynamic** — it scales with the documentation size (3x our AI analysis cost, min €49).
+The app uses Stripe's `price_data` to create the correct amount at checkout time automatically.
 
-**Starter Plan ($49)**
-- Name: "AgentReadiness Starter Plan"
-- Price: $49.00
-- Type: One-time
-
-**Growth Plan ($149)**
-- Name: "AgentReadiness Growth Plan"
-- Price: $149.00
-- Type: One-time
-
-4. Copy the Price IDs (they look like `price_1ABC123...`)
+You do NOT need to create any Products or Prices in Stripe. Just the API keys are enough.
 
 ### Step 4: Add to Environment Variables
 
 Add these to your Railway/Render environment variables:
 
 ```
-STRIPE_STARTER_PRICE_ID=price_your_starter_price_id
-STRIPE_GROWTH_PRICE_ID=price_your_growth_price_id
+STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
+STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
+STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
 ```
 
 ---
@@ -283,11 +273,10 @@ When you're ready to accept real customer payments:
 3. Update environment variables with live keys
 4. Redeploy
 
-### Step 2: Update Pricing
+### Step 2: Pricing is Automatic
 
-Make sure your Stripe products are set to the correct prices:
-- Starter: $49
-- Growth: $149
+Pricing is dynamic and calculated automatically (3x API cost, min €49).
+No Stripe products to update — the amount is set at checkout time.
 
 ### Step 3: Test Real Payment
 

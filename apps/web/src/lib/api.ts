@@ -107,7 +107,6 @@ export const authApi = {
 export const paymentsApi = {
   getConfig: () => apiClient.get('/api/payments/config'),
   createCheckout: (data: {
-    plan: string
     assessment_id: string
     success_url: string
     cancel_url: string
@@ -134,6 +133,7 @@ export interface AssessmentResult {
   avg_latency_ms: number
   page_count: number
   top_issues: Array<{ category: string; title: string; severity: string }>
+  estimated_price_eur: number
   has_paid: boolean
   created_at: string
 }

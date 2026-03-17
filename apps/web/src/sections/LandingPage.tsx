@@ -13,7 +13,10 @@ import {
   FileText,
   BarChart3,
   Clock,
-  Star
+  AlertTriangle,
+  Eye,
+  EyeOff,
+  Bot
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -26,31 +29,31 @@ import { useNavigate } from 'react-router-dom'
 
 const features = [
   {
-    icon: Search,
+    icon: Bot,
     title: 'Agent Simulation',
-    description: 'Test how AI agents interact with your documentation using realistic developer personas.',
+    description: 'We test your docs the way AI agents actually consume them — not how humans read them.',
   },
   {
-    icon: Zap,
-    title: 'Friendliness Score',
-    description: 'Get a single composite score (0-100) measuring agent-readiness across 5 key dimensions.',
+    icon: Eye,
+    title: 'Visibility Score',
+    description: 'Find out if AI agents can see you, recommend you, and answer questions about your product.',
   },
   {
     icon: TrendingUp,
-    title: 'Actionable Insights',
-    description: 'Receive prioritized recommendations with estimated impact and implementation effort.',
+    title: 'Actionable Playbook',
+    description: 'Get a complete, prioritised action plan — not vague tips. Before/after examples included.',
   },
   {
     icon: Shield,
-    title: 'Competitive Benchmark',
-    description: 'Compare your documentation against competitors and industry leaders.',
+    title: 'Competitor Intel',
+    description: 'See exactly how your docs stack up against competitors in the eyes of AI agents.',
   },
 ]
 
 const assessmentStages = [
   { name: 'Discovering pages', icon: Search },
   { name: 'Analyzing structure', icon: FileText },
-  { name: 'Simulating queries', icon: Zap },
+  { name: 'Simulating AI agents', icon: Bot },
   { name: 'Calculating score', icon: BarChart3 },
 ]
 
@@ -122,6 +125,7 @@ export function LandingPage() {
           title: issue.title,
           severity: issue.severity as 'high' | 'medium' | 'low',
         })),
+        estimatedPriceEur: data.estimated_price_eur,
         hasPaid: data.has_paid,
         createdAt: data.created_at,
       })
@@ -153,17 +157,17 @@ export function LandingPage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Features
+              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                How it Works
               </a>
               <a href="#pricing" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Pricing
               </a>
-              <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
-                How it Works
+              <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                FAQ
               </a>
-              <Button variant="outline" size="sm" onClick={() => navigate('/dashboard')}>
-                Sign In
+              <Button size="sm" onClick={scrollToAssessment}>
+                Get Free Score
               </Button>
             </div>
 
@@ -186,11 +190,11 @@ export function LandingPage() {
               className="md:hidden border-t bg-background"
             >
               <div className="px-4 py-4 space-y-3">
-                <a href="#features" className="block text-sm text-muted-foreground">Features</a>
-                <a href="#pricing" className="block text-sm text-muted-foreground">Pricing</a>
                 <a href="#how-it-works" className="block text-sm text-muted-foreground">How it Works</a>
-                <Button variant="outline" size="sm" className="w-full" onClick={() => navigate('/dashboard')}>
-                  Sign In
+                <a href="#pricing" className="block text-sm text-muted-foreground">Pricing</a>
+                <a href="#faq" className="block text-sm text-muted-foreground">FAQ</a>
+                <Button size="sm" className="w-full" onClick={scrollToAssessment}>
+                  Get Free Score
                 </Button>
               </div>
             </motion.div>
@@ -207,9 +211,9 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
-                <Sparkles className="w-4 h-4" />
-                Free Assessment — No Credit Card Required
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-sm font-medium mb-6">
+                <AlertTriangle className="w-4 h-4" />
+                68% of documentation is invisible to AI agents
               </span>
             </motion.div>
 
@@ -219,9 +223,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             >
-              Is your documentation{' '}
+              AI agents are the new buyers.{' '}
               <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                AI-ready?
+                Can they find you?
               </span>
             </motion.h1>
 
@@ -231,9 +235,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8"
             >
-              AI agents are becoming the primary way developers discover tools.
-              Get your <strong>free Friendliness Score</strong> and see how you compare
-              to industry leaders.
+              For every $1 spent on software, $6 is spent on services — and AI agents
+              are deciding where that money goes. Get your <strong>free Visibility Score</strong> and
+              find out if you're winning or losing in the agent economy.
             </motion.p>
 
             {/* Assessment Form */}
@@ -272,11 +276,11 @@ export function LandingPage() {
                     {isAssessing ? (
                       <>
                         <Clock className="mr-2 w-4 h-4 animate-spin" />
-                        Analyzing...
+                        Scanning...
                       </>
                     ) : (
                       <>
-                        Get Free Score
+                        Check My Visibility — Free
                         <ArrowRight className="ml-2 w-4 h-4" />
                       </>
                     )}
@@ -343,7 +347,7 @@ export function LandingPage() {
                           className="h-2"
                         />
                         <p className="text-xs text-muted-foreground text-center mt-2">
-                          Crawling and analyzing your documentation...
+                          Simulating how AI agents see your documentation...
                         </p>
                       </div>
                     </motion.div>
@@ -353,7 +357,7 @@ export function LandingPage() {
 
               <p className="text-xs text-muted-foreground mt-4">
                 <CheckCircle2 className="w-3 h-3 inline mr-1" />
-                Free assessment - No signup required - Real analysis of your docs
+                Free score in 60 seconds — No signup — No credit card
               </p>
             </motion.div>
           </div>
@@ -366,11 +370,37 @@ export function LandingPage() {
         </div>
       </section>
 
+      {/* Urgency Banner */}
+      <section className="py-8 border-y bg-destructive/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div>
+              <div className="text-3xl font-bold text-destructive mb-1">6x</div>
+              <p className="text-sm text-muted-foreground">
+                Services budget vs software budget — agents decide where it goes
+              </p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-destructive mb-1">68%</div>
+              <p className="text-sm text-muted-foreground">
+                of docs score below C — effectively invisible to AI agents
+              </p>
+            </div>
+            <div>
+              <div className="text-3xl font-bold text-destructive mb-1">2025</div>
+              <p className="text-sm text-muted-foreground">
+                The year AI agents become the primary discovery channel
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Social Proof */}
-      <section className="py-12 border-y bg-muted/30">
+      <section className="py-12 border-b bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <p className="text-center text-sm text-muted-foreground mb-6">
-            Trusted by developer-focused companies
+            Companies already optimising for the agent economy
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-50">
             {['Resend', 'Stripe', 'Vercel', 'Supabase', 'Linear'].map((company) => (
@@ -386,10 +416,12 @@ export function LandingPage() {
       <section id="features" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Everything you need for agent-ready docs</h2>
+            <h2 className="text-3xl font-bold mb-4">
+              Your docs are your storefront in the agent economy
+            </h2>
             <p className="text-muted-foreground">
-              Comprehensive analysis and optimization tools to ensure your documentation
-              performs well when consumed by AI agents.
+              AI agents don't browse your website — they read your documentation.
+              If your docs aren't optimised, you're invisible to the fastest-growing buyer channel.
             </p>
           </div>
 
@@ -420,7 +452,7 @@ export function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">How it works</h2>
             <p className="text-muted-foreground">
-              Get your Friendliness Score in minutes, then unlock your action plan.
+              60 seconds to your score. One click to your complete playbook.
             </p>
           </div>
 
@@ -428,21 +460,21 @@ export function LandingPage() {
             {[
               {
                 step: '01',
-                title: 'Free Assessment',
-                description: 'Enter your docs URL and get an instant Friendliness Score with component breakdown.',
+                title: 'Get Your Free Score',
+                description: 'Enter your docs URL. We simulate real AI agents consuming your documentation and grade you across 5 dimensions.',
                 highlight: 'Free',
               },
               {
                 step: '02',
-                title: 'Unlock Action Plan',
-                description: 'Purchase a plan to get detailed recommendations with step-by-step improvement guide.',
-                highlight: 'From $49',
+                title: 'See Where You Stand',
+                description: 'See how you compare against industry leaders and competitors. Find out what\'s costing you agent visibility.',
+                highlight: 'Instant',
               },
               {
                 step: '03',
-                title: 'Implement & Improve',
-                description: 'Follow the playbook to improve your score and attract more developers via AI agents.',
-                highlight: 'Track Progress',
+                title: 'Get Your Playbook',
+                description: 'Unlock your complete Agent-Readiness Report with prioritised fixes, code examples, and before/after previews. Price based on your docs size.',
+                highlight: 'From €49',
               },
             ].map((item, index) => (
               <motion.div
@@ -465,138 +497,155 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Pricing Section */}
+      {/* Pricing Section — Single Tier */}
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Unlock your action plan</h2>
+            <h2 className="text-3xl font-bold mb-4">One report. Priced to your docs.</h2>
             <p className="text-muted-foreground">
-              Get detailed recommendations and step-by-step guidance to improve your score.
+              No tiers. No subscriptions. No upsells. Price scales with your documentation
+              size — starting at just €49 for small docs.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {[
-              {
-                name: 'Free Assessment',
-                price: '$0',
-                period: '',
-                description: 'Get started with your Friendliness Score',
-                features: [
+          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            {/* Free Column */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="bg-card rounded-xl border p-6 flex flex-col"
+            >
+              <h3 className="text-lg font-semibold">Free Score</h3>
+              <div className="mt-2 flex items-baseline">
+                <span className="text-3xl font-bold">$0</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">See where you stand</p>
+              <ul className="mt-6 space-y-3 flex-1">
+                {[
                   'Friendliness Score (0-100)',
                   'Letter grade (A+ to F)',
-                  'Component breakdown',
+                  'Component breakdown (5 dimensions)',
                   'Top 3 issues identified',
                   'Industry benchmark comparison',
-                ],
-                cta: 'Start Free',
-                variant: 'outline' as const,
-                highlighted: false,
-              },
-              {
-                name: 'Starter Plan',
-                price: '$49',
-                period: '/one-time',
-                description: 'Complete action plan for your docs',
-                features: [
-                  'Everything in Free',
-                  'Detailed recommendations (10+)',
-                  'Step-by-step improvement guide',
-                  'Code examples & templates',
-                  'Priority support (email)',
-                  'PDF report download',
-                ],
-                cta: 'Get Action Plan',
-                variant: 'default' as const,
-                highlighted: true,
-              },
-              {
-                name: 'Growth Plan',
-                price: '$149',
-                period: '/one-time',
-                description: 'Advanced optimization for teams',
-                features: [
-                  'Everything in Starter',
-                  'Unlimited recommendations',
-                  'Competitor deep-dive analysis',
-                  'Custom improvement roadmap',
-                  '1-on-1 consultation (30 min)',
-                  'Slack support (1 week)',
-                ],
-                cta: 'Get Full Analysis',
-                variant: 'outline' as const,
-                highlighted: false,
-              },
-            ].map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={cn(
-                  "bg-card rounded-xl border p-6 flex flex-col",
-                  plan.highlighted && "border-primary ring-1 ring-primary shadow-lg scale-105"
-                )}
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                variant="outline"
+                className="w-full mt-6"
+                onClick={scrollToAssessment}
               >
-                {plan.highlighted && (
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary text-primary-foreground w-fit mb-4">
-                    <Star className="w-3 h-3 mr-1" />
-                    Most Popular
-                  </span>
-                )}
-                <h3 className="text-lg font-semibold">{plan.name}</h3>
-                <div className="mt-2 flex items-baseline">
-                  <span className="text-3xl font-bold">{plan.price}</span>
-                  <span className="text-muted-foreground ml-1">{plan.period}</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>
-                <ul className="mt-6 space-y-3 flex-1">
-                  {plan.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button
-                  variant={plan.variant}
-                  className="w-full mt-6"
-                  onClick={scrollToAssessment}
-                >
-                  {plan.cta}
-                </Button>
-              </motion.div>
-            ))}
+                Get Free Score
+              </Button>
+            </motion.div>
+
+            {/* Report Column */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.1 }}
+              className="bg-card rounded-xl border border-primary ring-1 ring-primary shadow-lg p-6 flex flex-col relative"
+            >
+              <span className="absolute -top-3 left-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
+                <Sparkles className="w-3 h-3 mr-1" />
+                Complete Playbook
+              </span>
+              <h3 className="text-lg font-semibold">Agent-Readiness Report</h3>
+              <div className="mt-2 flex items-baseline gap-2">
+                <span className="text-sm text-muted-foreground">from</span>
+                <span className="text-3xl font-bold">€49</span>
+              </div>
+              <p className="text-sm text-muted-foreground mt-2">
+                Price scales with your docs size — 3x our AI analysis cost
+              </p>
+              <ul className="mt-6 space-y-3 flex-1">
+                {[
+                  'Everything in Free Score',
+                  'Deep-dive analysis across all 5 dimensions',
+                  '10+ prioritised recommendations',
+                  'Before/after code examples',
+                  'Competitor benchmarking deep-dive',
+                  'Implementation templates',
+                  'Downloadable PDF report',
+                  '30-day email support',
+                ].map((feature) => (
+                  <li key={feature} className="flex items-start gap-2 text-sm">
+                    <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+              <Button
+                className="w-full mt-6"
+                onClick={scrollToAssessment}
+              >
+                Get Free Score First
+                <ArrowRight className="ml-2 w-4 h-4" />
+              </Button>
+              <p className="text-xs text-center text-muted-foreground mt-3">
+                Exact price shown after free scan. 7-day money-back guarantee.
+              </p>
+            </motion.div>
           </div>
         </div>
       </section>
 
+      {/* FOMO Section */}
+      <section className="py-16 bg-primary/5 border-y">
+        <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <EyeOff className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <h2 className="text-2xl font-bold mb-4">
+            If AI agents can't parse your docs, they can't recommend you.
+          </h2>
+          <p className="text-muted-foreground mb-2">
+            Every day you wait, your competitors are getting optimised. AI agents
+            are already choosing who to recommend for development tools, APIs, and services.
+          </p>
+          <p className="text-sm text-muted-foreground mb-8">
+            The companies that move first will own the agent economy. The rest will wonder where their traffic went.
+          </p>
+          <Button size="lg" onClick={scrollToAssessment}>
+            Check My Visibility Now
+            <ArrowRight className="ml-2 w-4 h-4" />
+          </Button>
+        </div>
+      </section>
+
       {/* FAQ Section */}
-      <section className="py-20 bg-muted/30">
+      <section id="faq" className="py-20 bg-muted/30">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <h2 className="text-3xl font-bold text-center mb-12">Frequently Asked Questions</h2>
           <div className="space-y-6">
             {[
               {
                 q: 'What is the Friendliness Score?',
-                a: 'The Friendliness Score is a composite metric (0-100) that measures how well your documentation performs when consumed by AI agents. It considers answer accuracy, context utilization, response latency, citation quality, and code executability.',
+                a: 'It\'s a composite metric (0-100) that measures how well your documentation performs when consumed by AI agents. We simulate real agent interactions and grade you on answer accuracy, context utilisation, response speed, citation quality, and code executability.',
               },
               {
-                q: 'How long does the assessment take?',
-                a: 'The free assessment typically takes 30-90 seconds depending on your documentation size. We crawl your docs, analyze the content structure, and calculate your score in real-time.',
+                q: 'Why should I care about AI agent visibility?',
+                a: 'AI agents are rapidly becoming the primary way developers discover and evaluate tools. Sequoia estimates that for every $1 spent on software, $6 is spent on services — and AI agents are increasingly deciding where that budget goes. If they can\'t read your docs, they can\'t recommend you.',
               },
               {
-                q: 'What do I get with the free assessment?',
-                a: 'You get your Friendliness Score, letter grade, component breakdown, top 3 issues identified, and a comparison to industry benchmarks. The detailed action plan with step-by-step recommendations requires a paid plan.',
+                q: 'What do I get for free vs. the paid report?',
+                a: 'The free scan gives you your score, letter grade, component breakdown, top 3 issues, and industry benchmarks. The Agent-Readiness Report (from €49) gives you the complete playbook: deep-dive analysis, 10+ prioritised recommendations with before/after examples, competitor analysis, implementation templates, and a downloadable PDF.',
               },
               {
-                q: 'Is my data secure?',
-                a: 'Yes. We only analyze publicly available documentation. We do not store any sensitive information, and all analysis data is encrypted in transit and at rest.',
+                q: 'How is the price calculated?',
+                a: 'The price scales with your documentation size — it\'s 3x our actual AI analysis cost. Small docs (under 25 pages) start at €49. Larger documentation sites cost more because they require more AI processing. You\'ll see your exact price after the free scan. No subscriptions, no hidden fees.',
+              },
+              {
+                q: 'How long does it take?',
+                a: 'The free score takes about 60 seconds. The full report is generated instantly after purchase — no waiting, no scheduling calls.',
               },
               {
                 q: 'Can I get a refund?',
-                a: 'Yes, we offer a 7-day money-back guarantee if you are not satisfied with your action plan.',
+                a: 'Yes. 7-day money-back guarantee, no questions asked.',
               },
             ].map((faq, index) => (
               <div key={index} className="bg-card rounded-lg p-6 border">
@@ -608,15 +657,17 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Final CTA Section */}
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl font-bold mb-4">Ready to optimize your docs for AI agents?</h2>
+          <h2 className="text-3xl font-bold mb-4">
+            Don't let AI agents forget you exist.
+          </h2>
           <p className="text-muted-foreground mb-8">
-            Get your free Friendliness Score in under a minute. No signup required.
+            Get your free Visibility Score in 60 seconds. No signup. No credit card.
           </p>
           <Button size="lg" onClick={scrollToAssessment}>
-            Get Free Assessment
+            Check My Visibility — Free
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>

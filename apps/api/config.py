@@ -39,8 +39,15 @@ class Settings(BaseSettings):
     stripe_secret_key: str = ""
     stripe_publishable_key: str = ""
     stripe_webhook_secret: str = ""
-    stripe_starter_price_id: str = "price_starter"
-    stripe_growth_price_id: str = "price_growth"
+
+    # Dynamic pricing (EUR)
+    # Price = max(min_price, ceil(estimated_api_cost * margin_multiplier))
+    # estimated_api_cost = base_cost + per_page_cost * page_count
+    pricing_base_cost: float = 5.0        # Fixed overhead: query gen, scoring, recommendations
+    pricing_per_page_cost: float = 0.40   # Per-page: embedding, RAG simulation, evaluation
+    pricing_margin_multiplier: float = 3.0  # 3x margin on API costs
+    pricing_min_eur: int = 49              # Minimum price (entry point, appealing)
+    pricing_max_eur: int = 499             # Cap for very large docs
 
     # Crawler
     max_crawl_pages: int = 100
