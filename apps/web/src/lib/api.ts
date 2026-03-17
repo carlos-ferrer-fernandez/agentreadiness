@@ -49,6 +49,10 @@ export const assessmentsApi = {
       assessment_id: assessmentId,
       code,
     }),
+  getOptimizationStatus: (assessmentId: string) =>
+    apiClient.get(`/api/assessments/${assessmentId}/optimization-status`),
+  getDownloadUrl: (assessmentId: string) =>
+    `${API_BASE_URL}/api/assessments/${assessmentId}/download`,
 }
 
 // --- Sites API ---
@@ -135,6 +139,10 @@ export interface AssessmentResult {
   top_issues: Array<{ category: string; title: string; severity: string }>
   estimated_price_eur: number
   has_paid: boolean
+  optimization_status: string | null
+  optimization_progress: number
+  optimization_stage: string | null
+  optimization_metadata: Record<string, any> | null
   created_at: string
 }
 

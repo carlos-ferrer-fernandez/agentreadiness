@@ -2,11 +2,11 @@
 Payments Router
 
 Stripe integration for handling payments.
-Dynamic pricing model: price scales with documentation size (3x API cost, min €49).
-Uses Stripe's price_data for dynamic amounts — no pre-created Price objects needed.
+After successful payment, triggers the documentation optimization pipeline
+to generate the customer's optimized docs (ZIP download).
 """
 
-from fastapi import APIRouter, HTTPException, Request, Header, Depends
+from fastapi import APIRouter, HTTPException, Request, Header, Depends, BackgroundTasks
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
 from typing import Optional
@@ -14,8 +14,9 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 import stripe
 import logging
+from datetime import datetime, timezone
 
-from database import get_db
+from database import get_db, async_session_factory
 from models import Assessment
 from config import get_settings
 from auth import get_optional_user
@@ -54,7 +55,7 @@ async def create_checkout_session(
         raise HTTPException(status_code=404, detail="Assessment not found")
 
     if assessment.has_paid:
-        raise HTTPException(status_code=400, detail="Report already purchased")
+        raise HTTPException(status_code=400, detail="Already purchased")
 
     price_eur = assessment.estimated_price_eur
     amount_cents = price_eur * 100  # Stripe uses cents
@@ -65,10 +66,10 @@ async def create_checkout_session(
                 "price_data": {
                     "currency": "eur",
                     "product_data": {
-                        "name": "Agent-Readiness Report",
+                        "name": "Optimized Documentation",
                         "description": (
-                            f"Complete playbook for {assessment.site_name} "
-                            f"({assessment.page_count} pages analysed)"
+                            f"AI-optimized documentation for {assessment.site_name} "
+                            f"({assessment.page_count} pages) — ready to deploy"
                         ),
                     },
                     "unit_amount": amount_cents,
@@ -80,7 +81,6 @@ async def create_checkout_session(
             cancel_url=request.cancel_url,
             metadata={
                 "assessment_id": request.assessment_id,
-                "plan": "report",
                 "page_count": str(assessment.page_count),
                 "price_eur": str(price_eur),
             },
@@ -94,8 +94,12 @@ async def create_checkout_session(
 
 
 @router.get("/verify")
-async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
-    """Verify a payment was successful and unlock the report."""
+async def verify_payment(
+    session_id: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """Verify a payment was successful and kick off documentation optimization."""
     if not stripe.api_key:
         raise HTTPException(status_code=503, detail="Stripe is not configured")
 
@@ -112,16 +116,24 @@ async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
                 assessment = result.scalar_one_or_none()
                 if assessment:
                     assessment.has_paid = True
-                    assessment.paid_plan = "report"
+                    assessment.paid_plan = "optimized_docs"
                     assessment.stripe_session_id = session_id
+                    assessment.optimization_status = "queued"
                     await db.flush()
+
+                    # Trigger optimization in background
+                    background_tasks.add_task(
+                        _run_optimization_pipeline,
+                        assessment_id,
+                        assessment.url,
+                    )
 
             return {
                 "paid": True,
                 "amount": session.amount_total,
                 "currency": session.currency,
-                "plan": "report",
                 "assessment_id": assessment_id,
+                "optimization_status": "queued",
             }
 
         return {"paid": False, "status": session.payment_status}
@@ -134,6 +146,7 @@ async def verify_payment(session_id: str, db: AsyncSession = Depends(get_db)):
 @router.post("/webhook")
 async def stripe_webhook(
     request: Request,
+    background_tasks: BackgroundTasks,
     stripe_signature: Optional[str] = Header(None, alias="Stripe-Signature"),
     db: AsyncSession = Depends(get_db),
 ):
@@ -161,12 +174,19 @@ async def stripe_webhook(
                 select(Assessment).where(Assessment.id == assessment_id)
             )
             assessment = result.scalar_one_or_none()
-            if assessment:
+            if assessment and not assessment.has_paid:
                 assessment.has_paid = True
-                assessment.paid_plan = "report"
+                assessment.paid_plan = "optimized_docs"
                 assessment.stripe_session_id = session.get("id")
+                assessment.optimization_status = "queued"
                 await db.flush()
-                logger.info(f"Report unlocked for assessment {assessment_id}")
+
+                background_tasks.add_task(
+                    _run_optimization_pipeline,
+                    assessment_id,
+                    assessment.url,
+                )
+                logger.info(f"Optimization queued for assessment {assessment_id}")
 
     elif event["type"] == "payment_intent.payment_failed":
         payment_intent = event["data"]["object"]
@@ -181,3 +201,77 @@ async def get_stripe_config():
     return {
         "publishable_key": settings.stripe_publishable_key or None,
     }
+
+
+async def _run_optimization_pipeline(assessment_id: str, url: str):
+    """
+    Run the full documentation optimization pipeline in background.
+    Uses its own DB session since this runs outside the request lifecycle.
+    """
+    from services.optimizer.document_optimizer import DocumentationOptimizer, OptimizationConfig
+
+    logger.info(f"Starting optimization for assessment {assessment_id}")
+
+    async with async_session_factory() as db:
+        try:
+            result = await db.execute(
+                select(Assessment).where(Assessment.id == assessment_id)
+            )
+            assessment = result.scalar_one_or_none()
+            if not assessment:
+                logger.error(f"Assessment {assessment_id} not found")
+                return
+
+            assessment.optimization_status = "running"
+            assessment.optimization_started_at = datetime.now(timezone.utc)
+            await db.commit()
+
+            # Configure optimizer for AI agent consumption
+            config = OptimizationConfig(
+                target_audience="mixed",
+                tone="technical",
+                priorities=["code_examples", "api_reference", "tutorials", "troubleshooting"],
+                add_troubleshooting=True,
+                improve_seo=True,
+            )
+
+            optimizer = DocumentationOptimizer(config)
+
+            def progress_callback(stage: str, progress: float):
+                # We can't easily update DB from sync callback, so just log
+                logger.info(f"Optimization {assessment_id}: {stage} ({progress:.0%})")
+
+            docs, metadata = await optimizer.optimize_documentation(
+                url, progress_callback=progress_callback
+            )
+            zip_path = await optimizer.create_zip_package(docs, metadata)
+
+            # Update assessment with results
+            result = await db.execute(
+                select(Assessment).where(Assessment.id == assessment_id)
+            )
+            assessment = result.scalar_one_or_none()
+            if assessment:
+                assessment.optimization_status = "complete"
+                assessment.optimization_progress = 1.0
+                assessment.optimization_stage = "complete"
+                assessment.optimization_zip_path = zip_path
+                assessment.optimization_metadata = metadata
+                assessment.optimization_completed_at = datetime.now(timezone.utc)
+                await db.commit()
+
+            logger.info(f"Optimization complete for {assessment_id}: {len(docs)} pages optimized")
+
+        except Exception as e:
+            logger.error(f"Optimization failed for {assessment_id}: {e}", exc_info=True)
+            try:
+                result = await db.execute(
+                    select(Assessment).where(Assessment.id == assessment_id)
+                )
+                assessment = result.scalar_one_or_none()
+                if assessment:
+                    assessment.optimization_status = "failed"
+                    assessment.optimization_error = str(e)[:500]
+                    await db.commit()
+            except Exception:
+                logger.error(f"Failed to update error status for {assessment_id}")

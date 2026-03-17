@@ -25,6 +25,10 @@ export interface AssessmentResult {
   }>
   estimatedPriceEur: number
   hasPaid: boolean
+  optimizationStatus: string | null  // queued, running, complete, failed
+  optimizationProgress: number
+  optimizationStage: string | null
+  optimizationMetadata: Record<string, any> | null
   createdAt: string
 }
 
@@ -49,6 +53,10 @@ interface AssessmentState {
   showPaywallModal: () => void
   hidePaywallModal: () => void
   markAsPaid: () => void
+
+  // Optimization actions
+  setOptimizationStatus: (status: string, progress?: number, stage?: string) => void
+  setOptimizationComplete: (metadata: Record<string, any>) => void
 }
 
 export const useAssessmentStore = create<AssessmentState>()(
@@ -96,8 +104,41 @@ export const useAssessmentStore = create<AssessmentState>()(
         const current = get().currentAssessment
         if (current) {
           set({
-            currentAssessment: { ...current, hasPaid: true },
+            currentAssessment: {
+              ...current,
+              hasPaid: true,
+              optimizationStatus: 'queued',
+            },
             showPaywall: false,
+          })
+        }
+      },
+
+      setOptimizationStatus: (status, progress = 0, stage = null) => {
+        const current = get().currentAssessment
+        if (current) {
+          set({
+            currentAssessment: {
+              ...current,
+              optimizationStatus: status,
+              optimizationProgress: progress,
+              optimizationStage: stage,
+            },
+          })
+        }
+      },
+
+      setOptimizationComplete: (metadata) => {
+        const current = get().currentAssessment
+        if (current) {
+          set({
+            currentAssessment: {
+              ...current,
+              optimizationStatus: 'complete',
+              optimizationProgress: 1,
+              optimizationStage: 'complete',
+              optimizationMetadata: metadata,
+            },
           })
         }
       },

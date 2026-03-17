@@ -6,10 +6,12 @@ This is the main entry point for new users landing on the site.
 """
 
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 from typing import Optional
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+import os
 
 from database import get_db
 from models import Assessment
@@ -39,6 +41,10 @@ class AssessmentResponse(BaseModel):
     top_issues: list[dict]
     estimated_price_eur: int
     has_paid: bool
+    optimization_status: Optional[str] = None
+    optimization_progress: float = 0.0
+    optimization_stage: Optional[str] = None
+    optimization_metadata: Optional[dict] = None
     created_at: str
 
     model_config = {"from_attributes": True}
@@ -136,22 +142,7 @@ async def run_assessment(
         await db.flush()
         await db.refresh(assessment)
 
-        return AssessmentResponse(
-            id=assessment.id,
-            url=assessment.url,
-            site_name=assessment.site_name,
-            score=assessment.score,
-            grade=assessment.grade,
-            components=assessment.components,
-            query_count=assessment.query_count,
-            pass_rate=assessment.pass_rate,
-            avg_latency_ms=assessment.avg_latency_ms,
-            page_count=assessment.page_count,
-            top_issues=assessment.top_issues,
-            estimated_price_eur=assessment.estimated_price_eur,
-            has_paid=assessment.has_paid,
-            created_at=assessment.created_at.isoformat(),
-        )
+        return _build_response(assessment)
 
     except HTTPException:
         raise
@@ -207,7 +198,77 @@ async def verify_promo_code(
     assessment.paid_plan = "promo"
     await db.flush()
 
-    return {"success": True, "message": "Promo code applied! Your action plan is unlocked."}
+    return {"success": True, "message": "Promo code applied! Your optimized docs are being generated."}
+
+
+@router.get("/{assessment_id}/optimization-status")
+async def get_optimization_status(assessment_id: str, db: AsyncSession = Depends(get_db)):
+    """Poll optimization progress."""
+    result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
+    assessment = result.scalar_one_or_none()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    if not assessment.has_paid:
+        raise HTTPException(status_code=403, detail="Payment required")
+
+    return {
+        "status": assessment.optimization_status or "pending",
+        "progress": assessment.optimization_progress,
+        "stage": assessment.optimization_stage,
+        "metadata": assessment.optimization_metadata,
+        "error": assessment.optimization_error,
+    }
+
+
+@router.get("/{assessment_id}/download")
+async def download_optimized_docs(assessment_id: str, db: AsyncSession = Depends(get_db)):
+    """Download the optimized documentation ZIP."""
+    result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
+    assessment = result.scalar_one_or_none()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    if not assessment.has_paid:
+        raise HTTPException(status_code=403, detail="Payment required")
+
+    if assessment.optimization_status != "complete":
+        raise HTTPException(status_code=400, detail="Optimization not yet complete")
+
+    zip_path = assessment.optimization_zip_path
+    if not zip_path or not os.path.exists(zip_path):
+        raise HTTPException(status_code=404, detail="Optimized docs file not found")
+
+    filename = f"{assessment.site_name}-optimized-docs.zip"
+    return FileResponse(
+        zip_path,
+        media_type="application/zip",
+        filename=filename,
+    )
+
+
+def _build_response(assessment: Assessment) -> AssessmentResponse:
+    """Build a consistent AssessmentResponse from an Assessment model."""
+    return AssessmentResponse(
+        id=assessment.id,
+        url=assessment.url,
+        site_name=assessment.site_name,
+        score=assessment.score,
+        grade=assessment.grade,
+        components=assessment.components,
+        query_count=assessment.query_count,
+        pass_rate=assessment.pass_rate,
+        avg_latency_ms=assessment.avg_latency_ms,
+        page_count=assessment.page_count,
+        top_issues=assessment.top_issues,
+        estimated_price_eur=assessment.estimated_price_eur,
+        has_paid=assessment.has_paid,
+        optimization_status=assessment.optimization_status,
+        optimization_progress=assessment.optimization_progress,
+        optimization_stage=assessment.optimization_stage,
+        optimization_metadata=assessment.optimization_metadata,
+        created_at=assessment.created_at.isoformat(),
+    )
 
 
 def _generate_top_issues(score) -> list[dict]:

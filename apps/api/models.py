@@ -175,7 +175,7 @@ class Recommendation(Base):
 
 
 class Assessment(Base):
-    """Stores free assessment results (before user creates an account)."""
+    """Stores free assessment results and optimization job tracking."""
     __tablename__ = "assessments"
 
     id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
@@ -194,4 +194,15 @@ class Assessment(Base):
     has_paid: Mapped[bool] = mapped_column(Boolean, default=False)
     paid_plan: Mapped[str | None] = mapped_column(String(20), nullable=True)
     stripe_session_id: Mapped[str | None] = mapped_column(String(255), nullable=True)
+
+    # Optimization job tracking
+    optimization_status: Mapped[str | None] = mapped_column(String(20), nullable=True)  # queued, running, complete, failed
+    optimization_progress: Mapped[float] = mapped_column(Float, default=0.0)
+    optimization_stage: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    optimization_zip_path: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    optimization_error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    optimization_metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    optimization_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    optimization_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)

@@ -37,6 +37,9 @@ engine = create_async_engine(_db_url, **_engine_kwargs)
 
 async_session = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 
+# Alias for use in background tasks that need their own session
+async_session_factory = async_session
+
 
 async def get_db() -> AsyncSession:
     """Dependency that provides a database session."""

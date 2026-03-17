@@ -40,13 +40,13 @@ const features = [
   },
   {
     icon: TrendingUp,
-    title: 'Actionable Playbook',
-    description: 'Get a complete, prioritised action plan — not vague tips. Before/after examples included.',
+    title: 'Optimized Documentation',
+    description: 'Not a report. Not tips. We rewrite your actual docs for AI agents. Download a ZIP and deploy.',
   },
   {
     icon: Shield,
-    title: 'Competitor Intel',
-    description: 'See exactly how your docs stack up against competitors in the eyes of AI agents.',
+    title: 'Ready to Deploy',
+    description: 'Structured markdown files with proper headings, code blocks & API tables. Works with any docs platform.',
   },
 ]
 
@@ -127,6 +127,10 @@ export function LandingPage() {
         })),
         estimatedPriceEur: data.estimated_price_eur,
         hasPaid: data.has_paid,
+        optimizationStatus: data.optimization_status || null,
+        optimizationProgress: data.optimization_progress || 0,
+        optimizationStage: data.optimization_stage || null,
+        optimizationMetadata: data.optimization_metadata || null,
         createdAt: data.created_at,
       })
 
@@ -452,7 +456,7 @@ export function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">How it works</h2>
             <p className="text-muted-foreground">
-              60 seconds to your score. One click to your complete playbook.
+              60 seconds to your score. One click to get your docs rewritten for AI agents.
             </p>
           </div>
 
@@ -472,8 +476,8 @@ export function LandingPage() {
               },
               {
                 step: '03',
-                title: 'Get Your Playbook',
-                description: 'Unlock your complete Agent-Readiness Report with prioritised fixes, code examples, and before/after previews. Price based on your docs size.',
+                title: 'Get Optimized Docs',
+                description: 'We rewrite every page of your documentation for AI agents. Download a ZIP with optimized markdown files. Deploy in minutes.',
                 highlight: 'From €49',
               },
             ].map((item, index) => (
@@ -501,10 +505,10 @@ export function LandingPage() {
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">One report. Priced to your docs.</h2>
+            <h2 className="text-3xl font-bold mb-4">Your docs, optimized. One price.</h2>
             <p className="text-muted-foreground">
-              No tiers. No subscriptions. No upsells. Price scales with your documentation
-              size — starting at just €49 for small docs.
+              No tiers. No subscriptions. No consulting calls. We rewrite your docs for AI agents.
+              Price scales with your documentation size — starting at just €49.
             </p>
           </div>
 
@@ -554,26 +558,26 @@ export function LandingPage() {
             >
               <span className="absolute -top-3 left-4 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-primary text-primary-foreground">
                 <Sparkles className="w-3 h-3 mr-1" />
-                Complete Playbook
+                The Final Product
               </span>
-              <h3 className="text-lg font-semibold">Agent-Readiness Report</h3>
+              <h3 className="text-lg font-semibold">Optimized Documentation</h3>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-sm text-muted-foreground">from</span>
                 <span className="text-3xl font-bold">€49</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Price scales with your docs size — 3x our AI analysis cost
+                Price scales with your docs size — you pay, we deliver the files
               </p>
               <ul className="mt-6 space-y-3 flex-1">
                 {[
                   'Everything in Free Score',
-                  'Deep-dive analysis across all 5 dimensions',
-                  '10+ prioritised recommendations',
-                  'Before/after code examples',
-                  'Competitor benchmarking deep-dive',
-                  'Implementation templates',
-                  'Downloadable PDF report',
-                  '30-day email support',
+                  'Every page rewritten for AI agents',
+                  'Structured markdown files (ready to deploy)',
+                  'Optimized headings, code blocks & API tables',
+                  'Auto-generated troubleshooting sections',
+                  'Implementation & deployment guide',
+                  'Download as ZIP in ~5 minutes',
+                  '7-day money-back guarantee',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
@@ -632,16 +636,20 @@ export function LandingPage() {
                 a: 'AI agents are rapidly becoming the primary way developers discover and evaluate tools. Sequoia estimates that for every $1 spent on software, $6 is spent on services — and AI agents are increasingly deciding where that budget goes. If they can\'t read your docs, they can\'t recommend you.',
               },
               {
-                q: 'What do I get for free vs. the paid report?',
-                a: 'The free scan gives you your score, letter grade, component breakdown, top 3 issues, and industry benchmarks. The Agent-Readiness Report (from €49) gives you the complete playbook: deep-dive analysis, 10+ prioritised recommendations with before/after examples, competitor analysis, implementation templates, and a downloadable PDF.',
+                q: 'What do I get for free vs. the paid product?',
+                a: 'The free scan gives you your score, letter grade, component breakdown, top 3 issues, and industry benchmarks. The paid product (from €49) gives you the actual optimized documentation files — every page rewritten for AI agent consumption, packaged as a ZIP you can download and deploy immediately.',
               },
               {
                 q: 'How is the price calculated?',
-                a: 'The price scales with your documentation size — it\'s 3x our actual AI analysis cost. Small docs (under 25 pages) start at €49. Larger documentation sites cost more because they require more AI processing. You\'ll see your exact price after the free scan. No subscriptions, no hidden fees.',
+                a: 'The price scales with your documentation size — it\'s based on the number of pages we need to rewrite. Small docs (under 25 pages) start at €49. Larger documentation sites cost more because they require more AI processing. You\'ll see your exact price after the free scan. No subscriptions, no hidden fees.',
               },
               {
                 q: 'How long does it take?',
-                a: 'The free score takes about 60 seconds. The full report is generated instantly after purchase — no waiting, no scheduling calls.',
+                a: 'The free score takes about 60 seconds. After purchase, your optimized documentation is generated in ~5 minutes. You\'ll get a ZIP file you can download immediately — no waiting, no scheduling calls.',
+              },
+              {
+                q: 'What format are the optimized docs in?',
+                a: 'You get a ZIP containing structured Markdown (.md) files — one per page. Plus a README overview and implementation guide. These work with any docs platform: GitHub Pages, Netlify, Vercel, ReadMe, GitBook, etc.',
               },
               {
                 q: 'Can I get a refund?',
