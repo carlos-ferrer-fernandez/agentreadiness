@@ -407,18 +407,64 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Social Proof */}
-      <section className="py-12 border-b bg-muted/30">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <p className="text-center text-sm text-muted-foreground mb-6">
-            Companies already optimising for the agent economy
-          </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12 opacity-50">
-            {['Resend', 'Stripe', 'Vercel', 'Supabase', 'Linear'].map((company) => (
-              <span key={company} className="text-lg font-semibold text-muted-foreground">
-                {company}
-              </span>
-            ))}
+      {/* YC Social Proof — The real thing */}
+      <section className="py-16 lg:py-20 border-b bg-muted/30">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid lg:grid-cols-2 gap-10 items-center">
+            {/* Video */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="relative aspect-video rounded-xl overflow-hidden shadow-2xl border"
+            >
+              <iframe
+                src="https://www.youtube.com/embed/Q8wVMdwhlh4?start=576"
+                title="Diana Hu (YC) on Agent Documentation"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </motion.div>
+
+            {/* Quote + Context */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              whileInView={{ opacity: 1, x: 0 }}
+              viewport={{ once: true }}
+              className="space-y-6"
+            >
+              <Badge variant="outline" className="text-xs">
+                Y Combinator AI Startup School 2025
+              </Badge>
+
+              <blockquote className="text-xl lg:text-2xl font-medium leading-relaxed">
+                <span className="text-primary">&ldquo;</span>
+                Documentation will be the front door for all of these agents recommending devtools.
+                <span className="text-primary">&rdquo;</span>
+              </blockquote>
+
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-sm font-bold text-primary">
+                  DH
+                </div>
+                <div>
+                  <p className="font-semibold text-sm">Diana Hu</p>
+                  <p className="text-xs text-muted-foreground">General Partner, Y Combinator</p>
+                </div>
+              </div>
+
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                In this talk, Diana explains how AI agents are rapidly becoming the primary way
+                developers discover and evaluate tools. The companies that optimise their
+                documentation for agent consumption will win. The rest will become invisible.
+              </p>
+
+              <Button variant="outline" size="sm" onClick={scrollToAssessment}>
+                Check if agents can find you
+                <ArrowRight className="ml-2 w-3 h-3" />
+              </Button>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -472,19 +518,19 @@ export function LandingPage() {
               {
                 step: '01',
                 title: 'Get Your Free Score',
-                description: 'Enter your docs URL. We simulate real AI agents consuming your documentation and grade you across 5 dimensions.',
+                description: 'Enter your docs URL. We evaluate your documentation against 20 agent-readiness rules derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, and more).',
                 highlight: 'Free',
               },
               {
                 step: '02',
-                title: 'See Where You Stand',
-                description: 'See how you compare against industry leaders and competitors. Find out what\'s costing you agent visibility.',
+                title: 'See What\'s Failing',
+                description: 'Get a rule-by-rule breakdown: which rules pass, which fail, and exactly what agents struggle with. No vague advice — concrete findings per page.',
                 highlight: 'Instant',
               },
               {
                 step: '03',
-                title: 'Get Optimized Docs',
-                description: 'We rewrite every page of your documentation for AI agents. Download a ZIP with optimized markdown files. Deploy in minutes.',
+                title: 'Get the Fixed Docs',
+                description: 'We rewrite every page applying all 20 rules. You download a ZIP with optimized markdown files + an llms.txt agent entry point. Deploy in minutes.',
                 highlight: 'From €49',
               },
             ].map((item, index) => (
@@ -534,11 +580,11 @@ export function LandingPage() {
               <p className="text-sm text-muted-foreground mt-2">See where you stand</p>
               <ul className="mt-6 space-y-3 flex-1">
                 {[
-                  'Friendliness Score (0-100)',
+                  'Agent-Readiness Score (0-100)',
                   'Letter grade (A+ to F)',
+                  '20-rule checklist (pass / warning / fail)',
+                  'Per-rule findings with page counts',
                   'Component breakdown (5 dimensions)',
-                  'Top 3 issues identified',
-                  'Industry benchmark comparison',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
@@ -578,11 +624,11 @@ export function LandingPage() {
               <ul className="mt-6 space-y-3 flex-1">
                 {[
                   'Everything in Free Score',
-                  'Every page rewritten for AI agents',
-                  'Structured markdown files (ready to deploy)',
-                  'Optimized headings, code blocks & API tables',
-                  'Auto-generated troubleshooting sections',
-                  'Implementation & deployment guide',
+                  'All 20 rules applied to every page',
+                  'Self-contained sections for RAG retrieval',
+                  'Complete code examples (imports + expected output)',
+                  'Structured parameter tables & error docs',
+                  'llms.txt — the agent entry point for your docs',
                   'Download as ZIP in ~5 minutes',
                   '7-day money-back guarantee',
                 ].map((feature) => (
@@ -635,16 +681,16 @@ export function LandingPage() {
           <div className="space-y-6">
             {[
               {
-                q: 'What is the Friendliness Score?',
-                a: 'It\'s a composite metric (0-100) that measures how well your documentation performs when consumed by AI agents. We simulate real agent interactions and grade you on answer accuracy, context utilisation, response speed, citation quality, and code executability.',
+                q: 'What is the Agent-Readiness Score?',
+                a: 'We evaluate your documentation against 20 concrete rules derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, Grok, and others). Each rule checks something specific: are your sections self-contained? Do code examples include imports? Are parameters in tables or buried in prose? You get a score per rule, per component, and overall.',
               },
               {
-                q: 'Why should I care about AI agent visibility?',
-                a: 'AI agents are rapidly becoming the primary way developers discover and evaluate tools. Sequoia estimates that for every $1 spent on software, $6 is spent on services — and AI agents are increasingly deciding where that budget goes. If they can\'t read your docs, they can\'t recommend you.',
+                q: 'Where do these 20 rules come from?',
+                a: 'We asked 8 major AI agents — Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, and others — what actually makes documentation easy or hard for them to consume. The 20 rules are the consensus: the specific patterns that ALL agents agree matter for accurate answers, good code generation, and reliable recommendations.',
               },
               {
                 q: 'What do I get for free vs. the paid product?',
-                a: 'The free scan gives you your score, letter grade, component breakdown, top 3 issues, and industry benchmarks. The paid product (from €49) gives you the actual optimized documentation files — every page rewritten for AI agent consumption, packaged as a ZIP you can download and deploy immediately.',
+                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from €49) gives you the actual optimized documentation files — every page rewritten with all 20 rules applied, plus an llms.txt agent entry point. Download as ZIP and deploy.',
               },
               {
                 q: 'How is the price calculated?',
