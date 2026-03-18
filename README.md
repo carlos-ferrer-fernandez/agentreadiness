@@ -1,252 +1,231 @@
-# AgentReadiness Platform
+---
+title: "AgentReadiness — Make your documentation AI-agent ready"
+description: "SaaS that evaluates documentation against 20 agent-readiness rules and delivers optimized files"
+version: "0.3.0"
+last_updated: "2026-03-18"
+tags: ["agentreadiness", "documentation", "ai-agents", "llms-txt", "rag", "optimization"]
+prerequisites: ["Docker and Docker Compose", "Node.js 20+", "Python 3.11+", "OpenAI API key", "Stripe account"]
+---
 
-A platform for measuring and optimizing documentation for AI agent consumption.
+# AgentReadiness
 
-## Business Model: Free Score → Paid Report (Single Tier)
+> AI agents are how developers discover tools now. If your documentation isn't optimized for them, they can't recommend you. AgentReadiness scores your docs against 20 concrete rules and delivers the optimized files.
 
-Inspired by Sequoia's "Services as the New Software" thesis: we don't sell a tool,
-we sell the outcome. Companies don't want an assessment platform — they want to know
-they're ready for the agent economy and exactly how to get there.
+## What AgentReadiness Does
 
-### Free Tier (Lead Generation)
-- **Friendliness Score** (0-100) with letter grade (A+ to F)
-- Component breakdown across 5 dimensions
-- Top 3 issues identified (titles only, details locked)
-- Industry benchmark comparison
-- Designed to trigger FOMO: "You're invisible to AI agents" / "Competitors score 30 pts higher"
+AgentReadiness evaluates documentation against **20 agent-readiness rules** derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, KimiClaw). It then rewrites every page applying all 20 rules and delivers the optimized files as a downloadable ZIP.
 
-### Agent-Readiness Report — Dynamic Pricing (from €49)
-Single product. No tiers. No decision fatigue. Price scales with documentation size.
-- Complete diagnostic across all 5 dimensions with deep-dive analysis
-- Prioritized action plan (10+ recommendations with before/after examples)
-- Competitor benchmarking deep-dive (how your docs stack up)
-- Code examples & implementation templates
-- PDF report download (shareable with your team)
-- 30-day email support for implementation questions
+**The output is not a report.** It is the actual optimized documentation — structured Markdown files with YAML frontmatter, an `llms.txt` agent entry point, and a deployment guide. Users download the ZIP and deploy.
 
-### Pricing Logic: 3x API Cost, min €49
-Price = max(€49, round_to_nice(estimated_api_cost × 3))
+### User Flow
 
-- **Estimated API cost** = €5 base + €0.40 per page crawled
-- **Multiplier**: 3x (guaranteed healthy margins)
-- **Min price**: €49 (impulse buy for any company)
-- **Max price**: €499 (capped for very large doc sites)
+| Step | What Happens | Cost |
+|------|-------------|------|
+| 1. Enter docs URL | Free scan evaluates docs against 20 rules | Free |
+| 2. See rule-by-rule results | Score (0-100), grade (A+ to F), per-rule findings | Free |
+| 3. Purchase optimized docs | Exact price shown based on documentation size | From €49 |
+| 4. Download ZIP | Every page rewritten + `llms.txt` + deployment guide | One-time |
 
-| Doc Size | Pages | Est. API Cost | Report Price |
-|----------|-------|---------------|--------------|
-| Small    | ~10   | ~€9           | **€49**      |
-| Medium   | ~30   | ~€17          | **€59**      |
-| Large    | ~75   | ~€35          | **€109**     |
-| XL       | ~150  | ~€65          | **€199**     |
-| XXL      | ~300  | ~€125         | **€379**     |
+### Pricing
 
-The price is calculated at scan time and shown to the user before purchase.
-No pre-created Stripe Price objects needed — uses Stripe's `price_data` for dynamic amounts.
+Price is calculated based on documentation size. Starting at €49 for small docs, scaling with the number of pages that need to be rewritten. The exact price is shown after the free scan. No subscriptions, no tiers, no consulting calls.
 
-### Positioning: Sell the Outcome, Not the Tool
-- NOT "here's a tool to assess your docs" (copilot = race against the model)
-- YES "here's your complete agent-readiness playbook" (autopilot = every model improvement makes us better)
-- The report IS the work product — a vendor swap for hiring a consultant
+## The 20 Agent-Readiness Rules
 
-## User Flow
+These rules are the consensus from 8 major AI agents on what makes documentation machine-consumable:
 
-1. **Landing Page** → FOMO-driven hero ("Your competitors are already optimised for AI agents")
-2. **Free Score** → 30-60 second analysis, instant gratification
-3. **Results Page** → Score + scary benchmarks + locked insights (FREE)
-4. **Single CTA** → "Get Your Agent-Readiness Report — €{price}" (dynamic, based on pages scanned)
-5. **Stripe Checkout** → One click, dynamic price, no friction
-6. **Full Report** → Complete playbook delivered instantly
+| # | Rule | What It Checks |
+|---|------|---------------|
+| 1 | Self-Contained Sections | No "see above" — every section stands alone for RAG retrieval |
+| 2 | Action-Oriented Headings | Headings match user/agent intents, not topic labels |
+| 3 | Structured Parameter Tables | Parameters in tables (name, type, required, default), not prose |
+| 4 | Complete Code Examples | Imports, setup, call, and expected output included |
+| 5 | Explicit Over Implicit | All defaults, constraints, and requirements stated |
+| 6 | First-Class Error Docs | Error codes with causes, diagnosis steps, and fixes |
+| 7 | Consistent Terminology | One term per concept across all pages |
+| 8 | Frontmatter Metadata | YAML frontmatter on every page: title, description, version, tags |
+| 9 | Prerequisites Up Front | Requirements listed at the top as a checklist |
+| 10 | Expected Outputs | Success responses, status codes, and expected behavior shown |
+| 11 | Cross-References with Context | Descriptive link text, never "click here" |
+| 12 | Content Type Separation | Conceptual, how-to, and reference content clearly separated |
+| 13 | Version Clarity | API/SDK version stated, deprecated content marked |
+| 14 | Decision Documentation | "When to use X vs Y" sections for comparison questions |
+| 15 | Safety Boundaries | Destructive actions, rate limits, billing implications documented |
+| 16 | No Anti-Patterns | No marketing language, no "contact support" as documentation |
+| 17 | Retrieval-Chunk Optimized | Good heading density, reasonable section size for RAG |
+| 18 | Intent Before Mechanics | WHY before HOW — context before code |
+| 19 | State Transitions | Systems documented as state machines where applicable |
+| 20 | Callouts & Admonitions | Standard callout syntax for warnings, tips, important notes |
 
-## Features
+Rules are grouped into 5 scoring components:
 
-### Core Features
-
-- **Friendliness Score**: Composite score (0-100) with letter grade (A+ to F)
-- **Agent Simulation**: Test with realistic developer personas
-- **Component Breakdown**: Detailed scoring across 5 dimensions:
-  - Answer Accuracy (30%)
-  - Context Utilization (25%)
-  - Response Latency (20%)
-  - Citation Quality (15%)
-  - Code Executability (10%)
-- **Recommendations**: Prioritized by impact × effort with before/after examples
-- **Competitive Benchmarking**: Compare against industry leaders
-
-### Analysis Pipeline
-
-1. **Crawl**: Discover and extract content from documentation
-2. **Chunk & Embed**: Create searchable vector representations
-3. **Query Generation**: Generate realistic developer questions
-4. **RAG Simulation**: Simulate agent retrieval and response generation
-5. **Evaluation**: Score responses across multiple dimensions
-6. **Recommendations**: Generate actionable improvement suggestions
+| Component | Weight | Rules |
+|-----------|--------|-------|
+| Answer Accuracy | 30% | #1, #5, #7, #12, #13, #18 |
+| Context Retrieval | 25% | #2, #8, #11, #17 |
+| Citation & Trust | 20% | #9, #10, #14, #19 |
+| Code Quality | 15% | #4, #6 |
+| Doc Structure | 10% | #3, #15, #16, #20 |
 
 ## Architecture
 
 ```
 agentreadiness/
 ├── apps/
-│   ├── web/              # React + TypeScript + Vite frontend
+│   ├── web/                    # React + TypeScript + Vite frontend
 │   │   ├── src/
-│   │   │   ├── components/   # UI components
-│   │   │   ├── sections/     # Page sections
-│   │   │   │   ├── LandingPage.tsx      # Hero + assessment form
-│   │   │   │   ├── AssessmentResults.tsx # Results + paywall
-│   │   │   │   ├── Dashboard.tsx         # User dashboard
-│   │   │   │   └── ...
-│   │   │   ├── hooks/        # Custom React hooks
-│   │   │   ├── lib/          # Utilities + API client
-│   │   │   ├── store/        # Zustand state management
-│   │   │   └── types/        # TypeScript types
+│   │   │   ├── components/     # UI components (shadcn/ui)
+│   │   │   ├── sections/       # Page sections
+│   │   │   │   ├── LandingPage.tsx        # Hero + 20 rules + assessment form
+│   │   │   │   └── AssessmentResults.tsx   # Rule-by-rule results + paywall + download
+│   │   │   ├── lib/            # API client + utilities
+│   │   │   └── store/          # Zustand state management
 │   │   └── package.json
-│   └── api/              # FastAPI backend
-│       ├── routers/          # API endpoints
-│       ├── services/         # Business logic
-│       └── main.py
+│   └── api/                    # FastAPI backend
+│       ├── routers/
+│       │   ├── assessments.py  # POST /api/assessments/analyze (20-rule evaluation)
+│       │   └── optimizer.py    # POST /api/optimizer/start (rewrite + ZIP)
+│       ├── services/
+│       │   ├── evaluator/
+│       │   │   ├── rule_analyzer.py    # 20-rule evaluation engine
+│       │   │   └── scorer.py           # Component scoring + grading
+│       │   ├── optimizer/
+│       │   │   └── document_optimizer.py  # GPT-4 page rewriting + ZIP packaging
+│       │   └── crawler/
+│       │       └── crawler.py          # Documentation site crawler
+│       ├── pricing.py          # Dynamic pricing (page count → price)
+│       ├── models.py           # SQLAlchemy ORM models
+│       ├── config.py           # Pydantic settings
+│       └── main.py             # FastAPI app entry point
 ├── docker-compose.yml
+├── render.yaml                 # Render deployment config
+├── llms.txt                    # Agent entry point for this repository
 └── README.md
 ```
 
-## Quick Start
+## Prerequisites
 
-### Prerequisites
+Before starting, ensure you have:
 
-- Docker and Docker Compose
-- Node.js 20+ (for local development)
-- Python 3.11+ (for local development)
-- OpenAI API key
-- Stripe account (for payments)
+- [ ] Docker and Docker Compose installed
+- [ ] Node.js 20+ installed
+- [ ] Python 3.11+ installed
+- [ ] An OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+- [ ] A Stripe account ([create one here](https://stripe.com)) — for accepting payments
 
-### Using Docker Compose
+## Set Up Local Development
 
-1. Clone the repository:
+### Step 1: Clone the repository
+
 ```bash
-git clone https://github.com/your-org/agentreadiness.git
+git clone https://github.com/carlos-ferrer-fernandez/agentreadiness.git
 cd agentreadiness
 ```
 
-2. Set environment variables:
+### Step 2: Set environment variables
+
 ```bash
 cp .env.example .env
-# Edit .env with your values
 ```
 
-3. Start services:
-```bash
-docker-compose up -d
-```
-
-4. Access the application:
-- Frontend: http://localhost:3000
-- API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-
-### Local Development
-
-#### Frontend
-
-```bash
-cd apps/web
-npm install
-npm run dev
-```
-
-#### Backend
-
-```bash
-cd apps/api
-python -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload
-```
-
-## Environment Variables
+Then edit `.env` with your values:
 
 ```env
 # Required
 OPENAI_API_KEY=sk-your-openai-key
-STRIPE_SECRET_KEY=sk_test_...
-STRIPE_PUBLISHABLE_KEY=pk_test_...
-STRIPE_WEBHOOK_SECRET=whsec_...
-# No price IDs needed — pricing is dynamic (3x API cost, min €49)
+STRIPE_SECRET_KEY=sk_test_your-stripe-secret
+STRIPE_PUBLISHABLE_KEY=pk_test_your-stripe-publishable
+STRIPE_WEBHOOK_SECRET=whsec_your-webhook-secret
 
-# Optional
-DATABASE_URL=postgresql://postgres:postgres@db:5432/agentreadiness
-REDIS_URL=redis://redis:6379/0
-JWT_SECRET=your-secure-jwt-secret
-VITE_API_URL=http://localhost:8000
+# Optional (defaults work for local dev)
+DATABASE_URL=postgresql+asyncpg://postgres:postgres@localhost:5432/agentreadiness
+REDIS_URL=redis://localhost:6379/0
+JWT_SECRET=change-me-in-production
 ```
 
-## Friendliness Score
+> **ℹ️ Info:** No Stripe products or prices need to be created. Pricing is dynamic — the app uses Stripe's `price_data` to set the amount at checkout time based on documentation size.
 
-### Grade Scale
+### Step 3: Start with Docker Compose
 
-| Score | Grade | Interpretation |
-|-------|-------|----------------|
-| 97-100 | A+ | Exceptional: best-in-class agent experience |
-| 93-96 | A | Excellent: strong competitive position |
-| 90-92 | A- | Very good: minor optimization opportunities |
-| 87-89 | B+ | Good: some gaps relative to leaders |
-| 83-86 | B | Above average: meaningful improvement potential |
-| 80-82 | B- | Average: significant optimization needed |
-| 77-79 | C+ | Below average: competitive disadvantage risk |
-| 73-76 | C | Concerning: likely losing agent recommendations |
-| 70-72 | C- | Poor: urgent improvement required |
-| 60-69 | D | Critical: effectively invisible to agents |
-| < 60 | F | Failing: complete restructuring needed |
+```bash
+docker-compose up -d
+```
 
-### Component Weights
+Expected output:
+```
+✔ Container agentreadiness-db-1     Started
+✔ Container agentreadiness-redis-1  Started
+✔ Container agentreadiness-api-1    Started
+✔ Container agentreadiness-web-1    Started
+```
 
-- **Answer Accuracy (30%)**: Correctness of generated answers
-- **Context Utilization (25%)**: Efficiency of information retrieval
-- **Response Latency (20%)**: Speed of query processing
-- **Citation Quality (15%)**: Accuracy of source attribution
-- **Code Executability (10%)**: Validity of code examples
+### Step 4: Verify everything is running
+
+| Service | URL | Expected Response |
+|---------|-----|-------------------|
+| Frontend | http://localhost:3000 | Landing page with assessment form |
+| API | http://localhost:8000 | `{"status": "healthy"}` |
+| API Docs | http://localhost:8000/docs | Swagger UI |
+
+### Alternative: Run services individually (without Docker)
+
+**Frontend:**
+```bash
+cd apps/web
+npm install
+npm run dev
+# Expected: Vite dev server at http://localhost:5173
+```
+
+**Backend:**
+```bash
+cd apps/api
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+pip install -r requirements.txt
+uvicorn main:app --reload
+# Expected: FastAPI server at http://localhost:8000
+```
 
 ## API Endpoints
 
-### Sites
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/assessments/analyze` | Evaluate docs URL against 20 rules. Returns score, grade, rule results |
+| `POST` | `/api/optimizer/pricing` | Get price estimate based on documentation size |
+| `POST` | `/api/optimizer/start` | Start optimization job (rewrites all pages) |
+| `GET` | `/api/optimizer/status/{job_id}` | Poll optimization progress |
+| `GET` | `/api/optimizer/download/{job_id}` | Download optimized docs as ZIP |
+| `POST` | `/api/payments/create-checkout` | Create Stripe checkout session |
+| `POST` | `/api/payments/webhook` | Stripe webhook handler |
+| `GET` | `/api/payments/verify` | Verify payment status |
 
-- `POST /api/sites` - Register a new documentation site
-- `GET /api/sites` - List all sites
-- `GET /api/sites/{id}` - Get site details
-- `POST /api/sites/{id}/analyze` - Trigger analysis
+## Grade Scale
 
-### Analyses
+| Score | Grade | What It Means |
+|-------|-------|--------------|
+| 97-100 | A+ | Exceptional — best-in-class agent experience |
+| 93-96 | A | Excellent — agents recommend you confidently |
+| 90-92 | A- | Very good — minor optimization opportunities |
+| 87-89 | B+ | Good — some gaps in agent-readiness |
+| 83-86 | B | Above average — meaningful improvement potential |
+| 80-82 | B- | Average — significant optimization needed |
+| 77-79 | C+ | Below average — agents struggle with your docs |
+| 73-76 | C | Concerning — likely losing agent recommendations |
+| 70-72 | C- | Poor — urgent improvement required |
+| 60-69 | D | Critical — effectively invisible to agents |
+| < 60 | F | Failing — complete restructuring needed |
 
-- `GET /api/analyses` - List analyses
-- `GET /api/analyses/{id}` - Get analysis details
-- `GET /api/analyses/{id}/score` - Get friendliness score
+## Deploy to Production
 
-### Payments (Stripe)
+AgentReadiness deploys to Render via GitHub push. See [DEPLOYMENT.md](DEPLOYMENT.md) for step-by-step instructions.
 
-- `POST /api/payments/create-checkout` - Create Stripe checkout session
-- `POST /api/payments/webhook` - Stripe webhook handler
-- `GET /api/payments/verify` - Verify payment status
-
-## Deployment
-
-See [DEPLOYMENT.md](DEPLOYMENT.md) for detailed deployment instructions.
-
-### Quick Deploy to Railway
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/template/your-template)
-
-### Quick Deploy to Render
-
-[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy)
+**Live URL:** https://agentreadiness-web.onrender.com/
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for development workflow, code style, and testing guidelines.
 
 ## License
 
-MIT License - see [LICENSE](LICENSE) for details.
-
-## Support
-
-- Documentation: https://docs.agentreadiness.dev
-- Discord: https://discord.gg/agentreadiness
-- Email: support@agentreadiness.dev
+MIT License — see [LICENSE](LICENSE) for details.

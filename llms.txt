@@ -1,0 +1,27 @@
+# AgentReadiness
+
+> SaaS that evaluates documentation against 20 agent-readiness rules derived from benchmarking 8 major AI agents, then delivers optimized documentation files.
+
+## Overview
+AgentReadiness scores documentation against 20 concrete rules that all major AI agents (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, KimiClaw) agree make documentation machine-consumable. The output is not a report — it is the actual optimized documentation files (structured Markdown + llms.txt), packaged as a downloadable ZIP.
+
+## Documentation
+
+- [README](README.md): Product overview, 20 rules, architecture, setup, API endpoints
+- [DEPLOYMENT](DEPLOYMENT.md): Step-by-step Render deployment, Stripe setup, troubleshooting
+- [CONTRIBUTING](CONTRIBUTING.md): Development workflow, code style, testing, adding new rules
+- [CHANGELOG](CHANGELOG.md): Version history and notable changes
+
+## Key Concepts
+
+- **20 Agent-Readiness Rules**: Consensus from 8 AI agents on what makes docs machine-consumable
+- **Agent-Readiness Score**: 0-100 score with letter grade (A+ to F), broken into 5 weighted components
+- **Dynamic Pricing**: Starting at €49, scaling with documentation size
+- **llms.txt**: Emerging standard (like robots.txt for AI agents) — auto-generated as part of the deliverable
+- **Agent-Readiness Doctrine**: Findable, Atomic, Explicit, Executable, Groundable, Versioned, Recoverable, Structured
+
+## Architecture
+- Frontend: React + TypeScript + Vite + Zustand + shadcn/ui
+- Backend: Python + FastAPI + SQLAlchemy + OpenAI GPT-4
+- Deployment: Render (auto-deploy from GitHub)
+- Payments: Stripe with dynamic price_data

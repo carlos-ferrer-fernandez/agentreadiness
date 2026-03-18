@@ -1,34 +1,50 @@
-# Contributing to AgentReadiness
+---
+title: "Contribute to AgentReadiness"
+description: "Development setup, code style, testing, and PR guidelines for contributing to AgentReadiness"
+version: "0.3.0"
+last_updated: "2026-03-18"
+tags: ["contributing", "development", "testing", "code-style"]
+prerequisites: ["Node.js 20+", "Python 3.11+", "Docker and Docker Compose", "Git"]
+---
 
-Thank you for your interest in contributing to AgentReadiness! This guide will help you get started.
+# Contribute to AgentReadiness
 
-## Development Setup
+> To contribute, you need a working local development environment and familiarity with React/TypeScript (frontend) or Python/FastAPI (backend).
 
-### Prerequisites
+## Prerequisites
 
-- Node.js 20+
-- Python 3.11+
-- Docker and Docker Compose
-- Git
+Before starting, ensure you have:
 
-### Quick Start
+- [ ] Node.js 20+ installed
+- [ ] Python 3.11+ installed
+- [ ] Docker and Docker Compose installed
+- [ ] Git installed
+- [ ] The repository cloned (see [README.md](README.md) for setup)
+
+## Set Up Your Development Environment
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/agentreadiness.git
+git clone https://github.com/carlos-ferrer-fernandez/agentreadiness.git
 cd agentreadiness
 
-# Install dependencies
-make install
-
-# Start development servers
-make dev
+# Start all services (database, Redis, API, frontend)
+docker-compose up -d
 ```
 
-This will start:
-- Frontend at http://localhost:3000
-- Backend at http://localhost:8000
-- API docs at http://localhost:8000/docs
+Expected result:
+```
+✔ Container agentreadiness-db-1     Started
+✔ Container agentreadiness-redis-1  Started
+✔ Container agentreadiness-api-1    Started
+✔ Container agentreadiness-web-1    Started
+```
+
+| Service | URL |
+|---------|-----|
+| Frontend | http://localhost:3000 |
+| Backend API | http://localhost:8000 |
+| API Docs (Swagger) | http://localhost:8000/docs |
 
 ## Project Structure
 
@@ -36,256 +52,190 @@ This will start:
 agentreadiness/
 ├── apps/
 │   ├── web/              # React + TypeScript + Vite frontend
+│   │   ├── src/
+│   │   │   ├── components/   # Reusable UI components (shadcn/ui based)
+│   │   │   ├── sections/     # Full page sections (LandingPage, AssessmentResults)
+│   │   │   ├── lib/          # API client (axios), utilities
+│   │   │   └── store/        # Zustand state management
+│   │   └── package.json
 │   └── api/              # FastAPI backend
-├── packages/
-│   └── shared/           # Shared types and utilities
-├── infra/
-│   └── docker/           # Docker configurations
-└── docs/                 # Documentation
+│       ├── routers/          # API route handlers
+│       ├── services/         # Business logic (evaluator, optimizer, crawler)
+│       ├── models.py         # SQLAlchemy ORM models
+│       ├── config.py         # Pydantic settings (env vars)
+│       └── main.py           # FastAPI app entry point
+├── docker-compose.yml
+└── .github/workflows/    # CI pipeline (lint, type-check, test, build)
 ```
 
 ## Development Workflow
 
-### 1. Create a Branch
+### Step 1: Create a branch
 
 ```bash
 git checkout -b feature/your-feature-name
 ```
 
-### 2. Make Changes
+### Step 2: Make changes
 
-- Follow the existing code style
-- Write tests for new features
-- Update documentation
+Follow the code style guidelines below. Key files you'll likely work with:
 
-### 3. Test
+| Area | Key Files |
+|------|-----------|
+| Landing page UI | `apps/web/src/sections/LandingPage.tsx` |
+| Assessment results | `apps/web/src/sections/AssessmentResults.tsx` |
+| 20-rule evaluation engine | `apps/api/services/evaluator/rule_analyzer.py` |
+| Documentation optimizer | `apps/api/services/optimizer/document_optimizer.py` |
+| API endpoints | `apps/api/routers/assessments.py`, `apps/api/routers/optimizer.py` |
+| Pricing logic | `apps/api/pricing.py` |
+| State management | `apps/web/src/store/assessment.ts` |
+
+### Step 3: Run tests and checks
 
 ```bash
-# Frontend tests
-cd apps/web && npm test
-
-# Backend tests
-cd apps/api && pytest
-
-# Type checking
+# Frontend: TypeScript type check
 cd apps/web && npx tsc --noEmit
+
+# Backend: Lint with flake8
+cd apps/api && flake8 .
+
+# Backend: Type check with mypy
 cd apps/api && mypy .
+
+# Backend: Run tests
+cd apps/api && pytest
 ```
 
-### 4. Commit
+> **⚠️ Warning:** CI runs all of these checks on every push. If any check fails, the build fails. Always run locally before pushing.
 
-We use conventional commits:
+### Step 4: Commit using conventional commits
 
 ```bash
-git commit -m "feat: add new feature"
-git commit -m "fix: resolve bug"
-git commit -m "docs: update readme"
-git commit -m "refactor: improve code structure"
+git commit -m "feat: add new rule to evaluation engine"
+git commit -m "fix: resolve pricing calculation edge case"
+git commit -m "docs: update README with new API endpoints"
+git commit -m "refactor: simplify optimizer prompt construction"
 ```
 
-### 5. Push and Create PR
+### Step 5: Push and create a pull request
 
 ```bash
 git push origin feature/your-feature-name
 ```
 
-Then create a Pull Request on GitHub.
+Then create a Pull Request on GitHub targeting the `main` branch.
 
 ## Code Style
 
-### Frontend (TypeScript/React)
+### Frontend (TypeScript / React)
 
-- Use functional components with hooks
-- Follow the existing component patterns
-- Use Tailwind CSS for styling
-- Use `cn()` utility for conditional classes
+| Convention | Example |
+|-----------|---------|
+| Functional components with hooks | `export function ScoreCard({ score }: Props) {}` |
+| Tailwind CSS for styling | `className="text-sm text-muted-foreground"` |
+| `cn()` utility for conditional classes | `cn("text-sm", isActive && "font-bold")` |
+| Zustand for state management | `useAssessmentStore()` |
+| Axios for API calls | `assessmentsApi.analyze({ url })` |
 
-Example:
 ```tsx
 import { cn } from '@/lib/utils'
 
-interface ButtonProps {
-  variant?: 'primary' | 'secondary'
-  children: React.ReactNode
+interface ScoreDisplayProps {
+  score: number
+  grade: string
 }
 
-export function Button({ variant = 'primary', children }: ButtonProps) {
+export function ScoreDisplay({ score, grade }: ScoreDisplayProps) {
   return (
-    <button className={cn(
-      'px-4 py-2 rounded',
-      variant === 'primary' && 'bg-blue-500',
-      variant === 'secondary' && 'bg-gray-500'
+    <div className={cn(
+      "text-3xl font-bold",
+      score >= 80 ? "text-green-600" :
+      score >= 60 ? "text-yellow-600" : "text-red-600"
     )}>
-      {children}
-    </button>
+      {score} ({grade})
+    </div>
   )
 }
 ```
 
-### Backend (Python)
+### Backend (Python / FastAPI)
 
-- Follow PEP 8
-- Use type hints
-- Write docstrings for functions
-- Use async/await for I/O operations
+| Convention | Example |
+|-----------|---------|
+| PEP 8 style | `def calculate_score(pages: list) -> int:` |
+| Type hints on all functions | `async def analyze(url: str) -> RuleAnalysisResult:` |
+| Docstrings on public functions | `"""Evaluate docs against 20 rules."""` |
+| Async/await for I/O | `await client.get(url)` |
+| Pydantic for request/response models | `class AnalyzeRequest(BaseModel):` |
 
-Example:
 ```python
-from typing import List, Optional
+from typing import List
+from dataclasses import dataclass
 
-async def get_sites(
-    organization_id: str,
-    status: Optional[str] = None
-) -> List[Site]:
-    """Get sites for an organization.
-    
+@dataclass
+class RuleResult:
+    """Result of evaluating one rule across all pages."""
+    rule_id: int
+    name: str
+    score: int      # 0-100
+    status: str     # 'pass', 'warning', 'fail'
+    finding: str    # Human-readable explanation
+
+async def evaluate_rule(pages: List[Page]) -> RuleResult:
+    """Evaluate a single agent-readiness rule across all crawled pages.
+
     Args:
-        organization_id: The organization ID
-        status: Optional status filter
-        
+        pages: List of crawled documentation pages
+
     Returns:
-        List of sites
+        RuleResult with score, status, and finding
     """
     # Implementation
 ```
 
-## Testing
+## Add a New Agent-Readiness Rule
 
-### Frontend Tests
+To add rule #21 (or modify an existing rule):
 
-```bash
-cd apps/web
-npm test
-```
+1. **Add the evaluation logic** in `apps/api/services/evaluator/rule_analyzer.py`:
+   - Create method `_rule_21_your_rule(self, pages)` returning a `RuleResult`
+   - Add it to the `analyze()` method's rule list
 
-Write tests using Vitest and React Testing Library:
+2. **Add the optimization prompt** in `apps/api/services/optimizer/document_optimizer.py`:
+   - Add `### RULE 21: YOUR RULE NAME` to the `OPTIMIZATION_RULES` constant
 
-```tsx
-import { render, screen } from '@testing-library/react'
-import { Button } from './Button'
+3. **Map to a component** in `rule_analyzer.py`:
+   - Add rule ID 21 to the appropriate component in `RULE_COMPONENTS`
 
-test('renders button', () => {
-  render(<Button>Click me</Button>)
-  expect(screen.getByText('Click me')).toBeInTheDocument()
-})
-```
+4. **Update the frontend rule list** in `apps/web/src/sections/LandingPage.tsx`:
+   - Add entry to the `agentReadinessRules` array
 
-### Backend Tests
-
-```bash
-cd apps/api
-pytest
-```
-
-Write tests using pytest:
-
-```python
-import pytest
-from services.evaluator.scorer import FriendlinessScorer
-
-def test_score_calculation():
-    scorer = FriendlinessScorer()
-    results = [
-        QueryResult(query="test", passed=True, confidence=0.9, ...)
-    ]
-    score = scorer.calculate_score(results)
-    assert score.overall > 0
-```
+5. **Run tests** to verify nothing breaks
 
 ## Database Migrations
 
 ```bash
-# Create migration
 cd apps/api
-alembic revision --autogenerate -m "description"
 
-# Apply migration
+# Create a new migration
+alembic revision --autogenerate -m "add column to assessments"
+
+# Apply all pending migrations
 alembic upgrade head
 
-# Rollback
+# Roll back one migration
 alembic downgrade -1
 ```
 
-## Environment Variables
-
-Create a `.env.local` file for local development:
-
-```env
-# Frontend
-VITE_API_URL=http://localhost:8000
-
-# Backend
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/agentreadiness
-REDIS_URL=redis://localhost:6379/0
-OPENAI_API_KEY=sk-...
-```
-
-## Debugging
-
-### Frontend
-
-- Use React DevTools browser extension
-- Check console for errors
-- Use `debugger` statement or VS Code debugger
-
-### Backend
-
-```python
-# Add breakpoint
-import pdb; pdb.set_trace()
-
-# Or use VS Code debugger
-```
-
-## Common Tasks
-
-### Add a New API Endpoint
-
-1. Create route in `apps/api/routers/`
-2. Add Pydantic models for request/response
-3. Implement business logic
-4. Add tests
-5. Update API docs (auto-generated)
-
-### Add a New UI Component
-
-1. Create component in `apps/web/src/components/ui/`
-2. Follow existing patterns
-3. Add to exports if needed
-4. Add Storybook story (optional)
-
-### Add a Database Model
-
-1. Define model in `apps/api/models/`
-2. Create migration
-3. Add CRUD operations
-4. Update API endpoints
+> **⚠️ Warning:** Always review auto-generated migrations before applying. Alembic can miss some changes or generate destructive operations.
 
 ## Pull Request Guidelines
 
-- Keep PRs focused and small
+- Keep PRs focused — one feature or fix per PR
 - Add screenshots for UI changes
-- Link related issues
-- Ensure CI passes
-- Request review from at least one team member
-
-## Release Process
-
-1. Update version in `package.json` and `pyproject.toml`
-2. Update `CHANGELOG.md`
-3. Create a git tag
-4. Push to trigger deployment
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
-
-## Getting Help
-
-- Check the [Documentation](https://docs.agentreadiness.dev)
-- Ask in [Discord](https://discord.gg/agentreadiness)
-- Email: dev@agentreadiness.dev
+- Ensure CI passes (lint + type-check + tests + build)
+- Link related GitHub issues
+- Describe what changed and why in the PR description
 
 ## License
 

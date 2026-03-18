@@ -1,326 +1,155 @@
-# Deploy AgentReadiness Online - Easy Guide
-
-This guide will help you deploy the AgentReadiness platform online so customers can access it from anywhere.
-
-## 📁 First: Get Your Files
-
-Before you start, you need the code files. Here's how to get them:
-
-### Option 1: Download from the KIMI_REF tag below
-At the bottom of this conversation, you'll see a file reference. Click on it to download all the files as a ZIP.
-
-### Option 2: Ask me to send you the files
-Just say "send me the files" and I'll provide them in a way you can download.
-
-### Option 3: Copy files manually
-If you have access to the files, make sure you have the entire `agentreadiness` folder.
-
+---
+title: "Deploy AgentReadiness to Production"
+description: "Step-by-step guide to deploy AgentReadiness on Render with GitHub auto-deploy"
+version: "0.3.0"
+last_updated: "2026-03-18"
+tags: ["deployment", "render", "production", "stripe", "openai"]
+prerequisites: ["GitHub account with the repository", "Render account", "OpenAI API key", "Stripe account with API keys"]
 ---
 
-Once you have the files, follow the steps below!
+# Deploy AgentReadiness to Production
 
-## Option 1: Railway (Easiest - Recommended) ⭐
+> AgentReadiness deploys to Render via GitHub push. Push to `main` → Render auto-deploys both frontend and backend. No manual steps after initial setup.
 
-Railway is the easiest way to deploy. It's like a "one-click" deploy.
+**Live URL:** https://agentreadiness-web.onrender.com/
 
-### Step 1: Create Accounts
+## Prerequisites
 
-1. **GitHub Account** (if you don't have one)
-   - Go to https://github.com/signup
-   - Create a free account
+Before deploying, ensure you have:
 
-2. **Railway Account**
-   - Go to https://railway.app
-   - Click "Login" and sign in with your GitHub account
+- [ ] The code pushed to GitHub at `carlos-ferrer-fernandez/agentreadiness`
+- [ ] A Render account ([create one here](https://render.com)) — sign up with GitHub
+- [ ] An OpenAI API key ([get one here](https://platform.openai.com/api-keys))
+- [ ] A Stripe account ([create one here](https://stripe.com)) with API keys
 
-### Step 2: Upload Your Code to GitHub (Drag & Drop!)
+## Step 1: Set Up Render Services
 
-**Option A: Using the files I provided**
+### Create the API service
 
-1. Create a new repository on GitHub:
-   - Go to https://github.com/new
-   - Name it "agentreadiness"
-   - Click "Create repository"
+1. Go to https://dashboard.render.com/new/web-service
+2. Connect the `carlos-ferrer-fernandez/agentreadiness` GitHub repository
+3. Configure the service:
 
-2. On the repository page, you'll see "...or drag and drop files here"
+| Setting | Value |
+|---------|-------|
+| Name | `agentreadiness-api` |
+| Root Directory | `apps/api` |
+| Runtime | Python 3 |
+| Build Command | `pip install -r requirements.txt` |
+| Start Command | `uvicorn main:app --host 0.0.0.0 --port $PORT` |
 
-3. **Download the files from me** - I'll give you a ZIP file with all the code
+### Create the frontend service
 
-4. **Unzip** the file on your computer
+1. Go to https://dashboard.render.com/new/static-site
+2. Connect the same repository
+3. Configure the service:
 
-5. **Open the folder** and select ALL files inside
+| Setting | Value |
+|---------|-------|
+| Name | `agentreadiness-web` |
+| Root Directory | `apps/web` |
+| Build Command | `npm install && npm run build` |
+| Publish Directory | `dist` |
 
-6. **Drag and drop** them into the GitHub page
+## Step 2: Set Environment Variables
 
-7. Type "Initial commit" in the message box
+Add these environment variables to the **API service** on Render:
 
-8. Click **"Commit changes"**
+| Variable | Value | Where to Get It |
+|----------|-------|-----------------|
+| `OPENAI_API_KEY` | `sk-...` | [OpenAI API Keys](https://platform.openai.com/api-keys) |
+| `STRIPE_SECRET_KEY` | `sk_test_...` | [Stripe Dashboard → API Keys](https://dashboard.stripe.com/test/apikeys) |
+| `STRIPE_PUBLISHABLE_KEY` | `pk_test_...` | [Stripe Dashboard → API Keys](https://dashboard.stripe.com/test/apikeys) |
+| `STRIPE_WEBHOOK_SECRET` | `whsec_...` | [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/test/webhooks) |
+| `JWT_SECRET` | Any random 32+ character string | Generate with `openssl rand -hex 32` |
+| `DATABASE_URL` | Render PostgreSQL URL | Create a Render PostgreSQL instance |
+| `ALLOWED_ORIGINS` | `https://agentreadiness-web.onrender.com` | Your frontend URL |
 
-✅ Done! Your code is now on GitHub.
+Add this environment variable to the **frontend service** on Render:
 
-**Option B: If you want to use command line (advanced)**
+| Variable | Value |
+|----------|-------|
+| `VITE_API_URL` | `https://agentreadiness-api.onrender.com` |
 
-If you're comfortable with the terminal, you can also use git commands. See `DEPLOYMENT-ADVANCED.md` for that method.
+> **ℹ️ Info:** No Stripe products or prices need to be created. Pricing is dynamic — the app calculates the price based on documentation size and uses Stripe's `price_data` at checkout time.
 
-### Step 3: Deploy on Railway
+## Step 3: Deploy
 
-1. Go to https://railway.app/new
+Push to the `main` branch:
 
-2. Click "Deploy from GitHub repo"
-
-3. Select your "agentreadiness" repository
-
-4. Railway will automatically detect your services and deploy them
-
-5. **Add Environment Variables**:
-   - Click on your project
-   - Go to "Variables" tab
-   - Add these variables:
-   
-   | Variable | Value | Where to Get It |
-   |----------|-------|-----------------|
-   | `OPENAI_API_KEY` | sk-... | https://platform.openai.com/api-keys |
-   | `STRIPE_SECRET_KEY` | sk_test_... | https://dashboard.stripe.com/test/apikeys |
-   | `STRIPE_PUBLISHABLE_KEY` | pk_test_... | https://dashboard.stripe.com/test/apikeys |
-   | `JWT_SECRET` | any-random-text | Just type 32 random characters |
-
-6. **Get Your Website URL**:
-   - Railway will give you a URL like `https://agentreadiness-production.up.railway.app`
-   - This is your live website! 🎉
-
----
-
-## Option 2: Render (Also Easy)
-
-Render is another simple option with a free tier.
-
-### Step 1: Create Render Account
-
-1. Go to https://render.com
-2. Click "Get Started for Free"
-3. Sign up with GitHub
-
-### Step 2: Create render.yaml
-
-Create a file named `render.yaml` in your project root:
-
-```yaml
-services:
-  - type: web
-    name: agentreadiness-web
-    runtime: node
-    buildCommand: cd apps/web && npm install && npm run build
-    startCommand: cd apps/web && npm run preview
-    envVars:
-      - key: VITE_API_URL
-        value: https://agentreadiness-api.onrender.com
-
-  - type: web
-    name: agentreadiness-api
-    runtime: python
-    buildCommand: cd apps/api && pip install -r requirements.txt
-    startCommand: cd apps/api && uvicorn main:app --host 0.0.0.0 --port $PORT
-    envVars:
-      - key: OPENAI_API_KEY
-        sync: false
-      - key: STRIPE_SECRET_KEY
-        sync: false
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false
-      - key: JWT_SECRET
-        sync: false
+```bash
+git push origin main
 ```
 
-### Step 3: Deploy
+Expected result: Render automatically builds and deploys both services within 3-5 minutes.
 
-1. Upload your code to GitHub (same drag & drop method as Railway Step 2)
+## Step 4: Verify the Deployment
 
-2. In Render dashboard:
-   - Click "New +"
-   - Select "Blueprint"
-   - Connect your GitHub repo
+| Check | URL | Expected Result |
+|-------|-----|-----------------|
+| Frontend loads | https://agentreadiness-web.onrender.com | Landing page with assessment form and 20-rule showcase |
+| API health check | https://agentreadiness-api.onrender.com/health | `{"status": "healthy"}` |
+| Assessment works | Enter any docs URL (e.g., `docs.stripe.com`) | Score, grade, and 20-rule breakdown returned in ~60 seconds |
+| Stripe checkout | Click "Get Optimized Docs" after assessment | Redirects to Stripe checkout page |
 
-3. Render will automatically deploy both frontend and backend
+## Set Up Stripe Webhooks
 
----
+To receive payment confirmations, configure a Stripe webhook:
 
-## Setting Up Stripe Payments (Required for Paid Plans)
+1. Go to [Stripe Dashboard → Webhooks](https://dashboard.stripe.com/test/webhooks)
+2. Click "Add endpoint"
+3. Set the endpoint URL to: `https://agentreadiness-api.onrender.com/api/payments/webhook`
+4. Select events: `checkout.session.completed`
+5. Copy the webhook signing secret (`whsec_...`)
+6. Add it as `STRIPE_WEBHOOK_SECRET` in Render environment variables
 
-To accept payments, you need a Stripe account:
+## Switch to Live Payments
 
-### Step 1: Create Stripe Account
+When ready to accept real payments:
 
-1. Go to https://stripe.com
-2. Click "Start now" and create an account
-3. Complete the onboarding (takes 5 minutes)
+1. Toggle Stripe Dashboard from "Test mode" to "Live mode"
+2. Get live API keys (they start with `sk_live_` and `pk_live_`)
+3. Update the `STRIPE_SECRET_KEY` and `STRIPE_PUBLISHABLE_KEY` environment variables on Render
+4. Create a new webhook endpoint for the live environment
+5. Update `STRIPE_WEBHOOK_SECRET` with the live webhook secret
+6. Redeploy
 
-### Step 2: Get API Keys
-
-1. Go to https://dashboard.stripe.com/test/apikeys
-2. Copy the "Secret key" (starts with `sk_test_`)
-3. Copy the "Publishable key" (starts with `pk_test_`)
-
-### Step 3: No Product Creation Needed!
-
-Pricing is **dynamic** — it scales with the documentation size (3x our AI analysis cost, min €49).
-The app uses Stripe's `price_data` to create the correct amount at checkout time automatically.
-
-You do NOT need to create any Products or Prices in Stripe. Just the API keys are enough.
-
-### Step 4: Add to Environment Variables
-
-Add these to your Railway/Render environment variables:
-
-```
-STRIPE_SECRET_KEY=sk_test_your_stripe_secret_key
-STRIPE_PUBLISHABLE_KEY=pk_test_your_stripe_publishable_key
-STRIPE_WEBHOOK_SECRET=whsec_your_webhook_secret
-```
-
----
-
-## Setting Up OpenAI (Required for Analysis)
-
-The AI analysis needs an OpenAI API key:
-
-1. Go to https://platform.openai.com/signup
-2. Create an account
-3. Go to https://platform.openai.com/api-keys
-4. Click "Create new secret key"
-5. Copy the key (starts with `sk-`)
-6. Add to your environment variables as `OPENAI_API_KEY`
-
-**Note**: OpenAI charges for API usage. New accounts get $5 free credit. After that, expect to pay ~$1-5 per analysis depending on documentation size.
-
----
-
-## Custom Domain (Optional)
-
-Want your own domain like `agentreadiness.yourcompany.com`?
-
-### Using Railway:
-
-1. Buy a domain from https://namecheap.com or https://godaddy.com
-2. In Railway, go to your service settings
-3. Click "Custom Domain"
-4. Enter your domain
-5. Railway will give you DNS records to add
-6. Go to your domain provider and add those DNS records
-7. Wait 10-30 minutes for it to work
-
-### Using Render:
-
-Same process as Railway - go to service settings and add custom domain.
-
----
-
-## Checking If Everything Works
-
-After deployment, test these URLs:
-
-1. **Homepage**: `https://your-url.com`
-   - Should show the landing page with the assessment form
-
-2. **API Health**: `https://your-url.com/api/health`
-   - Should show `{"status": "healthy"}`
-
-3. **Run an Assessment**:
-   - Enter any docs URL (like `docs.stripe.com`)
-   - Should complete in 30-60 seconds
-   - Should show score and results
-
----
+> **⚠️ Warning:** Test a real payment with a small amount before announcing to customers. Verify that the payment appears in your Stripe Dashboard and that the optimized docs are generated and downloadable.
 
 ## Troubleshooting
 
-### "Build Failed" Error
+### Build fails on Render
 
-**Problem**: The deployment didn't work.
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| `tsc` type errors | TypeScript compilation failure | Check CI locally with `cd apps/web && npx tsc --noEmit` |
+| `ModuleNotFoundError` | Missing Python dependency | Add the package to `apps/api/requirements.txt` |
+| `npm ERR!` | Node dependency issue | Delete `package-lock.json` and rebuild |
 
-**Solution**:
-1. Check the build logs in Railway/Render
-2. Make sure all environment variables are set
-3. Try redeploying
+### Assessment never finishes
 
-### "Payment Not Working"
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| Spinner runs forever | `OPENAI_API_KEY` not set or invalid | Check Render env vars |
+| 500 error on analyze | OpenAI account has no credit | Add credit at https://platform.openai.com/account/billing |
+| Timeout | Documentation site blocks crawling | Check if the target URL returns content |
 
-**Problem**: Customers can't pay.
+### Payment flow broken
 
-**Solution**:
-1. Check that all Stripe environment variables are correct
-2. Make sure you're using TEST keys (not live keys yet)
-3. In test mode, use card number `4242 4242 4242 4242` with any future expiry date
+| Symptom | Likely Cause | Fix |
+|---------|-------------|-----|
+| Checkout page doesn't load | `STRIPE_SECRET_KEY` not set or invalid | Check Render env vars |
+| Payment succeeds but no download | `STRIPE_WEBHOOK_SECRET` missing or wrong | Re-create webhook in Stripe Dashboard |
+| "Payment failed" error | Using test card in live mode | Use a real card in live mode, or switch to test mode |
 
-### "Assessment Stuck"
-
-**Problem**: Assessment never finishes.
-
-**Solution**:
-1. Check that `OPENAI_API_KEY` is set correctly
-2. Check that you have credit in your OpenAI account
-3. Check the API logs for errors
-
----
-
-## Going Live (Accepting Real Payments)
-
-When you're ready to accept real customer payments:
-
-### Step 1: Switch to Live Stripe Keys
-
-1. In Stripe Dashboard, toggle from "Test mode" to "Live mode"
-2. Get your live API keys
-3. Update environment variables with live keys
-4. Redeploy
-
-### Step 2: Pricing is Automatic
-
-Pricing is dynamic and calculated automatically (3x API cost, min €49).
-No Stripe products to update — the amount is set at checkout time.
-
-### Step 3: Test Real Payment
-
-1. Use a real credit card
-2. Make a small test purchase
-3. Check that you receive the money in Stripe
-
----
-
-## Monthly Costs Estimate
+## Monthly Cost Estimate
 
 | Service | Cost | Notes |
 |---------|------|-------|
-| Railway/Render | $0-20/month | Free tier available |
-| OpenAI API | $1-50/month | Depends on usage |
-| Stripe | 2.9% + 30¢ per transaction | Only when you make sales |
-| Domain | $10-15/year | Optional |
+| Render (API + Frontend) | $0–25/month | Free tier available for low traffic |
+| Render PostgreSQL | $0–7/month | Free tier: 1GB, 90-day retention |
+| OpenAI API | $1–50/month | Depends on number of assessments and optimizations |
+| Stripe | 2.9% + €0.30 per transaction | Only charged when customers pay |
+| Domain (optional) | $10–15/year | Custom domain like agentreadiness.dev |
 
-**Total**: ~$20-70/month for a small startup
-
----
-
-## Need Help?
-
-- **Railway Docs**: https://docs.railway.app
-- **Render Docs**: https://render.com/docs
-- **Stripe Docs**: https://stripe.com/docs
-- **Email us**: support@agentreadiness.dev
-
----
-
-## Quick Checklist
-
-Before going live, make sure:
-
-- [ ] Downloaded the files (from KIMI_REF below or ask me)
-- [ ] Uploaded files to GitHub (drag & drop)
-- [ ] Deployed on Railway or Render
-- [ ] OPENAI_API_KEY is set
-- [ ] Stripe account created
-- [ ] Stripe products created
-- [ ] All Stripe environment variables set
-- [ ] Tested the assessment flow
-- [ ] Tested the payment flow
-- [ ] Custom domain configured (optional)
-
-**You're ready to launch! 🚀**
+**Estimated total for a side project:** €20–50/month at low volume.
