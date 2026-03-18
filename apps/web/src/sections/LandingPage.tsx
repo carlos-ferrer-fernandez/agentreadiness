@@ -92,9 +92,31 @@ const agentReadinessRules = [
 
 const assessmentStages = [
   { name: 'Discovering pages', icon: Search },
-  { name: 'Analyzing structure', icon: FileText },
-  { name: 'Simulating AI agents', icon: Bot },
-  { name: 'Calculating score', icon: BarChart3 },
+  { name: 'Crawling documentation', icon: FileText },
+  { name: 'Checking self-contained sections', icon: BookOpen },
+  { name: 'Evaluating code examples', icon: Code2 },
+  { name: 'Analyzing heading structure', icon: MessageSquare },
+  { name: 'Checking parameter tables', icon: Table2 },
+  { name: 'Scanning for anti-patterns', icon: Trash2 },
+  { name: 'Testing retrieval chunks', icon: SplitSquareHorizontal },
+  { name: 'Verifying error documentation', icon: AlertOctagon },
+  { name: 'Running 20-rule evaluation', icon: ListChecks },
+  { name: 'Calculating your score', icon: BarChart3 },
+]
+
+const liveStatusMessages = [
+  'Simulating how Claude reads your docs...',
+  'Checking if GPT can find your API reference...',
+  'Testing RAG retrieval on your sections...',
+  'Verifying code examples are copy-paste ready...',
+  'Scanning for vague cross-references...',
+  'Checking terminology consistency...',
+  'Evaluating frontmatter metadata...',
+  'Testing heading relevance for agent queries...',
+  'Looking for missing expected outputs...',
+  'Checking safety boundary documentation...',
+  'Analyzing content type separation...',
+  'Almost there — finalizing scores...',
 ]
 
 export function LandingPage() {
@@ -102,6 +124,7 @@ export function LandingPage() {
   const [url, setUrl] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [liveMessage, setLiveMessage] = useState(0)
 
   const {
     isAssessing,
@@ -129,17 +152,24 @@ export function LandingPage() {
     }
 
     startAssessment()
+    setLiveMessage(0)
 
-    // Animate stages while the API call runs
+    // Animate stages while the API call runs — advance every 4s through 11 stages
     const stageInterval = setInterval(() => {
       useAssessmentStore.setState((state) => ({
         assessmentStage: Math.min(state.assessmentStage + 1, assessmentStages.length - 1),
       }))
+    }, 4000)
+
+    // Rotate the live status message every 3s to show activity
+    const messageInterval = setInterval(() => {
+      setLiveMessage((prev) => (prev + 1) % liveStatusMessages.length)
     }, 3000)
 
     try {
       const response = await assessmentsApi.analyze({ url: validatedUrl })
       clearInterval(stageInterval)
+      clearInterval(messageInterval)
 
       // Map API response to assessment store format
       const data = response.data
@@ -184,11 +214,12 @@ export function LandingPage() {
       navigate('/assessment')
     } catch (err: any) {
       clearInterval(stageInterval)
+      clearInterval(messageInterval)
       const message = err.response?.data?.detail || 'Analysis failed. Please check the URL and try again.'
       setAssessmentError(message)
       setError(message)
     }
-  }, [url, isAssessing, startAssessment, setAssessmentResult, setAssessmentError, navigate])
+  }, [url, isAssessing, startAssessment, setAssessmentResult, setAssessmentError, navigate, setLiveMessage])
 
   const scrollToAssessment = () => {
     document.getElementById('assessment')?.scrollIntoView({ behavior: 'smooth' })
@@ -401,9 +432,18 @@ export function LandingPage() {
                           value={((assessmentStage + 1) / assessmentStages.length) * 100}
                           className="h-2"
                         />
-                        <p className="text-xs text-muted-foreground text-center mt-2">
-                          Simulating how AI agents see your documentation...
-                        </p>
+                        <AnimatePresence mode="wait">
+                          <motion.p
+                            key={liveMessage}
+                            initial={{ opacity: 0, y: 6 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: -6 }}
+                            transition={{ duration: 0.3 }}
+                            className="text-xs text-muted-foreground text-center mt-2"
+                          >
+                            {liveStatusMessages[liveMessage]}
+                          </motion.p>
+                        </AnimatePresence>
                       </div>
                     </motion.div>
                   )}
