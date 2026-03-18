@@ -45,19 +45,14 @@ def calculate_report_price(page_count: int) -> int:
 
 
 def get_price_breakdown(page_count: int) -> dict:
-    """Return a detailed breakdown for transparency (used in API responses)."""
-    settings = get_settings()
+    """Return a price breakdown for API responses.
 
-    estimated_api_cost = (
-        settings.pricing_base_cost
-        + settings.pricing_per_page_cost * page_count
-    )
+    Note: We intentionally don't expose cost structure or margin.
+    The customer sees page count and final price — that's it.
+    """
     price = calculate_report_price(page_count)
 
     return {
         "page_count": page_count,
-        "estimated_api_cost_eur": round(estimated_api_cost, 2),
-        "margin_multiplier": settings.pricing_margin_multiplier,
         "price_eur": price,
-        "min_price_eur": settings.pricing_min_eur,
     }

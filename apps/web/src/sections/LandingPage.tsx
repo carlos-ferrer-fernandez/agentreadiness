@@ -15,8 +15,25 @@ import {
   Clock,
   AlertTriangle,
   Eye,
-  EyeOff,
-  Bot
+  Bot,
+  BookOpen,
+  Code2,
+  Table2,
+  FileCheck,
+  AlertOctagon,
+  Tags,
+  ListChecks,
+  MonitorCheck,
+  Link2,
+  Layers,
+  History,
+  HelpCircle,
+  ShieldAlert,
+  Trash2,
+  SplitSquareHorizontal,
+  MessageSquare,
+  RefreshCcw,
+  Megaphone,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -48,6 +65,29 @@ const features = [
     title: 'Ready to Deploy',
     description: 'Structured markdown files with proper headings, code blocks & API tables. Works with any docs platform.',
   },
+]
+
+const agentReadinessRules = [
+  { id: 1, name: 'Self-Contained Sections', icon: BookOpen, description: 'Every section must make sense if read in isolation. No "see above" or "as mentioned earlier".' },
+  { id: 2, name: 'Action-Oriented Headings', icon: MessageSquare, description: 'Headings should read like user intents: "Authenticate with API key", not "Authentication".' },
+  { id: 3, name: 'Structured Parameter Tables', icon: Table2, description: 'Parameters in tables (name, type, required, default), never buried in prose.' },
+  { id: 4, name: 'Complete Code Examples', icon: Code2, description: 'Every example must include imports, setup, the call, and expected output.' },
+  { id: 5, name: 'Explicit Over Implicit', icon: Eye, description: 'State all defaults, constraints, and requirements. Agents have zero intuition.' },
+  { id: 6, name: 'First-Class Error Docs', icon: AlertOctagon, description: 'Every error code documented with causes, diagnosis steps, and fixes.' },
+  { id: 7, name: 'Consistent Terminology', icon: Tags, description: 'One term per concept everywhere. No alternating between synonyms.' },
+  { id: 8, name: 'Frontmatter Metadata', icon: FileCheck, description: 'YAML frontmatter on every page: title, description, version, tags.' },
+  { id: 9, name: 'Prerequisites Up Front', icon: ListChecks, description: 'State all requirements at the top: accounts, permissions, API keys, SDK version.' },
+  { id: 10, name: 'Expected Outputs', icon: MonitorCheck, description: 'Show what success looks like: expected response body, status code, logs.' },
+  { id: 11, name: 'Cross-References with Context', icon: Link2, description: 'Never "click here". Always describe what the linked page covers.' },
+  { id: 12, name: 'Content Type Separation', icon: Layers, description: 'Separate conceptual, how-to, and reference content clearly.' },
+  { id: 13, name: 'Version Clarity', icon: History, description: 'API/SDK version stated prominently. Deprecated content marked with migration paths.' },
+  { id: 14, name: 'Decision Documentation', icon: HelpCircle, description: '"When to use X vs Y" sections for agents answering comparison questions.' },
+  { id: 15, name: 'Safety Boundaries', icon: ShieldAlert, description: 'Destructive actions, billing implications, rate limits clearly documented.' },
+  { id: 16, name: 'No Anti-Patterns', icon: Trash2, description: 'Strip marketing language, "contact support" placeholders, and JS-dependent content.' },
+  { id: 17, name: 'Retrieval-Chunk Optimized', icon: SplitSquareHorizontal, description: 'Sections scoped for RAG: clear heading, clear scope, standalone context.' },
+  { id: 18, name: 'Intent Before Mechanics', icon: Megaphone, description: 'Always explain WHY before HOW. Context before code.' },
+  { id: 19, name: 'State Transitions', icon: RefreshCcw, description: 'Document systems as state machines: states, transitions, triggers, terminal states.' },
+  { id: 20, name: 'Callouts & Admonitions', icon: AlertTriangle, description: 'Standard callout syntax for warnings, tips, notes — prioritization signals for agents.' },
 ]
 
 const assessmentStages = [
@@ -168,6 +208,9 @@ export function LandingPage() {
             </div>
 
             <div className="hidden md:flex items-center gap-6">
+              <a href="#rules" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                The 20 Rules
+              </a>
               <a href="#how-it-works" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 How it Works
               </a>
@@ -201,6 +244,7 @@ export function LandingPage() {
               className="md:hidden border-t bg-background"
             >
               <div className="px-4 py-4 space-y-3">
+                <a href="#rules" className="block text-sm text-muted-foreground">The 20 Rules</a>
                 <a href="#how-it-works" className="block text-sm text-muted-foreground">How it Works</a>
                 <a href="#pricing" className="block text-sm text-muted-foreground">Pricing</a>
                 <a href="#faq" className="block text-sm text-muted-foreground">FAQ</a>
@@ -222,9 +266,9 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-destructive/10 text-destructive text-sm font-medium mb-6">
-                <AlertTriangle className="w-4 h-4" />
-                68% of documentation is invisible to AI agents
+              <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
+                <Shield className="w-4 h-4" />
+                Evaluated against 20 rules from 8 major AI agents
               </span>
             </motion.div>
 
@@ -246,9 +290,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8"
             >
-              For every $1 spent on software, $6 is spent on services — and AI agents
-              are deciding where that money goes. Get your <strong>free Visibility Score</strong> and
-              find out if you're winning or losing in the agent economy.
+              AI agents are how developers discover tools now. If your documentation
+              isn't optimized for them, they can't recommend you. Get your <strong>free Agent-Readiness Score</strong> and
+              see exactly what needs fixing — tested against 20 rules that all major AI agents agree on.
             </motion.p>
 
             {/* Assessment Form */}
@@ -381,28 +425,57 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Urgency Banner */}
-      <section className="py-8 border-y bg-destructive/5">
+      {/* The 20 Rules — Proof of methodology */}
+      <section id="rules" className="py-20 border-y bg-muted/30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid md:grid-cols-3 gap-6 text-center">
-            <div>
-              <div className="text-3xl font-bold text-destructive mb-1">6x</div>
-              <p className="text-sm text-muted-foreground">
-                Services budget vs software budget — agents decide where it goes
-              </p>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-destructive mb-1">68%</div>
-              <p className="text-sm text-muted-foreground">
-                of docs score below C — effectively invisible to AI agents
-              </p>
-            </div>
-            <div>
-              <div className="text-3xl font-bold text-destructive mb-1">2025</div>
-              <p className="text-sm text-muted-foreground">
-                The year AI agents become the primary discovery channel
-              </p>
-            </div>
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4">Our Methodology</Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              The 20 Agent-Readiness Rules
+            </h2>
+            <p className="text-muted-foreground">
+              We asked 8 major AI agents — Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, and others —
+              what makes documentation easy or hard for them. These 20 rules are the consensus.
+              Your docs are scored against every single one.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {agentReadinessRules.map((rule, index) => (
+              <motion.div
+                key={rule.id}
+                initial={{ opacity: 0, y: 12 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.03 }}
+                className="bg-card p-4 rounded-lg border hover:border-primary/50 transition-colors group"
+              >
+                <div className="flex items-start gap-3">
+                  <div className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
+                    <rule.icon className="w-4 h-4 text-primary" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-sm leading-tight">
+                      <span className="text-muted-foreground mr-1">#{rule.id}</span>
+                      {rule.name}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
+                      {rule.description}
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="text-center mt-10">
+            <p className="text-sm text-muted-foreground mb-4">
+              Your documentation is scored against all 20 rules. Our optimizer fixes every failing rule automatically.
+            </p>
+            <Button onClick={scrollToAssessment}>
+              Test Your Docs Against These Rules — Free
+              <ArrowRight className="ml-2 w-4 h-4" />
+            </Button>
           </div>
         </div>
       </section>
@@ -558,10 +631,10 @@ export function LandingPage() {
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Your docs, optimized. One price.</h2>
+            <h2 className="text-3xl font-bold mb-4">Simple pricing. No surprises.</h2>
             <p className="text-muted-foreground">
-              No tiers. No subscriptions. No consulting calls. We rewrite your docs for AI agents.
-              Price scales with your documentation size — starting at just €49.
+              Get your free score first. If you want the optimized docs, we'll show you the exact price
+              based on your documentation size. Starting at just €49. No subscriptions.
             </p>
           </div>
 
@@ -615,11 +688,11 @@ export function LandingPage() {
               </span>
               <h3 className="text-lg font-semibold">Optimized Documentation</h3>
               <div className="mt-2 flex items-baseline gap-2">
-                <span className="text-sm text-muted-foreground">from</span>
+                <span className="text-sm text-muted-foreground">starting at</span>
                 <span className="text-3xl font-bold">€49</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Price scales with your docs size — you pay, we deliver the files
+                Exact price shown after your free scan — based on your documentation size
               </p>
               <ul className="mt-6 space-y-3 flex-1">
                 {[
@@ -646,29 +719,29 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-3">
-                Exact price shown after free scan. 7-day money-back guarantee.
+                Run the free scan first. We'll calculate the exact price based on your docs. 7-day money-back guarantee.
               </p>
             </motion.div>
           </div>
         </div>
       </section>
 
-      {/* FOMO Section */}
+      {/* CTA Section */}
       <section className="py-16 bg-primary/5 border-y">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <EyeOff className="w-12 h-12 text-destructive mx-auto mb-4" />
+          <Bot className="w-12 h-12 text-primary mx-auto mb-4" />
           <h2 className="text-2xl font-bold mb-4">
-            If AI agents can't parse your docs, they can't recommend you.
+            When someone asks an AI agent about your product, what does it say?
           </h2>
           <p className="text-muted-foreground mb-2">
-            Every day you wait, your competitors are getting optimised. AI agents
-            are already choosing who to recommend for development tools, APIs, and services.
+            If your documentation doesn't follow these 20 rules, agents struggle to answer
+            accurately — or worse, they recommend a competitor whose docs are better structured.
           </p>
           <p className="text-sm text-muted-foreground mb-8">
-            The companies that move first will own the agent economy. The rest will wonder where their traffic went.
+            Check your score for free. See exactly which rules are failing. Fix them in minutes.
           </p>
           <Button size="lg" onClick={scrollToAssessment}>
-            Check My Visibility Now
+            Check My Score — Free
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
@@ -694,7 +767,7 @@ export function LandingPage() {
               },
               {
                 q: 'How is the price calculated?',
-                a: 'The price scales with your documentation size — it\'s based on the number of pages we need to rewrite. Small docs (under 25 pages) start at €49. Larger documentation sites cost more because they require more AI processing. You\'ll see your exact price after the free scan. No subscriptions, no hidden fees.',
+                a: 'After your free scan, we know exactly how many pages need to be rewritten and how much work each one requires. Small docs start at €49. Larger sites cost more because each page is individually analyzed and rewritten by AI applying all 20 rules. You\'ll see your exact price before paying — no surprises, no subscriptions.',
               },
               {
                 q: 'How long does it take?',
