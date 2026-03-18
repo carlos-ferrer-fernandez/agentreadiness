@@ -206,11 +206,31 @@ async def get_stripe_config():
 async def _run_optimization_pipeline(assessment_id: str, url: str):
     """
     Run the full documentation optimization pipeline in background.
+
     Uses its own DB session since this runs outside the request lifecycle.
+    Applies all 20 agent-readiness rules to every page, generates a ZIP,
+    and stores it at a persistent path (not /tmp).
     """
-    from services.optimizer.document_optimizer import DocumentationOptimizer, OptimizationConfig
+    import os
+    from pathlib import Path
+    from services.optimizer.document_optimizer import DocumentationOptimizer
 
     logger.info(f"Starting optimization for assessment {assessment_id}")
+
+    # Validate OpenAI key before starting expensive work
+    openai_key = os.getenv("OPENAI_API_KEY", "")
+    if not openai_key or openai_key == "sk-your-openai-key":
+        logger.error(f"Optimization aborted for {assessment_id}: OPENAI_API_KEY not configured")
+        async with async_session_factory() as db:
+            result = await db.execute(
+                select(Assessment).where(Assessment.id == assessment_id)
+            )
+            assessment = result.scalar_one_or_none()
+            if assessment:
+                assessment.optimization_status = "failed"
+                assessment.optimization_error = "Service configuration error. Please contact support."
+                await db.commit()
+        return
 
     async with async_session_factory() as db:
         try:
@@ -226,25 +246,40 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
             assessment.optimization_started_at = datetime.now(timezone.utc)
             await db.commit()
 
-            # Configure optimizer for AI agent consumption
-            config = OptimizationConfig(
-                target_audience="mixed",
-                tone="technical",
-                priorities=["code_examples", "api_reference", "tutorials", "troubleshooting"],
-                add_troubleshooting=True,
-                improve_seo=True,
-            )
+            # No config needed — optimizer always applies all 20 rules
+            optimizer = DocumentationOptimizer()
 
-            optimizer = DocumentationOptimizer(config)
-
-            def progress_callback(stage: str, progress: float):
-                # We can't easily update DB from sync callback, so just log
-                logger.info(f"Optimization {assessment_id}: {stage} ({progress:.0%})")
+            async def progress_callback(stage: str, progress: float):
+                """Update DB with real-time progress so frontend can poll."""
+                try:
+                    async with async_session_factory() as progress_db:
+                        r = await progress_db.execute(
+                            select(Assessment).where(Assessment.id == assessment_id)
+                        )
+                        a = r.scalar_one_or_none()
+                        if a:
+                            a.optimization_progress = progress
+                            a.optimization_stage = stage
+                            await progress_db.commit()
+                except Exception:
+                    pass  # Progress updates are best-effort
 
             docs, metadata = await optimizer.optimize_documentation(
                 url, progress_callback=progress_callback
             )
             zip_path = await optimizer.create_zip_package(docs, metadata)
+
+            # Move ZIP to persistent storage directory (survives container restarts)
+            persist_dir = Path("/opt/render/project/src/data/zips")
+            if "RENDER" in os.environ:
+                persist_dir.mkdir(parents=True, exist_ok=True)
+            else:
+                persist_dir = Path("./data/zips")
+                persist_dir.mkdir(parents=True, exist_ok=True)
+
+            import shutil
+            persistent_path = str(persist_dir / f"{assessment_id}.zip")
+            shutil.move(zip_path, persistent_path)
 
             # Update assessment with results
             result = await db.execute(
@@ -255,7 +290,7 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
                 assessment.optimization_status = "complete"
                 assessment.optimization_progress = 1.0
                 assessment.optimization_stage = "complete"
-                assessment.optimization_zip_path = zip_path
+                assessment.optimization_zip_path = persistent_path
                 assessment.optimization_metadata = metadata
                 assessment.optimization_completed_at = datetime.now(timezone.utc)
                 await db.commit()

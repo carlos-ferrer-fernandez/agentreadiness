@@ -150,9 +150,10 @@ async def get_assessment(assessment_id: str, db: AsyncSession = Depends(get_db))
 async def verify_promo_code(
     assessment_id: str,
     request: PromoCodeRequest,
+    background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    """Verify a promo code and unlock the assessment."""
+    """Verify a promo code, unlock the assessment, and trigger optimization."""
     result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
     assessment = result.scalar_one_or_none()
     if not assessment:
@@ -164,7 +165,16 @@ async def verify_promo_code(
 
     assessment.has_paid = True
     assessment.paid_plan = "promo"
+    assessment.optimization_status = "queued"
     await db.flush()
+
+    # Trigger optimization in background (same pipeline as paid flow)
+    from routers.payments import _run_optimization_pipeline
+    background_tasks.add_task(
+        _run_optimization_pipeline,
+        assessment_id,
+        assessment.url,
+    )
 
     return {"success": True, "message": "Promo code applied! Your optimized docs are being generated."}
 

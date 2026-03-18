@@ -241,6 +241,15 @@ class DocumentationOptimizer:
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=30.0)
 
+    async def _notify_progress(self, callback, stage: str, progress: float):
+        """Call progress callback, handling both sync and async callbacks."""
+        if not callback:
+            return
+        import asyncio
+        result = callback(stage, progress)
+        if asyncio.iscoroutine(result):
+            await result
+
     async def optimize_documentation(
         self,
         start_url: str,
@@ -255,51 +264,47 @@ class DocumentationOptimizer:
         logger.info(f"Starting optimization of {start_url}")
 
         # Step 1: Crawl documentation
-        if progress_callback:
-            progress_callback("crawling", 0.1)
+        await self._notify_progress(progress_callback, "crawling", 0.1)
 
         pages = await self._crawl_documentation(start_url)
         logger.info(f"Crawled {len(pages)} pages")
 
         # Step 2: Deep analysis of each page against agent-readiness rules
-        if progress_callback:
-            progress_callback("analyzing", 0.3)
+        await self._notify_progress(progress_callback, "analyzing", 0.3)
 
         analyzed_pages = []
         for i, page in enumerate(pages):
             analysis = self._analyze_page_deep(page)
             analyzed_pages.append((page, analysis))
-            if progress_callback:
-                progress_callback("analyzing", 0.3 + (0.2 * (i + 1) / len(pages)))
+            await self._notify_progress(
+                progress_callback, "analyzing", 0.3 + (0.2 * (i + 1) / len(pages))
+            )
 
         # Step 3: Build terminology map across all pages
         terminology_context = self._build_terminology_context(pages)
 
         # Step 4: Generate optimized content
-        if progress_callback:
-            progress_callback("optimizing", 0.5)
+        await self._notify_progress(progress_callback, "optimizing", 0.5)
 
         optimized_docs = []
         for i, (page, analysis) in enumerate(analyzed_pages):
             optimized = await self._optimize_page(page, analysis, terminology_context)
             optimized_docs.append(optimized)
-            if progress_callback:
-                progress_callback("optimizing", 0.5 + (0.35 * (i + 1) / len(analyzed_pages)))
+            await self._notify_progress(
+                progress_callback, "optimizing", 0.5 + (0.35 * (i + 1) / len(analyzed_pages))
+            )
 
         # Step 5: Generate llms.txt
-        if progress_callback:
-            progress_callback("generating_llms_txt", 0.9)
+        await self._notify_progress(progress_callback, "generating_llms_txt", 0.9)
 
         llms_txt = self._generate_llms_txt(start_url, optimized_docs)
 
         # Step 6: Generate metadata
-        if progress_callback:
-            progress_callback("finalizing", 0.95)
+        await self._notify_progress(progress_callback, "finalizing", 0.95)
 
         metadata = self._generate_metadata(optimized_docs)
 
-        if progress_callback:
-            progress_callback("complete", 1.0)
+        await self._notify_progress(progress_callback, "complete", 1.0)
 
         # Attach llms.txt to metadata for packaging
         metadata['llms_txt'] = llms_txt
@@ -549,62 +554,77 @@ class DocumentationOptimizer:
         analysis: PageAnalysis,
         terminology_context: str
     ) -> OptimizedDoc:
-        """Use AI to optimize a single page applying all 20 rules."""
+        """Use AI to optimize a single page applying all 20 rules.
+
+        Includes retry logic with exponential backoff for rate limits
+        and transient errors. Falls back to original content if all
+        retries fail.
+        """
+        import asyncio
 
         prompt = self._build_optimization_prompt(page, analysis, terminology_context)
 
-        try:
-            client = openai.AsyncOpenAI()
-            response = await client.chat.completions.create(
-                model="gpt-4-turbo-preview",
-                messages=[
-                    {
-                        "role": "system",
-                        "content": (
-                            "You are an expert documentation optimizer. Your SOLE purpose is to "
-                            "rewrite documentation so it is maximally useful for AI agents "
-                            "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
-                            "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
-                            "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
-                            "The output must be production-ready documentation that can be deployed as-is."
-                        )
-                    },
-                    {
-                        "role": "user",
-                        "content": prompt
-                    }
-                ],
-                temperature=0.2,
-                max_tokens=4096
-            )
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                client = openai.AsyncOpenAI()
+                response = await client.chat.completions.create(
+                    model="gpt-4-turbo-preview",
+                    messages=[
+                        {
+                            "role": "system",
+                            "content": (
+                                "You are an expert documentation optimizer. Your SOLE purpose is to "
+                                "rewrite documentation so it is maximally useful for AI agents "
+                                "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
+                                "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
+                                "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
+                                "The output must be production-ready documentation that can be deployed as-is."
+                            )
+                        },
+                        {
+                            "role": "user",
+                            "content": prompt
+                        }
+                    ],
+                    temperature=0.2,
+                    max_tokens=4096,
+                    timeout=120.0,
+                )
 
-            optimized_content = response.choices[0].message.content
+                optimized_content = response.choices[0].message.content
+                break  # Success — exit retry loop
 
-            # Extract improvements
-            improvements = self._extract_improvements(optimized_content, analysis)
+            except Exception as e:
+                if attempt < max_retries - 1:
+                    wait = 2 ** (attempt + 1)  # 2s, 4s
+                    logger.warning(
+                        f"OpenAI call failed for {page.url} (attempt {attempt + 1}): {e}. "
+                        f"Retrying in {wait}s..."
+                    )
+                    await asyncio.sleep(wait)
+                else:
+                    logger.error(f"All retries failed for {page.url}: {e}")
+                    return OptimizedDoc(
+                        original_url=page.url,
+                        title=page.title,
+                        optimized_content=page.content,
+                        improvements=["Failed to optimize — using original content"],
+                        file_name=self._generate_file_name(page.title, page.url)
+                    )
 
-            # Clean up
-            optimized_content = self._clean_optimized_content(optimized_content)
+        # Extract improvements and clean up
+        improvements = self._extract_improvements(optimized_content, analysis)
+        optimized_content = self._clean_optimized_content(optimized_content)
+        file_name = self._generate_file_name(page.title, page.url)
 
-            file_name = self._generate_file_name(page.title, page.url)
-
-            return OptimizedDoc(
-                original_url=page.url,
-                title=page.title,
-                optimized_content=optimized_content,
-                improvements=improvements,
-                file_name=file_name
-            )
-
-        except Exception as e:
-            logger.error(f"Error optimizing page {page.url}: {e}")
-            return OptimizedDoc(
-                original_url=page.url,
-                title=page.title,
-                optimized_content=page.content,
-                improvements=["Failed to optimize — using original content"],
-                file_name=self._generate_file_name(page.title, page.url)
-            )
+        return OptimizedDoc(
+            original_url=page.url,
+            title=page.title,
+            optimized_content=optimized_content,
+            improvements=improvements,
+            file_name=file_name
+        )
 
     def _build_optimization_prompt(
         self,
