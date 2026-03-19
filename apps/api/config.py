@@ -5,9 +5,7 @@ Loads from environment variables with sensible defaults for development.
 """
 
 from pydantic_settings import BaseSettings
-from pydantic import field_validator
 from functools import lru_cache
-import json
 
 
 class Settings(BaseSettings):
@@ -15,27 +13,15 @@ class Settings(BaseSettings):
     app_name: str = "AgentReadiness API"
     app_version: str = "0.2.0"
     debug: bool = False
-    allowed_origins: list[str] = [
-        "http://localhost:3000",
-        "http://localhost:5173",
-        "https://agentreadiness-web.onrender.com",
-    ]
 
-    @field_validator("allowed_origins", mode="before")
-    @classmethod
-    def parse_allowed_origins(cls, v):
-        """Accept both JSON list and comma-separated string."""
-        if isinstance(v, str):
-            v = v.strip()
-            # Try JSON first (e.g. '["http://...", "http://..."]')
-            if v.startswith("["):
-                try:
-                    return json.loads(v)
-                except json.JSONDecodeError:
-                    pass
-            # Fall back to comma-separated (e.g. "http://...,http://...")
-            return [origin.strip() for origin in v.split(",") if origin.strip()]
-        return v
+    # Stored as comma-separated string to avoid pydantic-settings JSON parsing.
+    # Use the .cors_origins property to get the parsed list.
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://agentreadiness-web.onrender.com"
+
+    @property
+    def cors_origins(self) -> list[str]:
+        """Parse allowed_origins string into a list."""
+        return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/agentreadiness"
