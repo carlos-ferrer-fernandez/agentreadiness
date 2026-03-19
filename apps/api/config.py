@@ -5,7 +5,9 @@ Loads from environment variables with sensible defaults for development.
 """
 
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 from functools import lru_cache
+import json
 
 
 class Settings(BaseSettings):
@@ -18,6 +20,22 @@ class Settings(BaseSettings):
         "http://localhost:5173",
         "https://agentreadiness-web.onrender.com",
     ]
+
+    @field_validator("allowed_origins", mode="before")
+    @classmethod
+    def parse_allowed_origins(cls, v):
+        """Accept both JSON list and comma-separated string."""
+        if isinstance(v, str):
+            v = v.strip()
+            # Try JSON first (e.g. '["http://...", "http://..."]')
+            if v.startswith("["):
+                try:
+                    return json.loads(v)
+                except json.JSONDecodeError:
+                    pass
+            # Fall back to comma-separated (e.g. "http://...,http://...")
+            return [origin.strip() for origin in v.split(",") if origin.strip()]
+        return v
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/agentreadiness"
