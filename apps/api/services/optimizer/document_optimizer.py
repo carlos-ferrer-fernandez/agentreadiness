@@ -22,6 +22,7 @@ import logging
 import httpx
 from bs4 import BeautifulSoup
 import openai
+import markdown
 
 logger = logging.getLogger(__name__)
 
@@ -862,18 +863,77 @@ If you are an AI agent:
     # ZIP PACKAGING
     # =========================================================================
 
+    def _render_markdown_to_html(self, md_content: str, title: str) -> str:
+        """Convert markdown content to a clean, readable HTML page."""
+        # Strip YAML frontmatter before rendering
+        body = md_content
+        if body.startswith('---'):
+            parts = body.split('---', 2)
+            if len(parts) >= 3:
+                body = parts[2].strip()
+
+        html_body = markdown.markdown(
+            body,
+            extensions=['tables', 'fenced_code', 'toc', 'attr_list'],
+        )
+
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{title}</title>
+<style>
+  :root {{ --bg: #fff; --fg: #1a1a1a; --muted: #666; --border: #e5e5e5; --accent: #2563eb; --code-bg: #f5f5f5; }}
+  @media (prefers-color-scheme: dark) {{
+    :root {{ --bg: #111; --fg: #e5e5e5; --muted: #999; --border: #333; --accent: #60a5fa; --code-bg: #1e1e1e; }}
+  }}
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.7; color: var(--fg); background: var(--bg); max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }}
+  h1 {{ font-size: 2rem; margin: 2rem 0 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }}
+  h2 {{ font-size: 1.5rem; margin: 1.8rem 0 0.8rem; color: var(--fg); }}
+  h3 {{ font-size: 1.2rem; margin: 1.5rem 0 0.6rem; }}
+  h4 {{ font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--muted); }}
+  p {{ margin: 0.8rem 0; }}
+  a {{ color: var(--accent); text-decoration: none; }} a:hover {{ text-decoration: underline; }}
+  code {{ font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.9em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }}
+  pre {{ background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }}
+  pre code {{ background: none; padding: 0; font-size: 0.85em; }}
+  table {{ width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }}
+  th, td {{ border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }}
+  th {{ background: var(--code-bg); font-weight: 600; }}
+  blockquote {{ border-left: 4px solid var(--accent); padding: 0.5rem 1rem; margin: 1rem 0; background: var(--code-bg); border-radius: 0 6px 6px 0; }}
+  ul, ol {{ margin: 0.8rem 0; padding-left: 1.5rem; }}
+  li {{ margin: 0.3rem 0; }}
+  hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
+  .badge {{ display: inline-block; font-size: 0.75rem; padding: 0.2em 0.6em; border-radius: 12px; background: var(--accent); color: white; margin-bottom: 1rem; }}
+</style>
+</head>
+<body>
+<div class="badge">Agent-Optimized</div>
+{html_body}
+<hr>
+<p style="font-size:0.8rem;color:var(--muted);">Optimized by AgentReadiness. 20 rules applied.</p>
+</body>
+</html>"""
+
     async def create_zip_package(
         self,
         docs: List[OptimizedDoc],
         metadata: Dict
     ) -> str:
-        """Create a ZIP file with all optimized documentation."""
+        """Create a ZIP file with markdown sources, HTML previews, and llms.txt."""
 
         with tempfile.NamedTemporaryFile(suffix='.zip', delete=False) as tmp:
             with zipfile.ZipFile(tmp.name, 'w', zipfile.ZIP_DEFLATED) as zf:
-                # Add each optimized document
+                # Add each optimized document as markdown + HTML
                 for doc in docs:
-                    zf.writestr(f"docs/{doc.file_name}", doc.optimized_content)
+                    zf.writestr(f"markdown/{doc.file_name}", doc.optimized_content)
+                    html_name = doc.file_name.replace('.md', '.html')
+                    html_content = self._render_markdown_to_html(
+                        doc.optimized_content, doc.title
+                    )
+                    zf.writestr(f"html/{html_name}", html_content)
 
                 # Add llms.txt at root
                 if 'llms_txt' in metadata:
@@ -887,11 +947,88 @@ If you are an AI agent:
                 readme = self._generate_readme(metadata)
                 zf.writestr('README.md', readme)
 
+                # Add HTML index page linking to all docs
+                index_html = self._generate_index_html(docs, metadata)
+                zf.writestr('html/index.html', index_html)
+
                 # Add deployment guide
                 guide = self._generate_deployment_guide()
                 zf.writestr('DEPLOY.md', guide)
 
             return tmp.name
+
+    def _generate_index_html(self, docs: List[OptimizedDoc], metadata: Dict) -> str:
+        """Generate an HTML index page that links to all optimized doc pages."""
+        pages_count = len(docs)
+        improvements_count = sum(len(d.improvements) for d in docs)
+
+        rows = ""
+        for doc in docs:
+            html_name = doc.file_name.replace('.md', '.html')
+            top_improvement = doc.improvements[0] if doc.improvements else "Optimized"
+            rows += f"""<tr>
+<td><a href="{html_name}">{doc.title}</a></td>
+<td>{len(doc.improvements)}</td>
+<td style="font-size:0.85rem;color:var(--muted)">{top_improvement}</td>
+</tr>\n"""
+
+        return f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent-Optimized Documentation</title>
+<style>
+  :root {{ --bg: #fff; --fg: #1a1a1a; --muted: #666; --border: #e5e5e5; --accent: #2563eb; --code-bg: #f5f5f5; }}
+  @media (prefers-color-scheme: dark) {{
+    :root {{ --bg: #111; --fg: #e5e5e5; --muted: #999; --border: #333; --accent: #60a5fa; --code-bg: #1e1e1e; }}
+  }}
+  * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.7; color: var(--fg); background: var(--bg); max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }}
+  h1 {{ font-size: 2rem; margin-bottom: 0.5rem; }}
+  .subtitle {{ color: var(--muted); margin-bottom: 2rem; }}
+  .stats {{ display: flex; gap: 2rem; margin: 1.5rem 0; }}
+  .stat {{ background: var(--code-bg); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--border); }}
+  .stat-value {{ font-size: 1.5rem; font-weight: 700; color: var(--accent); }}
+  .stat-label {{ font-size: 0.8rem; color: var(--muted); }}
+  table {{ width: 100%; border-collapse: collapse; margin: 1.5rem 0; }}
+  th, td {{ border: 1px solid var(--border); padding: 0.7rem 1rem; text-align: left; }}
+  th {{ background: var(--code-bg); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }}
+  a {{ color: var(--accent); text-decoration: none; font-weight: 500; }} a:hover {{ text-decoration: underline; }}
+  .badge {{ display: inline-block; font-size: 0.75rem; padding: 0.2em 0.6em; border-radius: 12px; background: var(--accent); color: white; }}
+  .footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }}
+</style>
+</head>
+<body>
+<span class="badge">Agent-Optimized</span>
+<h1>Your Optimized Documentation</h1>
+<p class="subtitle">Every page rewritten applying 20 agent-readiness rules. Open any file below to see the result.</p>
+
+<div class="stats">
+  <div class="stat"><div class="stat-value">{pages_count}</div><div class="stat-label">Pages optimized</div></div>
+  <div class="stat"><div class="stat-value">{improvements_count}</div><div class="stat-label">Improvements applied</div></div>
+  <div class="stat"><div class="stat-value">20</div><div class="stat-label">Rules per page</div></div>
+</div>
+
+<h2>Pages</h2>
+<table>
+<thead><tr><th>Page</th><th>Fixes</th><th>Key improvement</th></tr></thead>
+<tbody>
+{rows}
+</tbody>
+</table>
+
+<h2>What's in this package</h2>
+<ul>
+  <li><strong>html/</strong> &mdash; rendered HTML pages (you're looking at one now)</li>
+  <li><strong>markdown/</strong> &mdash; source Markdown files for your docs platform</li>
+  <li><strong>llms.txt</strong> &mdash; agent entry point (deploy at your docs root)</li>
+  <li><strong>README.md</strong> &mdash; overview and deployment instructions</li>
+</ul>
+
+<div class="footer">Optimized by AgentReadiness. 20 rules applied per page.</div>
+</body>
+</html>"""
 
     def _generate_readme(self, metadata: Dict) -> str:
         """Generate README for the optimized documentation package."""
