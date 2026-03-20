@@ -598,6 +598,9 @@ class DocumentationOptimizer:
                                     "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
                                     "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
                                     "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
+                                    "NEVER wrap output in ```markdown fences. Start directly with --- frontmatter.\n"
+                                    "CRITICAL: Always preserve the original language. If the input is French, "
+                                    "output French. If Spanish, output Spanish. NEVER translate to English.\n"
                                     "The output must be production-ready documentation that can be deployed as-is."
                                 )
                             },
@@ -748,8 +751,15 @@ Rewrite this page applying ALL 20 rules above. The output must be:
 12. **Use callouts** for warnings, tips, and important notes
 13. **State intent before mechanics** — explain WHY then HOW
 
+**CRITICAL: PRESERVE THE ORIGINAL LANGUAGE.** If the original content is in French,
+the optimized output MUST also be in French. If it is in Spanish, output Spanish.
+NEVER translate to English. The structural improvements (frontmatter keys, headings
+style, tables) should follow the rules, but all prose content stays in the original language.
+Frontmatter field NAMES stay in English (title, description, tags, etc.) but their VALUES
+must be in the original language.
+
 Output ONLY the optimized Markdown. No explanations. No "here's the optimized version".
-Start directly with the --- frontmatter."""
+Do NOT wrap the output in ```markdown or ``` fences. Start directly with the --- frontmatter."""
 
     # =========================================================================
     # LLMS.TXT GENERATION
@@ -852,6 +862,18 @@ If you are an AI agent:
 
     def _clean_optimized_content(self, content: str) -> str:
         """Clean up the optimized content."""
+        # Strip markdown code fences that LLMs often wrap around output
+        # Handles: ```markdown\n...\n```, ```md\n...\n```, ```\n...\n```
+        content = content.strip()
+        if content.startswith('```'):
+            lines = content.split('\n')
+            # Remove opening fence (```markdown, ```md, ```)
+            lines = lines[1:]
+            # Remove closing fence
+            if lines and lines[-1].strip() == '```':
+                lines = lines[:-1]
+            content = '\n'.join(lines)
+
         # Remove any "improvements" section the LLM might have added
         if "## Improvements Made" in content:
             content = content.split("## Improvements Made")[0].strip()
@@ -1094,7 +1116,7 @@ If you are an AI agent:
         """Generate README for the optimized documentation package."""
         nl = chr(10)
         pages_list = nl.join(
-            [f"- `docs/{p['file_name']}` — {p['title']} ({len(p['improvements'])} improvements)"
+            [f"- `{p['file_name']}` - {p['title']} ({len(p['improvements'])} improvements)"
              for p in metadata['pages']]
         )
         improvements_list = nl.join(
@@ -1114,15 +1136,18 @@ the Agent-Readiness Doctrine.
 - **Total improvements**: {metadata['total_improvements']}
 - **Rules applied per page**: {metadata.get('optimization_rules_applied', 20)}
 
-## Files
+## Package Contents
+
+### `html/`
+Open `html/index.html` in your browser to preview all optimized pages.
+
+### `markdown/`
+Source Markdown files for your docs platform (Mintlify, GitBook, ReadMe, Docusaurus, etc.).
+
+{pages_list}
 
 ### `llms.txt`
-The agent entry point — place this at the root of your documentation site.
-This is the equivalent of `robots.txt` for AI agents. It helps agents
-quickly understand the scope and structure of your documentation.
-
-### `docs/`
-{pages_list}
+The agent entry point. Place at the root of your documentation site.
 
 ## Improvements Applied
 {improvements_list}
@@ -1135,24 +1160,29 @@ Every page was optimized following 20 concrete rules derived from a
 multi-agent benchmark (Claude, GPT, Kimi, Grok, Deepseek, Manus,
 Gemini, KimiClaw). Key changes:
 
-1. **Self-contained sections** — every section stands alone for RAG retrieval
-2. **Action-oriented headings** — match how agents search for information
-3. **Structured parameter tables** — machine-parseable, not prose
-4. **Complete code examples** — imports, setup, call, expected output
-5. **Error documentation** — exact error strings with causes and fixes
-6. **Frontmatter metadata** — title, version, tags on every page
-7. **llms.txt** — agent entry point for your documentation
+1. **Self-contained sections** - every section stands alone for RAG retrieval
+2. **Action-oriented headings** - match how agents search for information
+3. **Structured parameter tables** - machine-parseable, not prose
+4. **Complete code examples** - imports, setup, call, expected output
+5. **Error documentation** - exact error strings with causes and fixes
+6. **Frontmatter metadata** - title, version, tags on every page
+7. **llms.txt** - agent entry point for your documentation
 
 ---
 
-*Optimized by [AgentReadiness](https://agentreadiness.dev) — Make your docs AI-agent ready*
+*Optimized by [AgentReadiness](https://agentreadiness.dev)*
 """
 
     def _generate_deployment_guide(self) -> str:
         """Generate deployment instructions."""
         return """# Deploy Your Agent-Optimized Documentation
 
-## Step 1: Deploy llms.txt
+## Step 1: Preview
+
+Open `html/index.html` in your browser to review all optimized pages
+before deploying.
+
+## Step 2: Deploy llms.txt
 
 Place `llms.txt` at the root of your documentation domain:
 ```
@@ -1161,22 +1191,22 @@ https://docs.yourcompany.com/llms.txt
 
 This file helps AI agents discover and navigate your documentation.
 
-## Step 2: Replace Your Documentation Pages
+## Step 3: Replace Your Documentation Pages
 
 Replace the content of each documentation page with the corresponding
-optimized file from the `docs/` folder.
+optimized file from the `markdown/` folder.
 
 ### If you use a docs platform (Mintlify, GitBook, ReadMe, Docusaurus):
-1. Replace the Markdown source files with the optimized versions
+1. Replace the Markdown source files with the optimized versions from `markdown/`
 2. The frontmatter metadata is compatible with most platforms
-3. Commit and push — your platform will rebuild automatically
+3. Commit and push. Your platform will rebuild automatically
 
 ### If you use a custom site:
-1. Copy the `docs/` folder to your documentation source
+1. Copy the files from `markdown/` to your documentation source
 2. Ensure your build process preserves YAML frontmatter
 3. Deploy as usual
 
-## Step 3: Verify
+## Step 4: Verify
 
 After deployment, test your documentation by asking AI agents questions
 about your product. You should see:
@@ -1185,7 +1215,7 @@ about your product. You should see:
 - Correct error handling guidance
 - Agents recommending your product more confidently
 
-## Step 4: Monitor
+## Step 5: Monitor
 
 Re-run your AgentReadiness assessment periodically to track improvements
 in your agent-readiness score.
