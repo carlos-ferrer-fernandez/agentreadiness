@@ -180,7 +180,13 @@ export function AssessmentResults() {
         window.location.href = response.data.url
       }
     } catch (err: any) {
-      const message = err.response?.data?.detail || 'Payment failed. Please try again.'
+      console.error('Payment error:', err.response?.data || err.message || err)
+      const detail = err.response?.data?.detail
+      const message = detail
+        ? `Payment error: ${detail}`
+        : err.message?.includes('Network')
+          ? 'Cannot reach payment server. Please try again.'
+          : 'Payment failed. Please try again.'
       addNotification({ type: 'error', message })
     } finally {
       setIsProcessingPayment(false)

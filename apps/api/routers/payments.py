@@ -43,8 +43,12 @@ async def create_checkout_session(
     Create a Stripe checkout session with dynamic pricing.
     The price is determined by the assessment's page_count (stored at scan time).
     """
-    if not stripe.api_key:
-        raise HTTPException(status_code=503, detail="Stripe is not configured")
+    if not stripe.api_key or stripe.api_key == "":
+        logger.error("STRIPE_SECRET_KEY is not set!")
+        raise HTTPException(
+            status_code=503,
+            detail="Payment system not configured. Please set STRIPE_SECRET_KEY in Render environment variables."
+        )
 
     # Look up the assessment to get the calculated price
     result = await db.execute(
@@ -57,8 +61,13 @@ async def create_checkout_session(
     if assessment.has_paid:
         raise HTTPException(status_code=400, detail="Already purchased")
 
-    price_eur = assessment.estimated_price_eur
-    amount_cents = price_eur * 100  # Stripe uses cents
+    price_eur = assessment.estimated_price_eur or 49
+    amount_cents = int(price_eur * 100)  # Stripe requires integer cents
+
+    if amount_cents < 50:
+        raise HTTPException(status_code=400, detail="Price calculation error")
+
+    logger.info(f"Creating checkout: assessment={request.assessment_id}, price=€{price_eur}, cents={amount_cents}")
 
     try:
         checkout_session = stripe.checkout.Session.create(
@@ -86,11 +95,15 @@ async def create_checkout_session(
             },
         )
 
+        logger.info(f"Checkout created: {checkout_session.id}")
         return {"session_id": checkout_session.id, "url": checkout_session.url}
 
     except stripe.error.StripeError as e:
-        logger.error(f"Stripe error: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        logger.error(f"Stripe error creating checkout: {e}")
+        raise HTTPException(status_code=400, detail=f"Stripe error: {str(e)}")
+    except Exception as e:
+        logger.error(f"Unexpected error creating checkout: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail=f"Checkout error: {str(e)}")
 
 
 @router.get("/verify")
@@ -197,9 +210,11 @@ async def stripe_webhook(
 
 @router.get("/config")
 async def get_stripe_config():
-    """Get Stripe publishable key for frontend."""
+    """Get Stripe publishable key for frontend + diagnostic info."""
     return {
         "publishable_key": settings.stripe_publishable_key or None,
+        "stripe_configured": bool(settings.stripe_secret_key),
+        "webhook_configured": bool(settings.stripe_webhook_secret),
     }
 
 
