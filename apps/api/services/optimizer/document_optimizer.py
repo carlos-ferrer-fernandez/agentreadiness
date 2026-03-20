@@ -758,7 +758,22 @@ style, tables) should follow the rules, but all prose content stays in the origi
 Frontmatter field NAMES stay in English (title, description, tags, etc.) but their VALUES
 must be in the original language.
 
-Output ONLY the optimized Markdown. No explanations. No "here's the optimized version".
+Output the optimized Markdown first, then after a separator line, list the specific
+improvements you made. Use this exact format:
+
+[Start with --- frontmatter, then the full optimized content]
+
+<!-- IMPROVEMENTS -->
+- [specific improvement 1, mentioning what section/content was changed]
+- [specific improvement 2]
+- [specific improvement 3]
+
+The improvements MUST be specific to THIS page. Do not use generic descriptions.
+BAD: "Added frontmatter metadata"
+GOOD: "Added YAML frontmatter with tags for event categories and registration management"
+BAD: "Converted headings"
+GOOD: "Restructured 'Assurance Annulation' and 'Paiements' into task-oriented headings"
+
 Do NOT wrap the output in ```markdown or ``` fences. Start directly with the --- frontmatter."""
 
     # =========================================================================
@@ -828,14 +843,29 @@ If you are an AI agent:
     # =========================================================================
 
     def _extract_improvements(self, content: str, analysis: PageAnalysis) -> List[str]:
-        """Determine what improvements were made based on analysis."""
+        """Extract improvements from GPT's output, falling back to static analysis."""
+        # Try to extract GPT-generated improvements from the content
+        if '<!-- IMPROVEMENTS -->' in content:
+            parts = content.split('<!-- IMPROVEMENTS -->')
+            if len(parts) >= 2:
+                improvements_text = parts[1].strip()
+                improvements = []
+                for line in improvements_text.split('\n'):
+                    line = line.strip()
+                    if line.startswith('- ') or line.startswith('* '):
+                        imp = line[2:].strip()
+                        if imp and len(imp) > 5:
+                            improvements.append(imp)
+                if improvements:
+                    return improvements[:8]  # Cap at 8 improvements
+
+        # Fallback: static analysis-based improvements (less specific)
         improvements = []
 
-        # Based on issues that were found (and should now be fixed)
         if analysis.has_vague_references:
-            improvements.append("Made sections self-contained — removed vague cross-references")
+            improvements.append("Made sections self-contained, removed vague cross-references")
         if not analysis.has_action_headings:
-            improvements.append("Converted headings to action-oriented, task-shaped format")
+            improvements.append("Restructured headings into action-oriented, task-shaped format")
         if not analysis.has_parameter_tables and 'parameter' in analysis.issues.__repr__().lower():
             improvements.append("Converted parameter descriptions from prose to structured tables")
         if not analysis.has_complete_examples and analysis.has_code_examples:
@@ -851,7 +881,7 @@ If you are an AI agent:
         if not analysis.has_expected_output:
             improvements.append("Added expected outputs for API calls and code examples")
         if analysis.has_marketing_language:
-            improvements.append("Stripped marketing language — technical precision only")
+            improvements.append("Stripped marketing language, technical precision only")
         if not analysis.has_version_info:
             improvements.append("Added version context and clarity")
 
@@ -873,6 +903,10 @@ If you are an AI agent:
             if lines and lines[-1].strip() == '```':
                 lines = lines[:-1]
             content = '\n'.join(lines)
+
+        # Remove the improvements section (parsed separately by _extract_improvements)
+        if '<!-- IMPROVEMENTS -->' in content:
+            content = content.split('<!-- IMPROVEMENTS -->')[0].strip()
 
         # Remove any "improvements" section the LLM might have added
         if "## Improvements Made" in content:
