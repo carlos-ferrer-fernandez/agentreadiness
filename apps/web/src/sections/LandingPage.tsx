@@ -122,6 +122,9 @@ const liveStatusMessages = [
 export function LandingPage() {
   const navigate = useNavigate()
   const [url, setUrl] = useState('')
+  const [email, setEmail] = useState('')
+  const [fullName, setFullName] = useState('')
+  const [role, setRole] = useState('')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [liveMessage, setLiveMessage] = useState(0)
@@ -137,6 +140,12 @@ export function LandingPage() {
   const handleAnalyze = useCallback(async () => {
     if (!url || isAssessing) return
     setError(null)
+
+    // Validate email (required)
+    if (!email || !email.includes('@') || !email.includes('.')) {
+      setError('Please enter a valid work email')
+      return
+    }
 
     let validatedUrl = url
     if (!url.startsWith('http')) {
@@ -167,7 +176,12 @@ export function LandingPage() {
     }, 3000)
 
     try {
-      const response = await assessmentsApi.analyze({ url: validatedUrl })
+      const response = await assessmentsApi.analyze({
+        url: validatedUrl,
+        email,
+        full_name: fullName || undefined,
+        role: role || undefined,
+      })
       clearInterval(stageInterval)
       clearInterval(messageInterval)
 
@@ -219,7 +233,7 @@ export function LandingPage() {
       setAssessmentError(message)
       setError(message)
     }
-  }, [url, isAssessing, startAssessment, setAssessmentResult, setAssessmentError, navigate, setLiveMessage])
+  }, [url, email, fullName, role, isAssessing, startAssessment, setAssessmentResult, setAssessmentError, navigate, setLiveMessage])
 
   const scrollToAssessment = () => {
     document.getElementById('assessment')?.scrollIntoView({ behavior: 'smooth' })
@@ -349,6 +363,48 @@ export function LandingPage() {
                     />
                   </div>
 
+                  {/* Lead capture fields — shown after URL is entered */}
+                  <AnimatePresence>
+                    {url.length > 3 && !isAssessing && (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: 'auto' }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="space-y-3"
+                      >
+                        <div className="pt-2 border-t">
+                          <p className="text-xs text-muted-foreground mb-3">
+                            We'll send your free report to this email
+                          </p>
+                          <Input
+                            type="email"
+                            placeholder="Work email *"
+                            value={email}
+                            onChange={(e) => { setEmail(e.target.value); setError(null) }}
+                            className="h-10 text-sm"
+                            onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
+                          />
+                        </div>
+                        <div className="grid grid-cols-2 gap-3">
+                          <Input
+                            type="text"
+                            placeholder="Full name"
+                            value={fullName}
+                            onChange={(e) => setFullName(e.target.value)}
+                            className="h-10 text-sm"
+                          />
+                          <Input
+                            type="text"
+                            placeholder="Role (e.g. CTO, DevRel)"
+                            value={role}
+                            onChange={(e) => setRole(e.target.value)}
+                            className="h-10 text-sm"
+                          />
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
                   {error && (
                     <p className="text-sm text-red-600">{error}</p>
                   )}
@@ -356,7 +412,7 @@ export function LandingPage() {
                   <Button
                     size="lg"
                     onClick={handleAnalyze}
-                    disabled={isAssessing || !url}
+                    disabled={isAssessing || !url || !email}
                     className="w-full"
                   >
                     {isAssessing ? (

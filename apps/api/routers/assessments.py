@@ -28,6 +28,8 @@ logger = logging.getLogger(__name__)
 class AssessmentRequest(BaseModel):
     url: HttpUrl
     email: Optional[str] = None
+    full_name: Optional[str] = None
+    role: Optional[str] = None
 
 
 class AssessmentResponse(BaseModel):
@@ -111,6 +113,8 @@ async def run_assessment(
             url=url,
             site_name=site_name,
             email=request.email,
+            full_name=request.full_name,
+            role=request.role,
             score=analysis.overall_score,
             grade=analysis.grade,
             components=analysis.components,
@@ -125,6 +129,11 @@ async def run_assessment(
         db.add(assessment)
         await db.flush()
         await db.refresh(assessment)
+
+        logger.info(
+            f"New lead: {request.email} | {request.full_name or 'N/A'} | "
+            f"{request.role or 'N/A'} | {site_name} | score={analysis.overall_score}"
+        )
 
         return _build_response(assessment)
 

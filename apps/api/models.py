@@ -182,6 +182,8 @@ class Assessment(Base):
     url: Mapped[str] = mapped_column(String(2048))
     site_name: Mapped[str] = mapped_column(String(255))
     email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    full_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    role: Mapped[str | None] = mapped_column(String(100), nullable=True)
     score: Mapped[int] = mapped_column(Integer)
     grade: Mapped[str] = mapped_column(String(5))
     components: Mapped[dict] = mapped_column(JSON)
