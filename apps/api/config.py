@@ -38,7 +38,7 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o"  # Model for doc optimization (gpt-4o, gpt-4o-mini, etc.)
+    openai_model: str = "gpt-5.4"  # Model for doc optimization (falls back to gpt-4o if unavailable)
 
     # Stripe
     stripe_secret_key: str = ""
@@ -48,10 +48,10 @@ class Settings(BaseSettings):
     # Dynamic pricing (EUR)
     # Price = max(min_price, ceil(estimated_api_cost * margin_multiplier))
     # estimated_api_cost = base_cost + per_page_cost * page_count
-    # Costs based on GPT-4o: $2.50/1M input, $10.00/1M output
-    # ~6K tokens in + ~3K tokens out per page = ~$0.05/page
+    # Costs based on GPT-5.4: $2.50/1M input, $15.00/1M output
+    # ~6K tokens in + ~3K tokens out per page = ~$0.06/page
     pricing_base_cost: float = 3.0        # Fixed overhead: assessment scan, server, Stripe fees
-    pricing_per_page_cost: float = 0.08   # Per-page optimization ($0.05 actual + buffer)
+    pricing_per_page_cost: float = 0.08   # Per-page optimization ($0.06 actual + buffer)
     pricing_margin_multiplier: float = 3.0  # 3x margin on API costs
     pricing_min_eur: int = 89              # Minimum price ($99 USD / €89 EUR)
     pricing_max_eur: int = 499             # Cap for very large docs
