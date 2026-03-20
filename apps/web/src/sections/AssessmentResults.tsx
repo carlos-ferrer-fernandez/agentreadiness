@@ -52,7 +52,7 @@ const componentDescriptions: Record<string, string> = {
 }
 
 const deliverableFeatures = [
-  'Every page rewritten by GPT-5.4 applying 20 rules',
+  'Every page individually rewritten applying all 20 rules',
   'Structured markdown files, ready to deploy',
   'Self-contained sections for RAG retrieval',
   'Complete code examples with imports and expected outputs',
@@ -235,7 +235,7 @@ export function AssessmentResults() {
   } = currentAssessment
 
   const rules = ruleResults || []
-  const price = estimatedPriceEur || 99
+  const price = estimatedPriceEur || 89
   const isOptimizing = hasPaid && optimizationStatus && !['complete', 'failed'].includes(optimizationStatus)
   const isOptimizationDone = hasPaid && optimizationStatus === 'complete'
   const isOptimizationFailed = hasPaid && optimizationStatus === 'failed'
@@ -388,7 +388,7 @@ export function AssessmentResults() {
                 size="sm"
                 onClick={() => useAssessmentStore.getState().showPaywallModal()}
               >
-                Get Optimized Docs · ${Math.round(price * 1.1)}/€{price}
+                Get Optimized Docs · ${Math.round(price * 1.12)}/€{price}
               </Button>
             </div>
           </motion.div>
@@ -602,7 +602,7 @@ export function AssessmentResults() {
                     </p>
                     <Button onClick={() => useAssessmentStore.getState().showPaywallModal()}>
                       <Unlock className="w-4 h-4 mr-2" />
-                      Get My Optimized Docs · ${Math.round(price * 1.1)}/€{price}
+                      Get My Optimized Docs · ${Math.round(price * 1.12)}/€{price}
                     </Button>
                   </div>
                 </div>
@@ -742,7 +742,7 @@ export function AssessmentResults() {
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Get My Optimized Docs · ${Math.round(price * 1.1)}/€{price}
+                  Get My Optimized Docs · ${Math.round(price * 1.12)}/€{price}
                 </>
               )}
             </Button>

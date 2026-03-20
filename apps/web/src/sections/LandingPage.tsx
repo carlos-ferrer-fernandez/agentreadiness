@@ -335,10 +335,10 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8"
             >
-              Developers increasingly discover tools through AI agents like Claude, GPT and Gemini.
-              These agents form opinions based on your documentation structure, not your marketing site.
-              We score your docs against <strong>20 rules that all major agents agree on</strong>, then
-              rewrite every page so agents can actually parse, cite, and recommend your product.
+              When a developer asks Claude, GPT, or Gemini to recommend a tool like yours,
+              the answer comes from your documentation. Not your website. Not your ads.{' '}
+              <strong>Your docs.</strong> We test yours against 20 rules and rewrite every page
+              so agents can parse, cite, and recommend you.
             </motion.p>
 
             {/* Assessment Form */}
@@ -514,7 +514,7 @@ export function LandingPage() {
                 </span>
                 <span className="flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
-                  Powered by GPT-5.4
+                  Research-backed methodology
                 </span>
                 <span className="flex items-center gap-1">
                   <CheckCircle2 className="w-3 h-3" />
@@ -712,7 +712,7 @@ export function LandingPage() {
                 step: '03',
                 title: 'Get the Fixed Docs',
                 description: 'We rewrite every page applying all 20 rules. You download a ZIP with optimized markdown files + an llms.txt agent entry point. Deploy in minutes.',
-                highlight: 'From $109/€99',
+                highlight: 'From $99/€89',
               },
             ].map((item, index) => (
               <motion.div
@@ -742,7 +742,7 @@ export function LandingPage() {
             <h2 className="text-3xl font-bold mb-4">Simple pricing, no surprises</h2>
             <p className="text-muted-foreground">
               Get your free score first. If you want the optimized docs, we'll show you the exact price
-              based on your documentation size. Starting at $109/€99. One-time payment, no subscriptions.
+              based on your documentation size. Starting at $99/€89. One-time payment, no subscriptions.
             </p>
           </div>
 
@@ -797,8 +797,8 @@ export function LandingPage() {
               <h3 className="text-lg font-semibold">Optimized Documentation</h3>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-sm text-muted-foreground">starting at</span>
-                <span className="text-3xl font-bold">$109</span>
-                <span className="text-sm text-muted-foreground">/€99</span>
+                <span className="text-3xl font-bold">$99</span>
+                <span className="text-sm text-muted-foreground">/€89</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
                 Exact price calculated after your free scan, based on documentation size
@@ -807,7 +807,7 @@ export function LandingPage() {
                 {[
                   'Everything in Free Score',
                   'All 20 rules applied to every page',
-                  'Every page rewritten by GPT-5.4',
+                  'Every page individually rewritten by AI',
                   'Self-contained sections for RAG retrieval',
                   'Complete code examples (imports + expected output)',
                   'Structured parameter tables and error docs',
@@ -872,11 +872,11 @@ export function LandingPage() {
               },
               {
                 q: 'What do I get for free vs. the paid product?',
-                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from $109/€99) gives you the actual optimized documentation files. Every page is individually rewritten by GPT-5.4 applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy.',
+                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from $99/€89) gives you the actual optimized documentation files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy.',
               },
               {
                 q: 'How is the price calculated?',
-                a: 'After your free scan, we know exactly how many pages need to be rewritten. Pricing starts at $109/€99. Each page is individually analyzed and rewritten by GPT-5.4 applying all 20 rules. Larger documentation sites cost more because there\'s more work per page. You\'ll see your exact price before paying. One-time payment, no subscriptions.',
+                a: 'After your free scan, we know exactly how many pages need to be rewritten. Pricing starts at $99/€89. Each page is individually analyzed and rewritten applying all 20 rules. Larger documentation sites cost more because there\'s more work per page. You\'ll see your exact price before paying. One-time payment, no subscriptions.',
               },
               {
                 q: 'How long does it take?',
