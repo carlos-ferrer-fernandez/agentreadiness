@@ -31,7 +31,7 @@ openai.api_key = os.getenv('OPENAI_API_KEY')
 
 # =============================================================================
 # THE AGENT-READINESS DOCTRINE
-# Distilled from multi-agent benchmark (Claude, GPT5.4, Kimi, Grok,
+# Distilled from multi-agent benchmark (Claude, GPT, Kimi, Grok,
 # Deepseek, Manus, Gemini, KimiClaw)
 #
 # Documentation is agent-ready when it is:
@@ -565,53 +565,113 @@ class DocumentationOptimizer:
 
         prompt = self._build_optimization_prompt(page, analysis, terminology_context)
 
+        from config import get_settings
+        settings = get_settings()
+        model = settings.openai_model
+
+        # Fallback chain: configured model -> gpt-4o -> gpt-4o-mini
+        models_to_try = [model]
+        if model != "gpt-4o":
+            models_to_try.append("gpt-4o")
+        if "gpt-4o-mini" not in models_to_try:
+            models_to_try.append("gpt-4o-mini")
+
         max_retries = 3
-        for attempt in range(max_retries):
-            try:
-                client = openai.AsyncOpenAI(timeout=120.0)
-                response = await client.chat.completions.create(
-                    model="gpt-5.4",
-                    messages=[
-                        {
-                            "role": "system",
-                            "content": (
-                                "You are an expert documentation optimizer. Your SOLE purpose is to "
-                                "rewrite documentation so it is maximally useful for AI agents "
-                                "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
-                                "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
-                                "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
-                                "The output must be production-ready documentation that can be deployed as-is."
-                            )
-                        },
-                        {
-                            "role": "user",
-                            "content": prompt
-                        }
-                    ],
-                    temperature=0.2,
-                    max_tokens=4096,
-                )
+        last_error = None
+        optimized_content = None
 
-                optimized_content = response.choices[0].message.content
-                break  # Success — exit retry loop
+        for current_model in models_to_try:
+            if optimized_content is not None:
+                break
 
-            except Exception as e:
-                if attempt < max_retries - 1:
-                    wait = 2 ** (attempt + 1)  # 2s, 4s
-                    logger.warning(
-                        f"OpenAI call failed for {page.url} (attempt {attempt + 1}): {e}. "
-                        f"Retrying in {wait}s..."
+            for attempt in range(max_retries):
+                try:
+                    client = openai.AsyncOpenAI(timeout=120.0)
+                    response = await client.chat.completions.create(
+                        model=current_model,
+                        messages=[
+                            {
+                                "role": "system",
+                                "content": (
+                                    "You are an expert documentation optimizer. Your SOLE purpose is to "
+                                    "rewrite documentation so it is maximally useful for AI agents "
+                                    "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
+                                    "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
+                                    "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
+                                    "The output must be production-ready documentation that can be deployed as-is."
+                                )
+                            },
+                            {
+                                "role": "user",
+                                "content": prompt
+                            }
+                        ],
+                        temperature=0.2,
+                        max_tokens=4096,
                     )
-                    await asyncio.sleep(wait)
-                else:
-                    logger.error(f"All retries failed for {page.url}: {e}")
+
+                    optimized_content = response.choices[0].message.content
+                    if current_model != model:
+                        logger.info(f"Used fallback model {current_model} for {page.url}")
+                    break  # Success, exit retry loop
+
+                except openai.NotFoundError as e:
+                    # Model doesn't exist, skip retries and try next model
+                    logger.warning(f"Model '{current_model}' not found: {e}. Trying next model.")
+                    last_error = e
+                    break  # Skip retries for this model
+
+                except openai.RateLimitError as e:
+                    last_error = e
+                    if attempt < max_retries - 1:
+                        wait = 2 ** (attempt + 1)
+                        logger.warning(
+                            f"Rate limited on {current_model} for {page.url} "
+                            f"(attempt {attempt + 1}): {e}. Retrying in {wait}s..."
+                        )
+                        await asyncio.sleep(wait)
+                    else:
+                        logger.warning(f"Rate limit retries exhausted for {current_model}, trying next model.")
+
+                except openai.AuthenticationError as e:
+                    # API key issue, no point retrying or trying other models
+                    logger.error(f"OpenAI authentication failed: {e}")
                     return OptimizedDoc(
                         original_url=page.url,
                         title=page.title,
                         optimized_content=page.content,
-                        improvements=["Failed to optimize — using original content"],
+                        improvements=["Failed to optimize: API key issue. Using original content."],
                         file_name=self._generate_file_name(page.title, page.url)
                     )
+
+                except Exception as e:
+                    last_error = e
+                    if attempt < max_retries - 1:
+                        wait = 2 ** (attempt + 1)
+                        logger.warning(
+                            f"OpenAI call failed ({current_model}) for {page.url} "
+                            f"(attempt {attempt + 1}): {type(e).__name__}: {e}. Retrying in {wait}s..."
+                        )
+                        await asyncio.sleep(wait)
+                    else:
+                        logger.error(
+                            f"All retries failed ({current_model}) for {page.url}: "
+                            f"{type(e).__name__}: {e}"
+                        )
+
+        if optimized_content is None:
+            logger.error(
+                f"All models failed for {page.url}. Last error: "
+                f"{type(last_error).__name__}: {last_error}" if last_error else
+                f"All models failed for {page.url}. No error captured."
+            )
+            return OptimizedDoc(
+                original_url=page.url,
+                title=page.title,
+                optimized_content=page.content,
+                improvements=["Failed to optimize. Using original content."],
+                file_name=self._generate_file_name(page.title, page.url)
+            )
 
         # Extract improvements and clean up
         improvements = self._extract_improvements(optimized_content, analysis)
