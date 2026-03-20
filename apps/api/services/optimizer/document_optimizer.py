@@ -567,9 +567,9 @@ class DocumentationOptimizer:
         max_retries = 3
         for attempt in range(max_retries):
             try:
-                client = openai.AsyncOpenAI()
+                client = openai.AsyncOpenAI(timeout=120.0)
                 response = await client.chat.completions.create(
-                    model="gpt-4-turbo-preview",
+                    model="gpt-4o",
                     messages=[
                         {
                             "role": "system",
@@ -589,7 +589,6 @@ class DocumentationOptimizer:
                     ],
                     temperature=0.2,
                     max_tokens=4096,
-                    timeout=120.0,
                 )
 
                 optimized_content = response.choices[0].message.content

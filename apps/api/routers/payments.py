@@ -132,7 +132,9 @@ async def verify_payment(
                     assessment.paid_plan = "optimized_docs"
                     assessment.stripe_session_id = session_id
                     assessment.optimization_status = "queued"
-                    await db.flush()
+                    await db.commit()  # Commit BEFORE background task starts
+
+                    logger.info(f"Payment verified for {assessment_id}, triggering optimization")
 
                     # Trigger optimization in background
                     background_tasks.add_task(
@@ -140,6 +142,8 @@ async def verify_payment(
                         assessment_id,
                         assessment.url,
                     )
+                else:
+                    logger.error(f"Assessment {assessment_id} not found during payment verify")
 
             return {
                 "paid": True,
@@ -149,6 +153,7 @@ async def verify_payment(
                 "optimization_status": "queued",
             }
 
+        logger.warning(f"Payment not yet paid for session {session_id}: {session.payment_status}")
         return {"paid": False, "status": session.payment_status}
 
     except stripe.error.StripeError as e:
@@ -192,7 +197,7 @@ async def stripe_webhook(
                 assessment.paid_plan = "optimized_docs"
                 assessment.stripe_session_id = session.get("id")
                 assessment.optimization_status = "queued"
-                await db.flush()
+                await db.commit()  # Commit BEFORE background task starts
 
                 background_tasks.add_task(
                     _run_optimization_pipeline,
@@ -230,7 +235,8 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
     from pathlib import Path
     from services.optimizer.document_optimizer import DocumentationOptimizer
 
-    logger.info(f"Starting optimization for assessment {assessment_id}")
+    logger.info(f"=== OPTIMIZATION PIPELINE STARTED for {assessment_id} ===")
+    logger.info(f"URL to optimize: {url}")
 
     # Validate OpenAI key before starting expensive work
     openai_key = os.getenv("OPENAI_API_KEY", "")
@@ -310,10 +316,10 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
                 assessment.optimization_completed_at = datetime.now(timezone.utc)
                 await db.commit()
 
-            logger.info(f"Optimization complete for {assessment_id}: {len(docs)} pages optimized")
+            logger.info(f"=== OPTIMIZATION COMPLETE for {assessment_id}: {len(docs)} pages optimized ===")
 
         except Exception as e:
-            logger.error(f"Optimization failed for {assessment_id}: {e}", exc_info=True)
+            logger.error(f"=== OPTIMIZATION FAILED for {assessment_id}: {e} ===", exc_info=True)
             try:
                 result = await db.execute(
                     select(Assessment).where(Assessment.id == assessment_id)
