@@ -141,7 +141,7 @@ async def run_assessment(
         raise
     except Exception as e:
         logger.error(f"Assessment failed for {url}: {e}", exc_info=True)
-        raise HTTPException(status_code=500, detail="Assessment failed. Please try again.")
+        raise HTTPException(status_code=500, detail=f"Assessment failed: {str(e)}")
 
 
 @router.get("/{assessment_id}", response_model=AssessmentResponse)

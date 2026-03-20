@@ -53,11 +53,35 @@ async def get_db() -> AsyncSession:
 
 
 async def init_db():
-    """Create all tables."""
+    """Create all tables and add any missing columns."""
     if _use_sqlite:
         logger.info("Using SQLite fallback database")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
+    # Add columns that may be missing from older table versions.
+    # SQLAlchemy create_all only creates new tables, not new columns.
+    _migration_columns = [
+        ("assessments", "full_name", "VARCHAR(255)"),
+        ("assessments", "role", "VARCHAR(100)"),
+        ("assessments", "optimization_status", "VARCHAR(50)"),
+        ("assessments", "optimization_progress", "FLOAT DEFAULT 0"),
+        ("assessments", "optimization_stage", "VARCHAR(255)"),
+        ("assessments", "optimization_metadata", "TEXT"),
+        ("assessments", "optimization_error", "TEXT"),
+        ("assessments", "optimization_zip_path", "VARCHAR(500)"),
+    ]
+    async with engine.begin() as conn:
+        for table, column, col_type in _migration_columns:
+            try:
+                await conn.execute(
+                    __import__("sqlalchemy").text(
+                        f"ALTER TABLE {table} ADD COLUMN IF NOT EXISTS {column} {col_type}"
+                    )
+                )
+            except Exception as e:
+                # Column may already exist, or DB doesn't support IF NOT EXISTS
+                logger.debug(f"Migration skip {table}.{column}: {e}")
 
 
 async def close_db():
