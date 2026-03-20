@@ -52,14 +52,14 @@ const componentDescriptions: Record<string, string> = {
 }
 
 const deliverableFeatures = [
-  'Every page rewritten applying 20 agent-readiness rules',
-  'Structured markdown files — ready to deploy',
+  'Every page rewritten by GPT-5.4 applying 20 rules',
+  'Structured markdown files, ready to deploy',
   'Self-contained sections for RAG retrieval',
-  'Complete code examples with imports & expected outputs',
+  'Complete code examples with imports and expected outputs',
   'Structured parameter tables (not prose)',
-  'Error documentation with codes, causes & fixes',
-  'llms.txt file generated — the agent entry point',
-  'Download as ZIP — deploy in minutes',
+  'Error documentation with codes, causes, and fixes',
+  'llms.txt file generated as agent entry point',
+  'Download as ZIP, deploy in minutes',
 ]
 
 function RuleStatusIcon({ status }: { status: string }) {
@@ -245,7 +245,7 @@ export function AssessmentResults() {
   const failingRules = rules.filter(r => r.status === 'fail').length
 
   const getFOMOMessage = (score: number): string => {
-    if (score >= 90) return 'Good position — but your competitors are catching up. Stay ahead.'
+    if (score >= 90) return 'Good position, but your competitors are catching up. Stay ahead.'
     if (score >= 80) return 'Solid foundation, but gaps are costing you agent recommendations.'
     if (score >= 70) return 'Below average. AI agents are likely recommending your competitors instead.'
     if (score >= 60) return 'Concerning. You\'re effectively invisible to most AI agents right now.'
@@ -361,7 +361,7 @@ export function AssessmentResults() {
               <div>
                 <p className="font-medium text-sm">Optimization failed. Please contact support.</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Your payment is safe — we'll either fix this or issue a full refund.
+                  Your payment is safe. We'll either fix this or issue a full refund.
                 </p>
               </div>
             </div>
@@ -388,7 +388,7 @@ export function AssessmentResults() {
                 size="sm"
                 onClick={() => useAssessmentStore.getState().showPaywallModal()}
               >
-                Get Optimized Docs — €{price}
+                Get Optimized Docs · ${Math.round(price * 1.1)}/€{price}
               </Button>
             </div>
           </motion.div>
@@ -571,7 +571,7 @@ export function AssessmentResults() {
                                   onClick={() => useAssessmentStore.getState().showPaywallModal()}
                                 >
                                   <FileCode className="w-3 h-3 mr-2" />
-                                  Fix This — Get Optimized Docs
+                                  Fix This · Get Optimized Docs
                                 </Button>
                               ) : null}
                             </div>
@@ -602,7 +602,7 @@ export function AssessmentResults() {
                     </p>
                     <Button onClick={() => useAssessmentStore.getState().showPaywallModal()}>
                       <Unlock className="w-4 h-4 mr-2" />
-                      Get My Optimized Docs — €{price}
+                      Get My Optimized Docs · ${Math.round(price * 1.1)}/€{price}
                     </Button>
                   </div>
                 </div>
@@ -624,7 +624,7 @@ export function AssessmentResults() {
                     <Rocket className="w-8 h-8 mx-auto mb-2 text-primary" />
                     <h4 className="font-medium text-sm">llms.txt Entry Point</h4>
                     <p className="text-xs text-muted-foreground mt-1">
-                      The agent-equivalent of robots.txt — helps AI agents find your docs
+                      The agent-equivalent of robots.txt. Helps AI agents find your docs
                     </p>
                   </div>
                   <div className="border rounded-lg p-4 text-center">
@@ -725,7 +725,7 @@ export function AssessmentResults() {
 
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Shield className="w-4 h-4" />
-              7-day money-back guarantee
+              Secure payment via Stripe
             </div>
 
             <Button
@@ -742,7 +742,7 @@ export function AssessmentResults() {
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Get My Optimized Docs — €{price}
+                  Get My Optimized Docs · ${Math.round(price * 1.1)}/€{price}
                 </>
               )}
             </Button>

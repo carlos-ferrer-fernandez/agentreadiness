@@ -48,22 +48,22 @@ const features = [
   {
     icon: Bot,
     title: 'Agent Simulation',
-    description: 'We test your docs the way AI agents actually consume them — not how humans read them.',
+    description: 'We test your docs the way AI agents actually consume them. Not how humans read them.',
   },
   {
     icon: Eye,
     title: 'Visibility Score',
-    description: 'Find out if AI agents can see you, recommend you, and answer questions about your product.',
+    description: 'Find out if agents can see you, recommend you, and answer questions about your product accurately.',
   },
   {
     icon: TrendingUp,
-    title: 'Optimized Documentation',
-    description: 'Not a report. Not tips. We rewrite your actual docs for AI agents. Download a ZIP and deploy.',
+    title: 'Rewritten Documentation',
+    description: 'Not a report. Not tips. We rewrite your actual docs so agents can parse them. Download a ZIP and deploy.',
   },
   {
     icon: Shield,
     title: 'Ready to Deploy',
-    description: 'Structured markdown files with proper headings, code blocks & API tables. Works with any docs platform.',
+    description: 'Structured markdown files with proper headings, code blocks, and API tables. Works with any docs platform.',
   },
 ]
 
@@ -87,7 +87,7 @@ const agentReadinessRules = [
   { id: 17, name: 'Retrieval-Chunk Optimized', icon: SplitSquareHorizontal, description: 'Sections scoped for RAG: clear heading, clear scope, standalone context.' },
   { id: 18, name: 'Intent Before Mechanics', icon: Megaphone, description: 'Always explain WHY before HOW. Context before code.' },
   { id: 19, name: 'State Transitions', icon: RefreshCcw, description: 'Document systems as state machines: states, transitions, triggers, terminal states.' },
-  { id: 20, name: 'Callouts & Admonitions', icon: AlertTriangle, description: 'Standard callout syntax for warnings, tips, notes — prioritization signals for agents.' },
+  { id: 20, name: 'Callouts & Admonitions', icon: AlertTriangle, description: 'Standard callout syntax for warnings, tips, and notes. These are prioritization signals for agents.' },
 ]
 
 const assessmentStages = [
@@ -116,7 +116,7 @@ const liveStatusMessages = [
   'Looking for missing expected outputs...',
   'Checking safety boundary documentation...',
   'Analyzing content type separation...',
-  'Almost there — finalizing scores...',
+  'Almost there, finalizing scores...',
 ]
 
 export function LandingPage() {
@@ -163,14 +163,14 @@ export function LandingPage() {
     startAssessment()
     setLiveMessage(0)
 
-    // Animate stages while the API call runs — advance every 4s through 11 stages
+    // Animate stages while the API call runs, advance every 4s through 11 stages
     const stageInterval = setInterval(() => {
       useAssessmentStore.setState((state) => ({
         assessmentStage: Math.min(state.assessmentStage + 1, assessmentStages.length - 1),
       }))
     }, 4000)
 
-    // Rotate the live status message every 3s to show activity
+    // Rotate the live status message every 3s
     const messageInterval = setInterval(() => {
       setLiveMessage((prev) => (prev + 1) % liveStatusMessages.length)
     }, 3000)
@@ -323,9 +323,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6"
             >
-              AI agents are the new buyers.{' '}
+              Agents read docs, not websites.{' '}
               <span className="bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                Can they find you?
+                Are yours ready?
               </span>
             </motion.h1>
 
@@ -335,9 +335,10 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8"
             >
-              AI agents are how developers discover tools now. If your documentation
-              isn't optimized for them, they can't recommend you. Get your <strong>free Agent-Readiness Score</strong> and
-              see exactly what needs fixing — tested against 20 rules that all major AI agents agree on.
+              Developers increasingly discover tools through AI agents like Claude, GPT and Gemini.
+              These agents form opinions based on your documentation structure, not your marketing site.
+              We score your docs against <strong>20 rules that all major agents agree on</strong>, then
+              rewrite every page so agents can actually parse, cite, and recommend your product.
             </motion.p>
 
             {/* Assessment Form */}
@@ -422,7 +423,7 @@ export function LandingPage() {
                       </>
                     ) : (
                       <>
-                        Check My Visibility — Free
+                        Run Free Assessment
                         <ArrowRight className="ml-2 w-4 h-4" />
                       </>
                     )}
@@ -506,10 +507,20 @@ export function LandingPage() {
                 </AnimatePresence>
               </div>
 
-              <p className="text-xs text-muted-foreground mt-4">
-                <CheckCircle2 className="w-3 h-3 inline mr-1" />
-                Free score in 60 seconds — No signup — No credit card
-              </p>
+              <div className="flex items-center justify-center gap-4 mt-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  20 rules, 8 agents
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Powered by GPT-5.4
+                </span>
+                <span className="flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Used by devtool teams
+                </span>
+              </div>
             </motion.div>
           </div>
         </div>
@@ -530,9 +541,9 @@ export function LandingPage() {
               The 20 Agent-Readiness Rules
             </h2>
             <p className="text-muted-foreground">
-              We asked 8 major AI agents — Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, and others —
-              what makes documentation easy or hard for them. These 20 rules are the consensus.
-              Your docs are scored against every single one.
+              Based on how LLMs are built and how they actually behave. We benchmarked 8 agents
+              (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus and others) and distilled the
+              consensus into 20 concrete, testable rules. Your docs are scored against every one.
             </p>
           </div>
 
@@ -569,7 +580,7 @@ export function LandingPage() {
               Your documentation is scored against all 20 rules. Our optimizer fixes every failing rule automatically.
             </p>
             <Button onClick={scrollToAssessment}>
-              Test Your Docs Against These Rules — Free
+              Test Your Docs Against These Rules
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </div>
@@ -626,7 +637,7 @@ export function LandingPage() {
               <p className="text-sm text-muted-foreground leading-relaxed">
                 In this talk, Diana explains how AI agents are rapidly becoming the primary way
                 developers discover and evaluate tools. The companies that optimise their
-                documentation for agent consumption will win. The rest will become invisible.
+                documentation for agent consumption will win. The rest become invisible.
               </p>
 
               <Button variant="outline" size="sm" onClick={scrollToAssessment}>
@@ -646,8 +657,9 @@ export function LandingPage() {
               Your docs are your storefront in the agent economy
             </h2>
             <p className="text-muted-foreground">
-              AI agents don't browse your website — they read your documentation.
-              If your docs aren't optimised, you're invisible to the fastest-growing buyer channel.
+              AI agents don't browse your website. They read your documentation.
+              If your docs aren't structured for machine consumption, you're invisible
+              to the fastest-growing discovery channel in software.
             </p>
           </div>
 
@@ -678,7 +690,7 @@ export function LandingPage() {
           <div className="text-center max-w-2xl mx-auto mb-16">
             <h2 className="text-3xl font-bold mb-4">How it works</h2>
             <p className="text-muted-foreground">
-              60 seconds to your score. One click to get your docs rewritten for AI agents.
+              Enter your docs URL. Get a score. See what's failing. Fix everything in one click.
             </p>
           </div>
 
@@ -693,14 +705,14 @@ export function LandingPage() {
               {
                 step: '02',
                 title: 'See What\'s Failing',
-                description: 'Get a rule-by-rule breakdown: which rules pass, which fail, and exactly what agents struggle with. No vague advice — concrete findings per page.',
+                description: 'Get a rule-by-rule breakdown: which rules pass, which fail, and exactly what agents struggle with. Concrete findings per page, not vague advice.',
                 highlight: 'Instant',
               },
               {
                 step: '03',
                 title: 'Get the Fixed Docs',
                 description: 'We rewrite every page applying all 20 rules. You download a ZIP with optimized markdown files + an llms.txt agent entry point. Deploy in minutes.',
-                highlight: 'From €99',
+                highlight: 'From $109/€99',
               },
             ].map((item, index) => (
               <motion.div
@@ -727,10 +739,10 @@ export function LandingPage() {
       <section id="pricing" className="py-20">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
-            <h2 className="text-3xl font-bold mb-4">Simple pricing. No surprises.</h2>
+            <h2 className="text-3xl font-bold mb-4">Simple pricing, no surprises</h2>
             <p className="text-muted-foreground">
               Get your free score first. If you want the optimized docs, we'll show you the exact price
-              based on your documentation size. Starting at €99. No subscriptions.
+              based on your documentation size. Starting at $109/€99. One-time payment, no subscriptions.
             </p>
           </div>
 
@@ -785,21 +797,22 @@ export function LandingPage() {
               <h3 className="text-lg font-semibold">Optimized Documentation</h3>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-sm text-muted-foreground">starting at</span>
-                <span className="text-3xl font-bold">€99</span>
+                <span className="text-3xl font-bold">$109</span>
+                <span className="text-sm text-muted-foreground">/€99</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
-                Exact price shown after your free scan — based on your documentation size
+                Exact price calculated after your free scan, based on documentation size
               </p>
               <ul className="mt-6 space-y-3 flex-1">
                 {[
                   'Everything in Free Score',
                   'All 20 rules applied to every page',
+                  'Every page rewritten by GPT-5.4',
                   'Self-contained sections for RAG retrieval',
                   'Complete code examples (imports + expected output)',
-                  'Structured parameter tables & error docs',
-                  'llms.txt — the agent entry point for your docs',
-                  'Download as ZIP in ~5 minutes',
-                  '7-day money-back guarantee',
+                  'Structured parameter tables and error docs',
+                  'llms.txt agent entry point included',
+                  'Download as ZIP, deploy in minutes',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2 text-sm">
                     <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
@@ -815,7 +828,7 @@ export function LandingPage() {
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-3">
-                Run the free scan first. We'll calculate the exact price based on your docs. 7-day money-back guarantee.
+                Run the free scan first. We'll calculate the exact price based on your documentation size.
               </p>
             </motion.div>
           </div>
@@ -831,13 +844,13 @@ export function LandingPage() {
           </h2>
           <p className="text-muted-foreground mb-2">
             If your documentation doesn't follow these 20 rules, agents struggle to answer
-            accurately — or worse, they recommend a competitor whose docs are better structured.
+            accurately. Worse: they recommend a competitor whose docs are better structured.
           </p>
           <p className="text-sm text-muted-foreground mb-8">
-            Check your score for free. See exactly which rules are failing. Fix them in minutes.
+            Check your score. See exactly which rules are failing. Fix them in one click.
           </p>
           <Button size="lg" onClick={scrollToAssessment}>
-            Check My Score — Free
+            Run Free Assessment
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
@@ -855,27 +868,23 @@ export function LandingPage() {
               },
               {
                 q: 'Where do these 20 rules come from?',
-                a: 'We asked 8 major AI agents — Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, and others — what actually makes documentation easy or hard for them to consume. The 20 rules are the consensus: the specific patterns that ALL agents agree matter for accurate answers, good code generation, and reliable recommendations.',
+                a: 'We benchmarked 8 major AI agents (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus and others) on what actually makes documentation easy or hard for them to consume. The 20 rules are the consensus: specific patterns that all agents agree matter for accurate answers, good code generation, and reliable recommendations. Grounded in how LLMs are built and how they actually behave.',
               },
               {
                 q: 'What do I get for free vs. the paid product?',
-                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from €99) gives you the actual optimized documentation files — every page rewritten with GPT-5.4 applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy.',
+                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from $109/€99) gives you the actual optimized documentation files. Every page is individually rewritten by GPT-5.4 applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy.',
               },
               {
                 q: 'How is the price calculated?',
-                a: 'After your free scan, we know exactly how many pages need to be rewritten and how much work each one requires. Pricing starts at €99 — each page is individually analyzed and rewritten by GPT-5.4 applying all 20 rules. Larger documentation sites cost more. You\'ll see your exact price before paying — no surprises, no subscriptions.',
+                a: 'After your free scan, we know exactly how many pages need to be rewritten. Pricing starts at $109/€99. Each page is individually analyzed and rewritten by GPT-5.4 applying all 20 rules. Larger documentation sites cost more because there\'s more work per page. You\'ll see your exact price before paying. One-time payment, no subscriptions.',
               },
               {
                 q: 'How long does it take?',
-                a: 'The free score takes about 60 seconds. After purchase, your optimized documentation is generated in ~5 minutes. You\'ll get a ZIP file you can download immediately — no waiting, no scheduling calls.',
+                a: 'The free score takes about 60 seconds. After purchase, your optimized documentation is generated in roughly 5 minutes. You\'ll get a ZIP file you can download immediately.',
               },
               {
                 q: 'What format are the optimized docs in?',
-                a: 'You get a ZIP containing structured Markdown (.md) files — one per page. Plus a README overview and implementation guide. These work with any docs platform: GitHub Pages, Netlify, Vercel, ReadMe, GitBook, etc.',
-              },
-              {
-                q: 'Can I get a refund?',
-                a: 'Yes. 7-day money-back guarantee, no questions asked.',
+                a: 'You get a ZIP containing structured Markdown (.md) files, one per page, plus a README overview and implementation guide. These work with any docs platform: GitHub Pages, Netlify, Vercel, ReadMe, GitBook, and others.',
               },
             ].map((faq, index) => (
               <div key={index} className="bg-card rounded-lg p-6 border">
@@ -891,13 +900,14 @@ export function LandingPage() {
       <section className="py-20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl font-bold mb-4">
-            Don't let AI agents forget you exist.
+            Make your docs a first-class citizen for AI agents.
           </h2>
           <p className="text-muted-foreground mb-8">
-            Get your free Visibility Score in 60 seconds. No signup. No credit card.
+            The teams that get this right early will own their category in the agent economy.
+            The rest will wonder why agents stopped recommending them.
           </p>
           <Button size="lg" onClick={scrollToAssessment}>
-            Check My Visibility — Free
+            Run Free Assessment
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
