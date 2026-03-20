@@ -71,11 +71,7 @@ async def get_pricing(request: PricingRequest):
 
 
 def _round_to_nice_price(raw: float) -> float:
-    """Round to a nice price ending in 9 (e.g., 49, 79, 99, 149, 199)."""
-    if raw <= 49:
-        return 49
-    if raw <= 79:
-        return 79
+    """Round to a nice price ending in 9 (e.g., 99, 149, 199, 299)."""
     if raw <= 99:
         return 99
     if raw <= 149:

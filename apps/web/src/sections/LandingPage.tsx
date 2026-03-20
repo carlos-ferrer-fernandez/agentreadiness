@@ -700,7 +700,7 @@ export function LandingPage() {
                 step: '03',
                 title: 'Get the Fixed Docs',
                 description: 'We rewrite every page applying all 20 rules. You download a ZIP with optimized markdown files + an llms.txt agent entry point. Deploy in minutes.',
-                highlight: 'From €49',
+                highlight: 'From €99',
               },
             ].map((item, index) => (
               <motion.div
@@ -730,7 +730,7 @@ export function LandingPage() {
             <h2 className="text-3xl font-bold mb-4">Simple pricing. No surprises.</h2>
             <p className="text-muted-foreground">
               Get your free score first. If you want the optimized docs, we'll show you the exact price
-              based on your documentation size. Starting at just €49. No subscriptions.
+              based on your documentation size. Starting at €99. No subscriptions.
             </p>
           </div>
 
@@ -785,7 +785,7 @@ export function LandingPage() {
               <h3 className="text-lg font-semibold">Optimized Documentation</h3>
               <div className="mt-2 flex items-baseline gap-2">
                 <span className="text-sm text-muted-foreground">starting at</span>
-                <span className="text-3xl font-bold">€49</span>
+                <span className="text-3xl font-bold">€99</span>
               </div>
               <p className="text-sm text-muted-foreground mt-2">
                 Exact price shown after your free scan — based on your documentation size
@@ -859,11 +859,11 @@ export function LandingPage() {
               },
               {
                 q: 'What do I get for free vs. the paid product?',
-                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from €49) gives you the actual optimized documentation files — every page rewritten with all 20 rules applied, plus an llms.txt agent entry point. Download as ZIP and deploy.',
+                a: 'The free scan gives you your score and a rule-by-rule breakdown showing exactly what\'s passing and failing. The paid product (from €99) gives you the actual optimized documentation files — every page rewritten with GPT-5.4 applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy.',
               },
               {
                 q: 'How is the price calculated?',
-                a: 'After your free scan, we know exactly how many pages need to be rewritten and how much work each one requires. Small docs start at €49. Larger sites cost more because each page is individually analyzed and rewritten by AI applying all 20 rules. You\'ll see your exact price before paying — no surprises, no subscriptions.',
+                a: 'After your free scan, we know exactly how many pages need to be rewritten and how much work each one requires. Pricing starts at €99 — each page is individually analyzed and rewritten by GPT-5.4 applying all 20 rules. Larger documentation sites cost more. You\'ll see your exact price before paying — no surprises, no subscriptions.',
               },
               {
                 q: 'How long does it take?',

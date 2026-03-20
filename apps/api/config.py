@@ -47,10 +47,12 @@ class Settings(BaseSettings):
     # Dynamic pricing (EUR)
     # Price = max(min_price, ceil(estimated_api_cost * margin_multiplier))
     # estimated_api_cost = base_cost + per_page_cost * page_count
-    pricing_base_cost: float = 5.0        # Fixed overhead: query gen, scoring, recommendations
-    pricing_per_page_cost: float = 0.40   # Per-page: embedding, RAG simulation, evaluation
+    # Costs based on GPT-5.4: $2.50/1M input, $15.00/1M output
+    # ~6K tokens in + ~3K tokens out per page = ~$0.06/page
+    pricing_base_cost: float = 3.0        # Fixed overhead: assessment scan, server, Stripe fees
+    pricing_per_page_cost: float = 0.08   # Per-page: GPT-5.4 optimization ($0.06 actual + buffer)
     pricing_margin_multiplier: float = 3.0  # 3x margin on API costs
-    pricing_min_eur: int = 49              # Minimum price (entry point, appealing)
+    pricing_min_eur: int = 99              # Minimum price — justified by GPT-5.4 quality
     pricing_max_eur: int = 499             # Cap for very large docs
 
     # Crawler

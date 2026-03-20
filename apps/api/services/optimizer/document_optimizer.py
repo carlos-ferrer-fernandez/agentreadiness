@@ -569,7 +569,7 @@ class DocumentationOptimizer:
             try:
                 client = openai.AsyncOpenAI(timeout=120.0)
                 response = await client.chat.completions.create(
-                    model="gpt-4o",
+                    model="gpt-5.4",
                     messages=[
                         {
                             "role": "system",
