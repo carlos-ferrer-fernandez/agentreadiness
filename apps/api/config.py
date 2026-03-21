@@ -36,9 +36,10 @@ class Settings(BaseSettings):
     github_client_id: str = ""
     github_client_secret: str = ""
 
-    # OpenAI
+    # OpenAI / LLM Provider
     openai_api_key: str = ""
-    openai_model: str = "gpt-5.4"  # Model for doc optimization (falls back to gpt-4o if unavailable)
+    openai_base_url: str = ""  # Leave empty for direct OpenAI. Set to "https://api.aimlapi.com/v1" for AIML API
+    openai_model: str = "openai/gpt-5-3-codex"  # AIML API model ID. For direct OpenAI, use "gpt-4o" etc.
 
     # Stripe
     stripe_secret_key: str = ""
@@ -48,7 +49,7 @@ class Settings(BaseSettings):
     # Dynamic pricing (EUR)
     # Price = max(min_price, ceil(estimated_api_cost * margin_multiplier))
     # estimated_api_cost = base_cost + per_page_cost * page_count
-    # Costs based on GPT-5.4: $2.50/1M input, $15.00/1M output
+    # Costs based on GPT-5-3-codex via AIML API (check current pricing)
     # ~6K tokens in + ~3K tokens out per page = ~$0.06/page
     pricing_base_cost: float = 3.0        # Fixed overhead: assessment scan, server, Stripe fees
     pricing_per_page_cost: float = 0.08   # Per-page optimization ($0.06 actual + buffer)

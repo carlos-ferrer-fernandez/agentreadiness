@@ -651,11 +651,15 @@ class DocumentationOptimizer:
         model = settings.openai_model
 
         # Fallback chain: configured model -> gpt-4o -> gpt-4o-mini
+        # Supports both direct OpenAI IDs (gpt-4o) and AIML API IDs (openai/gpt-5-3-codex)
         models_to_try = [model]
-        if model != "gpt-4o":
-            models_to_try.append("gpt-4o")
-        if "gpt-4o-mini" not in models_to_try:
-            models_to_try.append("gpt-4o-mini")
+        fallbacks = ["gpt-4o", "gpt-4o-mini"]
+        if settings.openai_base_url:
+            # AIML API uses openai/ prefix for OpenAI models
+            fallbacks = ["openai/gpt-5-2-codex", "gpt-4o", "gpt-4o-mini"]
+        for fb in fallbacks:
+            if fb not in models_to_try:
+                models_to_try.append(fb)
 
         max_retries = 3
         last_error = None
@@ -667,7 +671,10 @@ class DocumentationOptimizer:
 
             for attempt in range(max_retries):
                 try:
-                    client = openai.AsyncOpenAI(timeout=120.0)
+                    client_kwargs = {"timeout": 120.0}
+                    if settings.openai_base_url:
+                        client_kwargs["base_url"] = settings.openai_base_url
+                    client = openai.AsyncOpenAI(**client_kwargs)
                     response = await client.chat.completions.create(
                         model=current_model,
                         messages=[
