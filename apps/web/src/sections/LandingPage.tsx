@@ -12,6 +12,10 @@ import {
   BarChart3,
   Clock,
   AlertTriangle,
+  Users,
+  Building2,
+  ShoppingBag,
+  Briefcase,
   Eye,
   Bot,
   BookOpen,
@@ -52,200 +56,166 @@ const features = [
   {
     icon: Bot,
     title: 'Multi-Agent Simulation',
-    description: 'We test your docs the way Claude, GPT, Gemini, and 5 other agents actually consume them. Not how humans read them.',
+    description: 'We test your content the way Claude, GPT, Gemini, and 5 other AI agents actually read it. Not how humans browse it.',
     gradient: 'from-blue-500/10 to-cyan-500/10',
     iconColor: 'text-blue-500',
   },
   {
     icon: BarChart3,
     title: 'Agent-Readiness Score',
-    description: 'Get a 0-100 score with letter grade, rule-by-rule breakdown, and per-page findings. Know exactly where you stand.',
+    description: 'Get a 0-100 score with a letter grade and rule-by-rule breakdown. Know exactly what AI agents struggle with on your site.',
     gradient: 'from-violet-500/10 to-purple-500/10',
     iconColor: 'text-violet-500',
   },
   {
     icon: FileCode,
-    title: 'Rewritten Documentation',
-    description: 'Not a report. Not tips. We rewrite your actual docs applying all 20 rules. Download a ZIP and deploy in minutes.',
+    title: 'Rewritten Content',
+    description: 'Not a report. Not tips. We rewrite your actual pages applying all 20 rules. Download and deploy in minutes.',
     gradient: 'from-emerald-500/10 to-green-500/10',
     iconColor: 'text-emerald-500',
   },
   {
     icon: Globe,
     title: 'llms.txt Entry Point',
-    description: 'Every package includes an llms.txt file. The agent discovery standard that helps AI find and navigate your docs.',
+    description: 'Every package includes an llms.txt file, the emerging standard that helps AI agents discover and navigate your content.',
     gradient: 'from-amber-500/10 to-orange-500/10',
     iconColor: 'text-amber-500',
   },
 ]
 
 const agentReadinessRules = [
-  { id: 1, name: 'Self-Contained Sections', icon: BookOpen, description: 'Every section must make sense if read in isolation. No "see above" or "as mentioned earlier".' },
-  { id: 2, name: 'Action-Oriented Headings', icon: MessageSquare, description: 'Headings should read like user intents: "Authenticate with API key", not "Authentication".' },
-  { id: 3, name: 'Structured Parameter Tables', icon: Table2, description: 'Parameters in tables (name, type, required, default), never buried in prose.' },
-  { id: 4, name: 'Complete Code Examples', icon: Code2, description: 'Every example must include imports, setup, the call, and expected output.' },
-  { id: 5, name: 'Explicit Over Implicit', icon: Eye, description: 'State all defaults, constraints, and requirements. Agents have zero intuition.' },
-  { id: 6, name: 'First-Class Error Docs', icon: AlertOctagon, description: 'Every error code documented with causes, diagnosis steps, and fixes.' },
+  { id: 1, name: 'Self-Contained Sections', icon: BookOpen, description: 'Every section must make sense on its own. No "see above" or "as mentioned earlier".' },
+  { id: 2, name: 'Action-Oriented Headings', icon: MessageSquare, description: 'Headings match what people ask AI: "How to register for a race", not "Registration".' },
+  { id: 3, name: 'Structured Data Tables', icon: Table2, description: 'Options, features, and specs in tables (name, type, description), not buried in paragraphs.' },
+  { id: 4, name: 'Complete Examples', icon: Code2, description: 'Every example includes full context: setup, the action, and what to expect.' },
+  { id: 5, name: 'Explicit Over Implicit', icon: Eye, description: 'State all details explicitly. AI agents have zero ability to "figure it out".' },
+  { id: 6, name: 'First-Class Error Docs', icon: AlertOctagon, description: 'Every error or issue documented with causes, steps to diagnose, and fixes.' },
   { id: 7, name: 'Consistent Terminology', icon: Tags, description: 'One term per concept everywhere. No alternating between synonyms.' },
-  { id: 8, name: 'Frontmatter Metadata', icon: FileCheck, description: 'YAML frontmatter on every page: title, description, version, tags.' },
-  { id: 9, name: 'Prerequisites Up Front', icon: ListChecks, description: 'State all requirements at the top: accounts, permissions, API keys, SDK version.' },
-  { id: 10, name: 'Expected Outputs', icon: MonitorCheck, description: 'Show what success looks like: expected response body, status code, logs.' },
-  { id: 11, name: 'Cross-References with Context', icon: Link2, description: 'Never "click here". Always describe what the linked page covers.' },
-  { id: 12, name: 'Content Type Separation', icon: Layers, description: 'Separate conceptual, how-to, and reference content clearly.' },
-  { id: 13, name: 'Version Clarity', icon: History, description: 'API/SDK version stated prominently. Deprecated content marked with migration paths.' },
-  { id: 14, name: 'Decision Documentation', icon: HelpCircle, description: '"When to use X vs Y" sections for agents answering comparison questions.' },
-  { id: 15, name: 'Safety Boundaries', icon: ShieldAlert, description: 'Destructive actions, billing implications, rate limits clearly documented.' },
-  { id: 16, name: 'No Anti-Patterns', icon: Trash2, description: 'Strip marketing language, "contact support" placeholders, and JS-dependent content.' },
-  { id: 17, name: 'Retrieval-Chunk Optimized', icon: SplitSquareHorizontal, description: 'Sections scoped for RAG: clear heading, clear scope, standalone context.' },
-  { id: 18, name: 'Intent Before Mechanics', icon: Megaphone, description: 'Always explain WHY before HOW. Context before code.' },
-  { id: 19, name: 'State Transitions', icon: RefreshCcw, description: 'Document systems as state machines: states, transitions, triggers, terminal states.' },
-  { id: 20, name: 'Callouts & Admonitions', icon: AlertTriangle, description: 'Standard callout syntax for warnings, tips, and notes. These are prioritization signals for agents.' },
+  { id: 8, name: 'Page Metadata', icon: FileCheck, description: 'Structured metadata on every page: title, description, tags, category.' },
+  { id: 9, name: 'Prerequisites Up Front', icon: ListChecks, description: 'State all requirements at the top: accounts, permissions, plans, setup steps.' },
+  { id: 10, name: 'Expected Outcomes', icon: MonitorCheck, description: 'Show what success looks like: expected results, confirmations, next steps.' },
+  { id: 11, name: 'Contextual Cross-References', icon: Link2, description: 'Never "click here". Always describe what the linked page covers.' },
+  { id: 12, name: 'Content Type Separation', icon: Layers, description: 'Separate explanations, step-by-step guides, and reference content clearly.' },
+  { id: 13, name: 'Version Clarity', icon: History, description: 'Version or date stated prominently. Outdated content marked with alternatives.' },
+  { id: 14, name: 'Comparison Sections', icon: HelpCircle, description: '"When to use X vs Y" sections so agents can answer comparison questions.' },
+  { id: 15, name: 'Safety & Limits', icon: ShieldAlert, description: 'Irreversible actions, billing implications, and limits clearly documented.' },
+  { id: 16, name: 'No Anti-Patterns', icon: Trash2, description: 'Strip marketing fluff, "contact us" dead-ends, and content hidden behind JS widgets.' },
+  { id: 17, name: 'Retrieval-Optimized', icon: SplitSquareHorizontal, description: 'Sections scoped so AI can retrieve them independently with full context.' },
+  { id: 18, name: 'Intent Before Mechanics', icon: Megaphone, description: 'Always explain WHY before HOW. Context before instructions.' },
+  { id: 19, name: 'Lifecycle & Status', icon: RefreshCcw, description: 'Document processes as flows: pending, active, completed, cancelled.' },
+  { id: 20, name: 'Callouts & Warnings', icon: AlertTriangle, description: 'Standard callout format for warnings, tips, and important notes that AI can prioritize.' },
 ]
 
 const assessmentStages = [
   { name: 'Discovering pages', icon: Search },
-  { name: 'Crawling documentation', icon: FileText },
-  { name: 'Checking self-contained sections', icon: BookOpen },
-  { name: 'Evaluating code examples', icon: Code2 },
+  { name: 'Reading your content', icon: FileText },
+  { name: 'Checking if sections stand alone', icon: BookOpen },
+  { name: 'Evaluating examples and guides', icon: Code2 },
   { name: 'Analyzing heading structure', icon: MessageSquare },
-  { name: 'Checking parameter tables', icon: Table2 },
+  { name: 'Checking data tables', icon: Table2 },
   { name: 'Scanning for anti-patterns', icon: Trash2 },
-  { name: 'Testing retrieval chunks', icon: SplitSquareHorizontal },
+  { name: 'Testing AI retrieval quality', icon: SplitSquareHorizontal },
   { name: 'Verifying error documentation', icon: AlertOctagon },
   { name: 'Running 20-rule evaluation', icon: ListChecks },
   { name: 'Calculating your score', icon: BarChart3 },
 ]
 
 const liveStatusMessages = [
-  'Simulating how Claude reads your docs...',
-  'Checking if GPT can find your API reference...',
-  'Testing RAG retrieval on your sections...',
-  'Verifying code examples are copy-paste ready...',
+  'Simulating how Claude reads your content...',
+  'Checking if GPT can find your key pages...',
+  'Testing if AI can understand your sections independently...',
+  'Verifying examples are complete and actionable...',
   'Scanning for vague cross-references...',
-  'Checking terminology consistency...',
-  'Evaluating frontmatter metadata...',
-  'Testing heading relevance for agent queries...',
-  'Looking for missing expected outputs...',
-  'Checking safety boundary documentation...',
-  'Analyzing content type separation...',
-  'Almost there, finalizing scores...',
+  'Checking terminology consistency across pages...',
+  'Evaluating page metadata and structure...',
+  'Testing if headings match what users ask AI...',
+  'Looking for missing expected outcomes...',
+  'Checking if limits and warnings are documented...',
+  'Analyzing content organization...',
+  'Almost there, finalizing your score...',
 ]
 
-// Before/After examples using Mailgun docs (mentioned in the YC video as a cautionary tale)
+// Before/After examples showing common patterns across well-known companies
 const beforeAfterSlides = [
-  {
-    rule: '#4 Complete Code Examples',
-    ruleShort: 'Rule #4',
-    tagline: 'If an agent can\'t copy-paste it, it doesn\'t exist',
-    before: {
-      label: 'Mailgun docs',
-      lines: [
-        { text: 'const mg = mailgun.client({', type: 'code' as const },
-        { text: '  username: "api",', type: 'code' as const },
-        { text: '  key: "MAILGUN_API_KEY"', type: 'code' as const },
-        { text: '});', type: 'code' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// No imports shown. FormData required but', type: 'comment-bad' as const },
-        { text: '// not in the example. No expected response.', type: 'comment-bad' as const },
-        { text: '// Agent generates broken code every time.', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After AgentReadiness',
-      lines: [
-        { text: '// 1. Install: npm install mailgun.js', type: 'comment-good' as const },
-        { text: 'import Mailgun from "mailgun.js";', type: 'code' as const },
-        { text: 'const mailgun = new Mailgun(FormData);', type: 'code' as const },
-        { text: 'const mg = mailgun.client({', type: 'code' as const },
-        { text: '  username: "api",', type: 'code' as const },
-        { text: '  key: process.env.MAILGUN_API_KEY', type: 'code' as const },
-        { text: '});', type: 'code' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// Expected: mg is a configured client', type: 'comment-good' as const },
-        { text: '// ready to call mg.messages.create()', type: 'comment-good' as const },
-      ],
-    },
-  },
   {
     rule: '#2 Action-Oriented Headings',
     ruleShort: 'Rule #2',
-    tagline: 'Agents search by intent, not by topic',
+    tagline: 'AI agents search by intent, not by topic name',
     before: {
-      label: 'Mailgun docs',
+      label: 'Typical docs (Salesforce-style)',
       lines: [
-        { text: '## Messages', type: 'heading-bad' as const },
+        { text: '## Contacts', type: 'heading-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Domains', type: 'heading-bad' as const },
+        { text: '## Opportunities', type: 'heading-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Events', type: 'heading-bad' as const },
+        { text: '## Reports', type: 'heading-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Webhooks', type: 'heading-bad' as const },
+        { text: '## Administration', type: 'heading-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '// Topic headings. An agent searching "how', type: 'comment-bad' as const },
-        { text: '// to send email" won\'t match "Messages".', type: 'comment-bad' as const },
+        { text: '// Topic-based headings. An agent searching', type: 'comment-bad' as const },
+        { text: '// "how to import contacts" won\'t match.', type: 'comment-bad' as const },
       ],
     },
     after: {
       label: 'After AgentReadiness',
       lines: [
-        { text: '## Send an Email via the Mailgun API', type: 'heading-good' as const },
+        { text: '## Import Contacts from a CSV File', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Verify and Configure a Sending Domain', type: 'heading-good' as const },
+        { text: '## Create and Track a Sales Opportunity', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Track Email Delivery Events', type: 'heading-good' as const },
+        { text: '## Build a Custom Sales Report', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Set Up Webhooks for Bounce Handling', type: 'heading-good' as const },
+        { text: '## Configure User Roles and Permissions', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
-        { text: '// Intent-based headings match how agents', type: 'comment-good' as const },
-        { text: '// search: "how to send email with Mailgun"', type: 'comment-good' as const },
+        { text: '// Intent-based headings match how users', type: 'comment-good' as const },
+        { text: '// actually ask AI for help.', type: 'comment-good' as const },
       ],
     },
   },
   {
-    rule: '#3 Structured Parameter Tables',
+    rule: '#3 Structured Data Tables',
     ruleShort: 'Rule #3',
     tagline: 'Tables are machine-parseable. Prose is not.',
     before: {
-      label: 'Mailgun docs',
+      label: 'Typical docs (Zendesk-style)',
       lines: [
-        { text: 'You can pass the following parameters:', type: 'normal' as const },
-        { text: 'to, subject, html or text for content,', type: 'prose-bad' as const },
-        { text: 'o:tag for tagging, o:campaign for campaign', type: 'prose-bad' as const },
-        { text: 'identification, attachment for files', type: 'prose-bad' as const },
-        { text: '(multipart/form-data required).', type: 'prose-bad' as const },
+        { text: 'You can configure the following options:', type: 'normal' as const },
+        { text: 'ticket priority (low, normal, high,', type: 'prose-bad' as const },
+        { text: 'urgent), assignee, tags, custom fields,', type: 'prose-bad' as const },
+        { text: 'and SLA policy. Some fields are required', type: 'prose-bad' as const },
+        { text: 'depending on your plan.', type: 'prose-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '// Parameters buried in prose. No types,', type: 'comment-bad' as const },
-        { text: '// no defaults, no required markers.', type: 'comment-bad' as const },
+        { text: '// Options buried in prose. No structure.', type: 'comment-bad' as const },
+        { text: '// AI can\'t extract valid values reliably.', type: 'comment-bad' as const },
       ],
     },
     after: {
       label: 'After AgentReadiness',
       lines: [
-        { text: '| Parameter  | Type     | Required | Description          |', type: 'table-header' as const },
+        { text: '| Field      | Type     | Required | Values               |', type: 'table-header' as const },
         { text: '|------------|----------|----------|----------------------|', type: 'table-sep' as const },
-        { text: '| from       | string   | yes      | Sender address       |', type: 'table-row' as const },
-        { text: '| to         | string[] | yes      | Recipients (max 50)  |', type: 'table-row' as const },
-        { text: '| subject    | string   | yes      | Email subject line   |', type: 'table-row' as const },
-        { text: '| html       | string   | one of*  | HTML email body      |', type: 'table-row' as const },
-        { text: '| text       | string   | one of*  | Plain text body      |', type: 'table-row' as const },
-        { text: '| o:tag      | string[] | no       | Message tags         |', type: 'table-row' as const },
+        { text: '| priority   | enum     | yes      | low, normal, high,   |', type: 'table-row' as const },
+        { text: '|            |          |          | urgent               |', type: 'table-row' as const },
+        { text: '| assignee   | user_id  | no       | Any active agent     |', type: 'table-row' as const },
+        { text: '| tags       | string[] | no       | Max 20 tags          |', type: 'table-row' as const },
+        { text: '| sla_policy | string   | Pro plan | Default: "standard"  |', type: 'table-row' as const },
       ],
     },
   },
   {
     rule: '#6 First-Class Error Docs',
     ruleShort: 'Rule #6',
-    tagline: 'Agents need exact error strings to help users debug',
+    tagline: 'AI agents need exact error strings to help users troubleshoot',
     before: {
-      label: 'Mailgun docs',
+      label: 'Typical docs (Shopify-style)',
       lines: [
-        { text: 'Mailgun returns standard HTTP response', type: 'normal' as const },
-        { text: 'codes. 200 for success. Errors include a', type: 'normal' as const },
-        { text: 'message field in the JSON response.', type: 'normal' as const },
+        { text: 'If something goes wrong, check your', type: 'normal' as const },
+        { text: 'settings and try again. Contact support', type: 'normal' as const },
+        { text: 'if the issue persists.', type: 'normal' as const },
         { text: '', type: 'gap' as const },
-        { text: '// No error table. No common failure modes.', type: 'comment-bad' as const },
-        { text: '// "Domain not verified" kills onboarding', type: 'comment-bad' as const },
-        { text: '// but isn\'t documented anywhere.', type: 'comment-bad' as const },
+        { text: '// No error codes listed. No common issues.', type: 'comment-bad' as const },
+        { text: '// "Contact support" is a dead-end for AI.', type: 'comment-bad' as const },
+        { text: '// Agent can\'t help the user at all.', type: 'comment-bad' as const },
       ],
     },
     after: {
@@ -253,47 +223,80 @@ const beforeAfterSlides = [
       lines: [
         { text: '| Error              | Cause                | Fix                  |', type: 'table-header' as const },
         { text: '|--------------------|----------------------|----------------------|', type: 'table-sep' as const },
-        { text: '| 401 Unauthorized   | Invalid API key      | Check key in env     |', type: 'table-row' as const },
-        { text: '| 400 "domain not    | Domain not verified  | Complete DNS setup   |', type: 'table-row' as const },
-        { text: '|   verified"        |                      | in Mailgun dashboard |', type: 'table-row' as const },
-        { text: '| 400 "to param      | Missing recipients   | Add to: ["email"]    |', type: 'table-row' as const },
-        { text: '|   is required"     |                      |                      |', type: 'table-row' as const },
-        { text: '| 429 Rate limited   | Too many requests    | Add 1s delay or use  |', type: 'table-row' as const },
-        { text: '|                    |                      | batch sending        |', type: 'table-row' as const },
+        { text: '| "Invalid API key"  | Key expired/revoked  | Generate new key in  |', type: 'table-row' as const },
+        { text: '|                    |                      | Settings > API Keys  |', type: 'table-row' as const },
+        { text: '| "Rate limited"     | Over 40 req/sec      | Add 1s delay between |', type: 'table-row' as const },
+        { text: '|                    |                      | requests             |', type: 'table-row' as const },
+        { text: '| "Product not found"| Wrong product ID     | Use GET /products to |', type: 'table-row' as const },
+        { text: '|                    | or deleted product   | list valid IDs       |', type: 'table-row' as const },
       ],
     },
   },
   {
-    rule: '#9 Prerequisites + #10 Expected Output',
-    ruleShort: 'Rules #9 & #10',
-    tagline: 'Tell agents what\'s needed before and what success looks like after',
+    rule: '#1 Self-Contained Sections',
+    ruleShort: 'Rule #1',
+    tagline: 'AI retrieves one section at a time. It needs full context.',
     before: {
-      label: 'Mailgun docs',
+      label: 'Typical docs (HubSpot-style)',
       lines: [
-        { text: '# Quickstart', type: 'heading-bad' as const },
+        { text: '## Email Templates', type: 'heading-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: 'Mailgun is an email service provider...', type: 'normal' as const },
+        { text: 'As mentioned in the previous section,', type: 'prose-bad' as const },
+        { text: 'you\'ll need to set up your sending', type: 'prose-bad' as const },
+        { text: 'domain first (see above).', type: 'prose-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: 'mg.messages.create("sandbox.mailgun.org",', type: 'code' as const },
-        { text: '  { from: "...", to: ["..."], subject: "..." }', type: 'code' as const },
-        { text: ')', type: 'code' as const },
+        { text: 'Use the same method described earlier', type: 'prose-bad' as const },
+        { text: 'to authenticate your requests.', type: 'prose-bad' as const },
         { text: '', type: 'gap' as const },
-        { text: '// No prerequisites. No expected response.', type: 'comment-bad' as const },
-        { text: '// Agent doesn\'t know setup is needed first.', type: 'comment-bad' as const },
+        { text: '// AI only sees this section. "See above"', type: 'comment-bad' as const },
+        { text: '// and "described earlier" are dead-ends.', type: 'comment-bad' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '## Create and Send an Email Template', type: 'heading-good' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'To send a template-based email, you need', type: 'normal' as const },
+        { text: 'a verified sending domain and an API key', type: 'normal' as const },
+        { text: 'with "Email" scope. Authenticate using a', type: 'normal' as const },
+        { text: 'Bearer token in the Authorization header.', type: 'normal' as const },
+        { text: '', type: 'gap' as const },
+        { text: '// Every section stands alone. AI can', type: 'comment-good' as const },
+        { text: '// answer without reading other pages.', type: 'comment-good' as const },
+      ],
+    },
+  },
+  {
+    rule: '#9 Prerequisites + #10 Expected Outcomes',
+    ruleShort: 'Rules #9 & #10',
+    tagline: 'Tell AI what\'s needed upfront and what success looks like',
+    before: {
+      label: 'Typical docs (Twilio-style)',
+      lines: [
+        { text: '# Getting Started', type: 'heading-bad' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'Welcome to our platform! Let\'s get you', type: 'normal' as const },
+        { text: 'set up in no time. It\'s easy to start.', type: 'normal' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'client.messages.create({ body: "Hi" })', type: 'code' as const },
+        { text: '', type: 'gap' as const },
+        { text: '// No prerequisites. No expected result.', type: 'comment-bad' as const },
+        { text: '// What account? What permissions? What', type: 'comment-bad' as const },
+        { text: '// does success look like?', type: 'comment-bad' as const },
       ],
     },
     after: {
       label: 'After AgentReadiness',
       lines: [
         { text: '## Prerequisites', type: 'heading-good' as const },
-        { text: '- Mailgun account (free tier: 100 emails/day)', type: 'normal' as const },
-        { text: '- Verified sending domain (DNS records)', type: 'normal' as const },
-        { text: '- API key from Settings > API Keys', type: 'normal' as const },
-        { text: '- Node.js >= 18.x, npm install mailgun.js', type: 'normal' as const },
+        { text: '- Active account (free trial: 100 messages)', type: 'normal' as const },
+        { text: '- Verified phone number', type: 'normal' as const },
+        { text: '- API credentials from Dashboard > Keys', type: 'normal' as const },
         { text: '', type: 'gap' as const },
-        { text: '## Expected Response', type: 'heading-good' as const },
-        { text: '// { id: "<abc123@sandbox.mailgun.org>",', type: 'comment-good' as const },
-        { text: '//   message: "Queued. Thank you." }', type: 'comment-good' as const },
+        { text: '## Expected Result', type: 'heading-good' as const },
+        { text: '// { sid: "SM...", status: "queued",', type: 'comment-good' as const },
+        { text: '//   date_sent: "2025-03-21T..." }', type: 'comment-good' as const },
       ],
     },
   },
@@ -655,9 +658,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.1 }}
               className="text-4xl md:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6"
             >
-              Build documentation that{' '}
+              Make AI agents{' '}
               <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
-                AI agents can actually use
+                find you and recommend you
               </span>
             </motion.h1>
 
@@ -667,9 +670,9 @@ export function LandingPage() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
             >
-              When developers ask AI for tool recommendations, the answer comes from your docs.
-              We evaluate yours against 20 rules, then rewrite every page so agents can parse,
-              cite, and recommend you.
+              When people ask AI about your industry, the answer comes from your content.
+              We evaluate your docs and help pages against 20 rules, then rewrite every page so agents
+              can parse, cite, and recommend your business.
             </motion.p>
 
             {/* Assessment Form - Cleaner Mintlify-style */}
@@ -686,7 +689,7 @@ export function LandingPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Enter your docs URL (e.g., docs.example.com)"
+                      placeholder="Enter your URL (e.g., docs.example.com, help.example.com)"
                       value={url}
                       onChange={(e) => { setUrl(e.target.value); setError(null) }}
                       className="pl-10 h-12 text-base rounded-xl border-border/60 focus:border-emerald-500 focus:ring-emerald-500/20"
@@ -726,7 +729,7 @@ export function LandingPage() {
                           />
                           <Input
                             type="text"
-                            placeholder="Role (e.g. CTO, DevRel)"
+                            placeholder="Role (e.g. CEO, Product, Marketing)"
                             value={role}
                             onChange={(e) => setRole(e.target.value)}
                             className="h-10 text-sm rounded-lg"
@@ -883,18 +886,81 @@ export function LandingPage() {
             >
               <Badge variant="outline" className="mb-6 text-xs">The new distribution channel</Badge>
               <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
-                Your docs are your storefront in the agent economy
+                Your content is your storefront in the agent economy
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-                AI agents don't browse your marketing site. They read your documentation.
-                When a developer asks Claude "what's the best auth library?" or GPT "how do I send emails in Python?",
-                the agent pulls from docs to answer.
+                AI agents don't browse your marketing site. They read your documentation, help center, and product pages.
+                When someone asks Claude "what's the best race registration platform?" or GPT "how do I send transactional emails?",
+                the agent pulls from your content to answer.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                If your docs aren't structured for machine consumption, agents can't parse them, can't cite them,
-                and recommend someone else. Your documentation is no longer just for humans.
+                If your content isn't structured for machine consumption, agents can't parse it, can't cite it,
+                and they recommend a competitor instead. Whether you're a SaaS tool, a marketplace, or a B2B platform,
+                your documentation is no longer just for humans.
               </p>
             </motion.div>
+          </div>
+        </div>
+      </section>
+
+      {/* Who it's for */}
+      <section className="py-16 lg:py-20 border-y bg-muted/20">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4 text-xs">Who it's for</Badge>
+            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+              Not just for developers
+            </h2>
+            <p className="text-muted-foreground text-lg">
+              Any business with online content that AI agents read can benefit from AgentReadiness.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {[
+              {
+                icon: Code2,
+                title: 'Developer Tools',
+                example: 'API docs, SDK references, integration guides',
+                ask: '"What\'s the best email API for Node.js?"',
+              },
+              {
+                icon: ShoppingBag,
+                title: 'Marketplaces & Platforms',
+                example: 'Help centers, organizer guides, vendor docs',
+                ask: '"What platform handles race registrations?"',
+              },
+              {
+                icon: Building2,
+                title: 'B2B SaaS',
+                example: 'Knowledge bases, onboarding docs, feature guides',
+                ask: '"What CRM integrates with Slack?"',
+              },
+              {
+                icon: Briefcase,
+                title: 'Professional Services',
+                example: 'Product pages, FAQ, support articles',
+                ask: '"Which accounting software handles VAT?"',
+              },
+            ].map((useCase, index) => (
+              <motion.div
+                key={useCase.title}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: index * 0.08 }}
+                className="bg-card rounded-2xl border p-6 hover:border-emerald-500/30 transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
+                  <useCase.icon className="w-5 h-5 text-emerald-600" />
+                </div>
+                <h3 className="font-semibold mb-1">{useCase.title}</h3>
+                <p className="text-sm text-muted-foreground mb-3">{useCase.example}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium italic">
+                  {useCase.ask}
+                </p>
+              </motion.div>
+            ))}
           </div>
         </div>
       </section>
@@ -930,7 +996,7 @@ export function LandingPage() {
 
               <blockquote className="text-xl lg:text-2xl font-medium leading-relaxed">
                 <span className="text-emerald-500">&ldquo;</span>
-                Documentation will be the front door for all of these agents recommending devtools.
+                Documentation will be the front door for all of these agents recommending tools and services.
                 <span className="text-emerald-500">&rdquo;</span>
               </blockquote>
 
@@ -946,8 +1012,8 @@ export function LandingPage() {
 
               <p className="text-sm text-muted-foreground leading-relaxed">
                 In this talk, Diana explains how AI agents are rapidly becoming the primary way
-                developers discover and evaluate tools. The companies that optimise their
-                documentation for agent consumption will win. The rest become invisible.
+                people discover and evaluate products. The companies that optimise their
+                content for agent consumption will win. The rest become invisible.
               </p>
 
               <Button variant="outline" size="sm" onClick={scrollToAssessment} className="rounded-lg">
@@ -968,7 +1034,7 @@ export function LandingPage() {
               From assessment to deployment in minutes
             </h2>
             <p className="text-muted-foreground text-lg">
-              Enter your docs URL. Get a score. See what's failing. Get the fixed docs.
+              Enter your URL. Get a score. See what AI agents struggle with. Get the fixed content.
             </p>
           </div>
 
@@ -979,7 +1045,7 @@ export function LandingPage() {
                 step: '1',
                 icon: Search,
                 title: 'Get Your Free Score',
-                description: 'Enter your docs URL. We evaluate against 20 agent-readiness rules derived from benchmarking 8 major AI agents.',
+                description: 'Enter your URL. We evaluate your content against 20 agent-readiness rules derived from benchmarking 8 major AI agents.',
                 highlight: 'Free',
               },
               {
@@ -992,8 +1058,8 @@ export function LandingPage() {
               {
                 step: '3',
                 icon: Download,
-                title: 'Download Fixed Docs',
-                description: 'Every page rewritten applying all 20 rules. Download a ZIP with optimized markdown + llms.txt. Deploy in minutes.',
+                title: 'Download Fixed Content',
+                description: 'Every page rewritten applying all 20 rules. Download a ZIP with optimized content + llms.txt. Deploy in minutes.',
                 highlight: 'From $99',
               },
             ].map((item, index) => (
@@ -1047,14 +1113,14 @@ export function LandingPage() {
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30 text-xs">
-              Real example: Mailgun docs
+              Before and after
             </Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-white">
-              See why Resend is winning
+              See what we fix, rule by rule
             </h2>
             <p className="text-slate-400 text-lg">
-              Mailgun's docs are hard for agents to parse. That's why AI recommends Resend instead.
-              Here's what we'd fix.
+              Common patterns from Salesforce, Zendesk, Shopify, HubSpot, and Twilio docs
+              that make AI agents struggle. Here's how we fix them.
             </p>
           </div>
 
@@ -1197,9 +1263,9 @@ export function LandingPage() {
                   'Everything in the free assessment',
                   'All 20 rules applied to every page',
                   'Every page individually rewritten by AI',
-                  'Self-contained sections for RAG retrieval',
-                  'Complete code examples with expected output',
-                  'Structured parameter tables and error docs',
+                  'Self-contained sections for AI retrieval',
+                  'Complete examples with expected outcomes',
+                  'Structured tables, error docs, and metadata',
                   'llms.txt agent entry point included',
                   'Download as ZIP, deploy in minutes',
                 ].map((feature) => (
@@ -1232,11 +1298,11 @@ export function LandingPage() {
 
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
-            When someone asks an AI about your product, what does it say?
+            When someone asks AI about your industry, do they find you?
           </h2>
           <p className="text-emerald-100 text-lg mb-8 max-w-2xl mx-auto">
-            If your docs don't follow these 20 rules, agents struggle to answer accurately.
-            Worse: they recommend a competitor whose docs are better structured.
+            If your content doesn't follow these 20 rules, AI agents struggle to answer accurately.
+            Worse: they recommend a competitor whose content is better structured.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
@@ -1267,27 +1333,31 @@ export function LandingPage() {
             <div className="px-6">
               <FaqItem
                 q="What is the Agent-Readiness Score?"
-                a="We evaluate your documentation against 20 concrete rules derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, Grok, and others). Each rule checks something specific: are your sections self-contained? Do code examples include imports? Are parameters in tables or buried in prose? You get a score per rule, per component, and overall."
+                a="We evaluate your content against 20 concrete rules derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, Grok, and others). Each rule checks something specific: are your sections self-contained? Are details in tables or buried in paragraphs? Can AI find what users are looking for? You get a score per rule, per component, and overall."
+              />
+              <FaqItem
+                q="Is this only for developer documentation?"
+                a="Not at all. AgentReadiness works for any content that AI agents read: API docs, help centers, knowledge bases, product pages, marketplace listings, FAQ pages. If you're a B2B SaaS, an e-commerce platform, a marketplace, or any business with online documentation, this is for you. AI agents don't just help developers; they help everyone find products and services."
               />
               <FaqItem
                 q="Where do these 20 rules come from?"
-                a="We benchmarked 8 major AI agents (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus and others) on what actually makes documentation easy or hard for them to consume. The 20 rules are the consensus: specific patterns that all agents agree matter for accurate answers, good code generation, and reliable recommendations."
+                a="We benchmarked 8 major AI agents (Claude, GPT, Gemini, Grok, Kimi, Deepseek, Manus, and others) on what actually makes content easy or hard for them to consume. The 20 rules are the consensus: specific patterns that all agents agree matter for accurate answers and reliable recommendations."
               />
               <FaqItem
                 q="What do I get for free vs. the paid product?"
-                a="The free scan gives you your score and a rule-by-rule breakdown showing exactly what's passing and failing. The paid product (from $99) gives you the actual optimized documentation files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy."
+                a="The free scan gives you your score and a rule-by-rule breakdown showing exactly what's passing and failing. The paid product (from $99) gives you the actual optimized content files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy."
               />
               <FaqItem
                 q="How is the price calculated?"
-                a="After your free scan, we know exactly how many pages need to be rewritten. Pricing starts at $99. Each page is individually analyzed and rewritten applying all 20 rules. Larger documentation sites cost more because there's more work per page. You'll see your exact price before paying. One-time payment, no subscriptions."
+                a="After your free scan, we know exactly how many pages need to be rewritten. Pricing starts at $99. Each page is individually analyzed and rewritten. Larger sites cost more because there's more work per page. You'll see your exact price before paying. One-time payment, no subscriptions."
               />
               <FaqItem
                 q="How long does it take?"
-                a="The free score takes about 60 seconds. After purchase, your optimized documentation is generated in roughly 5 minutes. You'll get a ZIP file you can download immediately."
+                a="The free score takes about 60 seconds. After purchase, your optimized content is generated in roughly 5 minutes. You'll get a ZIP file you can download immediately."
               />
               <FaqItem
-                q="What format are the optimized docs in?"
-                a="You get a ZIP containing structured Markdown (.md) files, one per page, rendered HTML previews, an llms.txt agent entry point, and deployment instructions. Works with any docs platform: Mintlify, GitBook, ReadMe, Docusaurus, GitHub Pages, and others."
+                q="What format are the optimized files in?"
+                a="You get a ZIP containing structured Markdown (.md) files, one per page, rendered HTML previews, an llms.txt agent entry point, and deployment instructions. Works with any content platform: Mintlify, GitBook, ReadMe, Docusaurus, WordPress, Notion, and more."
               />
             </div>
           </div>
@@ -1298,11 +1368,11 @@ export function LandingPage() {
       <section className="py-20 lg:py-24 border-t bg-muted/20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
-            Make your docs a first-class citizen for AI agents
+            Make AI agents your best sales channel
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            The teams that get this right early will own their category in the agent economy.
-            The rest will wonder why agents stopped recommending them.
+            The businesses that get this right early will own their category in the agent economy.
+            The rest will wonder why AI stopped recommending them.
           </p>
           <Button size="lg" onClick={scrollToAssessment} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-8">
             Run Free Assessment
