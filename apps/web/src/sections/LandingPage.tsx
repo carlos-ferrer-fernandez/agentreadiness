@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -34,6 +34,8 @@ import {
   MessageSquare,
   RefreshCcw,
   Megaphone,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -118,6 +120,295 @@ const liveStatusMessages = [
   'Analyzing content type separation...',
   'Almost there, finalizing scores...',
 ]
+
+// Before/After examples using htmx.org docs as reference
+const beforeAfterSlides = [
+  {
+    rule: '#2 Action-Oriented Headings',
+    ruleShort: 'Rule #2',
+    tagline: 'Agents search by intent, not by topic',
+    before: {
+      label: 'Original docs',
+      lines: [
+        { text: '## Ajax', type: 'heading-bad' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'The core of htmx is a set of attributes that allow', type: 'normal' as const },
+        { text: 'you to issue AJAX requests directly from HTML.', type: 'normal' as const },
+        { text: '', type: 'gap' as const },
+        { text: '## Triggers', type: 'heading-bad' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'By default, AJAX requests are triggered by the', type: 'normal' as const },
+        { text: '"natural" event of an element...', type: 'normal' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '## Send AJAX Requests from HTML Elements', type: 'heading-good' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'To issue AJAX requests directly from HTML without', type: 'normal' as const },
+        { text: 'JavaScript, use the hx-get, hx-post, hx-put...', type: 'normal' as const },
+        { text: '', type: 'gap' as const },
+        { text: '## Configure When AJAX Requests Fire', type: 'heading-good' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'By default, hx-get triggers on click (for buttons)', type: 'normal' as const },
+        { text: 'and on change (for inputs). To customize...', type: 'normal' as const },
+      ],
+    },
+  },
+  {
+    rule: '#3 Structured Parameter Tables',
+    ruleShort: 'Rule #3',
+    tagline: 'Tables are machine-parseable. Prose is not.',
+    before: {
+      label: 'Original docs',
+      lines: [
+        { text: 'Other modifiers you can use for triggers are:', type: 'normal' as const },
+        { text: 'changed, which will only fire if the value has', type: 'prose-bad' as const },
+        { text: 'changed; delay:<time>, which adds a delay;', type: 'prose-bad' as const },
+        { text: 'throttle:<time>, which throttles the event;', type: 'prose-bad' as const },
+        { text: 'from:<selector>, which listens for events on', type: 'prose-bad' as const },
+        { text: 'a different element.', type: 'prose-bad' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '| Modifier    | Type     | Default | Description           |', type: 'table-header' as const },
+        { text: '|-------------|----------|---------|-----------------------|', type: 'table-sep' as const },
+        { text: '| changed     | boolean  | false   | Only fire if value    |', type: 'table-row' as const },
+        { text: '|             |          |         | has changed           |', type: 'table-row' as const },
+        { text: '| delay       | duration | none    | Wait before firing    |', type: 'table-row' as const },
+        { text: '| throttle    | duration | none    | Max once per interval |', type: 'table-row' as const },
+        { text: '| from        | selector | self    | Listen on different   |', type: 'table-row' as const },
+        { text: '|             |          |         | element               |', type: 'table-row' as const },
+      ],
+    },
+  },
+  {
+    rule: '#4 Complete Code Examples',
+    ruleShort: 'Rule #4',
+    tagline: 'If an agent can\'t copy-paste it, it doesn\'t exist',
+    before: {
+      label: 'Original docs',
+      lines: [
+        { text: '<button hx-post="/clicked"', type: 'code' as const },
+        { text: '    hx-trigger="click"', type: 'code' as const },
+        { text: '    hx-target="#parent-div"', type: 'code' as const },
+        { text: '    hx-swap="outerHTML">', type: 'code' as const },
+        { text: '    Click Me!', type: 'code' as const },
+        { text: '</button>', type: 'code' as const },
+        { text: '', type: 'gap' as const },
+        { text: '// No imports, no setup, no expected response', type: 'comment-bad' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '<!-- 1. Include htmx (required) -->', type: 'comment-good' as const },
+        { text: '<script src="/htmx.org@2.0.4"></script>', type: 'code' as const },
+        { text: '', type: 'gap' as const },
+        { text: '<!-- 2. Button that replaces its parent -->', type: 'comment-good' as const },
+        { text: '<button hx-post="/clicked"', type: 'code' as const },
+        { text: '    hx-swap="outerHTML">', type: 'code' as const },
+        { text: '    Click Me!</button>', type: 'code' as const },
+        { text: '', type: 'gap' as const },
+        { text: '<!-- Expected: server returns HTML that', type: 'comment-good' as const },
+        { text: '     replaces the button\'s parent div -->', type: 'comment-good' as const },
+      ],
+    },
+  },
+  {
+    rule: '#6 First-Class Error Docs',
+    ruleShort: 'Rule #6',
+    tagline: 'Agents need exact error strings to help users debug',
+    before: {
+      label: 'Original docs',
+      lines: [
+        { text: 'htmx uses a set of response codes to determine', type: 'normal' as const },
+        { text: 'behavior. Any 2xx response is a swap, 286 stops', type: 'normal' as const },
+        { text: 'polling. Errors use responseHandling config.', type: 'normal' as const },
+        { text: '', type: 'gap' as const },
+        { text: '// No error table. No troubleshooting guide.', type: 'comment-bad' as const },
+        { text: '// Agent can\'t help users fix broken swaps.', type: 'comment-bad' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '| Status | Behavior       | Common Cause          |', type: 'table-header' as const },
+        { text: '|--------|----------------|-----------------------|', type: 'table-sep' as const },
+        { text: '| 200    | Swap content   | Normal operation      |', type: 'table-row' as const },
+        { text: '| 204    | No swap        | Intentional no-op     |', type: 'table-row' as const },
+        { text: '| 286    | Stop polling   | Server signals stop   |', type: 'table-row' as const },
+        { text: '| 422    | Show errors    | Validation failed     |', type: 'table-row' as const },
+        { text: '| 4xx    | htmx:error evt | Auth/permissions      |', type: 'table-row' as const },
+        { text: '| 5xx    | htmx:error evt | Server-side error     |', type: 'table-row' as const },
+      ],
+    },
+  },
+  {
+    rule: '#8 Frontmatter + #1 Self-Contained',
+    ruleShort: 'Rules #1 & #8',
+    tagline: 'Every page must work if an agent reads only that page',
+    before: {
+      label: 'Original docs',
+      lines: [
+        { text: '# Attributes', type: 'heading-bad' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'As mentioned in the previous section, htmx', type: 'prose-bad' as const },
+        { text: 'extends HTML with a set of custom attributes.', type: 'prose-bad' as const },
+        { text: 'See above for how triggers work.', type: 'prose-bad' as const },
+        { text: '', type: 'gap' as const },
+        { text: '// No metadata. References other sections.', type: 'comment-bad' as const },
+        { text: '// RAG retrieval gets an incomplete chunk.', type: 'comment-bad' as const },
+      ],
+    },
+    after: {
+      label: 'After AgentReadiness',
+      lines: [
+        { text: '---', type: 'frontmatter' as const },
+        { text: 'title: "Configure htmx HTML Attributes"', type: 'frontmatter' as const },
+        { text: 'version: "2.0.4"', type: 'frontmatter' as const },
+        { text: 'tags: [htmx, attributes, hx-get, hx-post]', type: 'frontmatter' as const },
+        { text: '---', type: 'frontmatter' as const },
+        { text: '', type: 'gap' as const },
+        { text: '# Configure htmx HTML Attributes', type: 'heading-good' as const },
+        { text: '', type: 'gap' as const },
+        { text: 'htmx extends HTML with custom attributes', type: 'normal' as const },
+        { text: 'that trigger AJAX requests. Each attribute...', type: 'normal' as const },
+      ],
+    },
+  },
+]
+
+function CodeLine({ line }: { line: { text: string; type: string } }) {
+  const styles: Record<string, string> = {
+    'heading-bad': 'text-red-400 font-bold',
+    'heading-good': 'text-emerald-400 font-bold',
+    'normal': 'text-slate-300',
+    'gap': '',
+    'prose-bad': 'text-red-300/80 bg-red-500/10',
+    'code': 'text-sky-300',
+    'comment-bad': 'text-red-400/60 italic',
+    'comment-good': 'text-emerald-400/60 italic',
+    'table-header': 'text-amber-300 font-mono text-xs',
+    'table-sep': 'text-slate-600 font-mono text-xs',
+    'table-row': 'text-slate-300 font-mono text-xs',
+    'frontmatter': 'text-violet-400',
+  }
+  if (line.type === 'gap') return <div className="h-2" />
+  return (
+    <div className={cn('px-3 py-0.5 font-mono text-[13px] leading-relaxed whitespace-pre', styles[line.type] || 'text-slate-300')}>
+      {line.text}
+    </div>
+  )
+}
+
+function BeforeAfterSlideshow() {
+  const [current, setCurrent] = useState(0)
+  const slide = beforeAfterSlides[current]
+
+  // Auto-advance every 6 seconds
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrent(prev => (prev + 1) % beforeAfterSlides.length)
+    }, 6000)
+    return () => clearInterval(timer)
+  }, [])
+
+  return (
+    <div>
+      {/* Slide indicator dots + rule name */}
+      <div className="flex items-center justify-center gap-3 mb-6">
+        <button
+          onClick={() => setCurrent(prev => (prev - 1 + beforeAfterSlides.length) % beforeAfterSlides.length)}
+          className="p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        <div className="flex items-center gap-2">
+          {beforeAfterSlides.map((_, i) => (
+            <button
+              key={i}
+              onClick={() => setCurrent(i)}
+              className={cn(
+                'w-2 h-2 rounded-full transition-all',
+                i === current ? 'bg-primary w-6' : 'bg-muted-foreground/30 hover:bg-muted-foreground/50'
+              )}
+            />
+          ))}
+        </div>
+        <button
+          onClick={() => setCurrent(prev => (prev + 1) % beforeAfterSlides.length)}
+          className="p-1.5 rounded-full hover:bg-muted transition-colors text-muted-foreground"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+
+      {/* Rule badge + tagline */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={current}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+        >
+          <div className="text-center mb-6">
+            <Badge className="mb-2">{slide.rule}</Badge>
+            <p className="text-sm text-muted-foreground">{slide.tagline}</p>
+          </div>
+
+          {/* Before / After panels */}
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Before */}
+            <div className="rounded-xl border border-red-500/20 bg-slate-950 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-slate-600" />
+                  <div className="w-3 h-3 rounded-full bg-slate-600" />
+                </div>
+                <span className="text-xs text-red-400 font-medium ml-2">BEFORE</span>
+                <span className="text-xs text-slate-500 ml-auto">{slide.before.label}</span>
+              </div>
+              <div className="py-3 min-h-[220px]">
+                {slide.before.lines.map((line, i) => (
+                  <CodeLine key={i} line={line} />
+                ))}
+              </div>
+            </div>
+
+            {/* After */}
+            <div className="rounded-xl border border-emerald-500/20 bg-slate-950 overflow-hidden">
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
+                <div className="flex gap-1.5">
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
+                  <div className="w-3 h-3 rounded-full bg-slate-600" />
+                  <div className="w-3 h-3 rounded-full bg-slate-600" />
+                </div>
+                <span className="text-xs text-emerald-400 font-medium ml-2">AFTER</span>
+                <span className="text-xs text-slate-500 ml-auto">{slide.after.label}</span>
+              </div>
+              <div className="py-3 min-h-[220px]">
+                {slide.after.lines.map((line, i) => (
+                  <CodeLine key={i} line={line} />
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Slide counter */}
+          <p className="text-center text-xs text-muted-foreground mt-4">
+            {current + 1} of {beforeAfterSlides.length} examples
+          </p>
+        </motion.div>
+      </AnimatePresence>
+    </div>
+  )
+}
 
 export function LandingPage() {
   const navigate = useNavigate()
@@ -646,6 +937,24 @@ export function LandingPage() {
               </Button>
             </motion.div>
           </div>
+        </div>
+      </section>
+
+      {/* Before/After Slideshow */}
+      <section className="py-20 border-b">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-2xl mx-auto mb-12">
+            <Badge variant="outline" className="mb-4">Real Example: htmx.org</Badge>
+            <h2 className="text-3xl font-bold mb-4">
+              See what we actually change
+            </h2>
+            <p className="text-muted-foreground">
+              Here's what happens when we run our 20 rules on real documentation.
+              Same content, restructured so AI agents can actually use it.
+            </p>
+          </div>
+
+          <BeforeAfterSlideshow />
         </div>
       </section>
 
