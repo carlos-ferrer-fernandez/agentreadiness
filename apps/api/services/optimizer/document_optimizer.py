@@ -327,52 +327,100 @@ class DocumentationOptimizer:
     # =========================================================================
 
     async def _crawl_documentation(self, start_url: str) -> List[DocPage]:
-        """Crawl documentation site and extract pages."""
+        """Crawl documentation site and extract pages.
+
+        Follows both absolute and relative links within the same domain.
+        Normalizes URLs to avoid duplicates. Skips non-content pages
+        (anchors, query params, auth pages, assets).
+        """
+        from urllib.parse import urljoin, urldefrag
+
         pages = []
         visited = set()
         to_visit = [start_url]
         max_pages = 100
 
+        parsed_base = urlparse(start_url)
+        base_domain = parsed_base.netloc
+        # Keep the base path prefix for scoping (e.g., /docs/ stays within /docs/)
+        base_path = parsed_base.path.rstrip('/')
+
         while to_visit and len(pages) < max_pages:
             url = to_visit.pop(0)
+
+            # Normalize: remove fragment, trailing slash
+            url = urldefrag(url)[0].rstrip('/')
+            if not url:
+                continue
             if url in visited:
                 continue
 
             try:
                 page = await self._fetch_page(url)
                 if page:
-                    pages.append(page)
+                    # Only add pages with meaningful content (not just nav/landing)
+                    if page.content and len(page.content.strip()) > 50:
+                        pages.append(page)
                     visited.add(url)
 
+                    # Discover new links (both absolute and relative)
                     for link in page.links:
-                        if link not in visited and self._is_same_domain(link, start_url):
-                            to_visit.append(link)
+                        normalized = urldefrag(link)[0].rstrip('/')
+                        if normalized and normalized not in visited:
+                            parsed_link = urlparse(normalized)
+                            if parsed_link.netloc == base_domain:
+                                # Stay within the docs scope
+                                if not base_path or parsed_link.path.startswith(base_path):
+                                    to_visit.append(normalized)
 
             except Exception as e:
                 logger.warning(f"Failed to fetch {url}: {e}")
 
+        logger.info(f"Crawled {len(pages)} content pages from {len(visited)} URLs visited")
         return pages
 
     async def _fetch_page(self, url: str) -> Optional[DocPage]:
-        """Fetch and parse a single page."""
+        """Fetch and parse a single page.
+
+        Resolves both absolute and relative links so the crawler
+        can discover the full documentation tree.
+        """
+        from urllib.parse import urljoin
+
         try:
-            response = await self.client.get(url)
+            response = await self.client.get(url, follow_redirects=True)
             if response.status_code != 200:
+                return None
+
+            content_type = response.headers.get('content-type', '')
+            if 'text/html' not in content_type and 'text/plain' not in content_type:
                 return None
 
             soup = BeautifulSoup(response.content, 'html.parser')
 
+            # Remove nav, footer, sidebar, cookie banners etc
+            for tag in soup.find_all(['nav', 'footer', 'aside', 'header']):
+                tag.decompose()
+            for tag in soup.find_all(class_=re.compile(
+                r'(nav|footer|sidebar|cookie|banner|menu|breadcrumb|toc)',
+                re.IGNORECASE
+            )):
+                tag.decompose()
+
             title = soup.find('title')
             title_text = title.get_text(strip=True) if title else "Untitled"
 
-            main = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
+            main = (soup.find('main') or soup.find('article') or
+                    soup.find('div', class_='content') or
+                    soup.find('div', role='main') or
+                    soup.find('div', class_=re.compile(r'(docs|documentation|page-content|markdown)', re.IGNORECASE)))
             if not main:
                 main = soup.find('body')
 
             content = main.get_text(separator='\n', strip=True) if main else ""
 
             code_blocks = []
-            for pre in soup.find_all('pre'):
+            for pre in (main or soup).find_all('pre'):
                 code = pre.find('code')
                 if code:
                     language = self._detect_language(code.get('class', []))
@@ -382,14 +430,25 @@ class DocumentationOptimizer:
                     })
 
             headings = []
-            for h in soup.find_all(['h1', 'h2', 'h3', 'h4']):
+            for h in (main or soup).find_all(['h1', 'h2', 'h3', 'h4']):
                 headings.append(h.get_text(strip=True))
 
+            # Collect ALL links: resolve relative links to absolute
             links = []
+            skip_patterns = re.compile(
+                r'(\.png|\.jpg|\.gif|\.svg|\.css|\.js|\.woff|\.pdf|'
+                r'mailto:|javascript:|#$|/login|/signup|/auth|/console|'
+                r'/search\?|/changelog|/blog)',
+                re.IGNORECASE
+            )
             for a in soup.find_all('a', href=True):
                 href = a['href']
-                if href.startswith('http'):
-                    links.append(href)
+                if skip_patterns.search(href):
+                    continue
+                # Resolve relative URLs to absolute
+                absolute = urljoin(url, href)
+                if absolute.startswith('http'):
+                    links.append(absolute)
 
             return DocPage(
                 url=url,
@@ -573,6 +632,18 @@ class DocumentationOptimizer:
         """
         import asyncio
 
+        # Skip pages with too little content -- these are typically nav/landing pages
+        # and the LLM will fabricate content if forced to "optimize" them
+        if analysis.word_count < 50:
+            logger.info(f"Skipping {page.url}: too short ({analysis.word_count} words)")
+            return OptimizedDoc(
+                original_url=page.url,
+                title=page.title,
+                optimized_content=page.content,
+                improvements=["Page too short to optimize (navigation or landing page)"],
+                file_name=self._generate_file_name(page.title, page.url)
+            )
+
         prompt = self._build_optimization_prompt(page, analysis, terminology_context)
 
         from config import get_settings
@@ -605,7 +676,7 @@ class DocumentationOptimizer:
                                 "content": (
                                     "You are an expert documentation writer who produces Mintlify-quality "
                                     "documentation optimized for AI agent consumption via RAG pipelines.\n\n"
-                                    "Your output should match the quality of the best developer documentation "
+                                    "Your output should match the quality of the best documentation "
                                     "(Stripe, Resend, Mintlify, Vercel). Clean, scannable, precise.\n\n"
                                     "WRITING STYLE:\n"
                                     "- Short paragraphs (2-3 sentences max). Lead with the key point.\n"
@@ -615,6 +686,18 @@ class DocumentationOptimizer:
                                     "- Code examples are complete: imports, setup, call, expected output.\n"
                                     "- Callout hierarchy: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**\n"
                                     "- No marketing fluff. No 'simply'. No 'just'. Technical precision only.\n\n"
+                                    "CRITICAL RULES:\n"
+                                    "- ONLY restructure and improve content that exists in the original. "
+                                    "NEVER invent, fabricate, or hallucinate new technical content, code examples, "
+                                    "API endpoints, error codes, or features that are not in the original.\n"
+                                    "- If the original content is thin (e.g., a landing page with just links), "
+                                    "restructure what exists. Do NOT pad it with made-up tutorials.\n"
+                                    "- NEVER add a 'Conclusion' or 'Summary' section. Premium docs don't have them.\n"
+                                    "- For frontmatter: use today's date for last_updated. For version, use the "
+                                    "version mentioned in the content, or omit the field if none is mentioned.\n"
+                                    "- Code blocks must be at the TOP LEVEL of the document (not indented inside "
+                                    "list items) to ensure proper rendering. If you need code in a step, end the "
+                                    "list, show the code block, then continue.\n\n"
                                     "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
                                     "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
                                     "NEVER wrap output in ```markdown fences. Start directly with --- frontmatter.\n"
@@ -771,7 +854,13 @@ applying ALL 20 agent-readiness rules. The output must be:
 12. **Use callout hierarchy**: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**
 13. **State intent before mechanics** — explain WHY then HOW
 14. **Use numbered lists for sequential steps**, bullet lists for non-sequential items
-15. **Every page should feel like premium documentation** — clean, scannable, precise
+15. **Every page should feel like premium documentation** -- clean, scannable, precise
+16. **NEVER fabricate content** -- only restructure and improve what exists in the original
+17. **NEVER add a Conclusion or Summary section** -- premium docs don't have them
+18. **Code blocks must be at the TOP LEVEL** -- never indent code fences inside list items.
+    If a step needs code, end the list, show the code block unindented, then continue.
+19. **For version/date in frontmatter** -- use the version from the content, or omit if unknown.
+    Use today's date for last_updated. NEVER invent version numbers.
 
 **CRITICAL: PRESERVE THE ORIGINAL LANGUAGE.** If the original content is in French,
 the optimized output MUST also be in French. If it is in Spanish, output Spanish.
@@ -1001,6 +1090,53 @@ If you are an AI agent:
     # ZIP PACKAGING
     # =========================================================================
 
+    def _fix_nested_code_blocks(self, md_content: str) -> str:
+        """Fix code blocks nested inside list items by pulling them out.
+
+        The Python markdown library's fenced_code extension fails to render
+        code fences that are indented inside list items (e.g., inside numbered
+        steps). This pre-processor detects such cases and restructures them
+        so code blocks are at the top level.
+        """
+        lines = md_content.split('\n')
+        result = []
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+            stripped = line.lstrip()
+            indent = len(line) - len(stripped)
+
+            # Detect a fenced code block that's indented (inside a list)
+            if stripped.startswith('```') and indent >= 2:
+                # Find the closing fence
+                lang = stripped[3:].strip()
+                code_lines = []
+                i += 1
+                while i < len(lines):
+                    inner = lines[i]
+                    inner_stripped = inner.lstrip()
+                    if inner_stripped.startswith('```') and len(inner_stripped) <= 4:
+                        i += 1
+                        break
+                    # Remove the list indentation from code lines
+                    if inner.startswith(' ' * indent):
+                        code_lines.append(inner[indent:])
+                    else:
+                        code_lines.append(inner.lstrip())
+                    i += 1
+
+                # Output the code block at top level
+                result.append('')
+                result.append(f'```{lang}')
+                result.extend(code_lines)
+                result.append('```')
+                result.append('')
+            else:
+                result.append(line)
+                i += 1
+
+        return '\n'.join(result)
+
     def _render_markdown_to_html(self, md_content: str, title: str) -> str:
         """Convert markdown content to a clean, readable HTML page."""
         # Strip YAML frontmatter before rendering
@@ -1010,9 +1146,18 @@ If you are an AI agent:
             if len(parts) >= 3:
                 body = parts[2].strip()
 
+        # Fix code blocks nested inside list items
+        body = self._fix_nested_code_blocks(body)
+
         html_body = markdown.markdown(
             body,
-            extensions=['tables', 'fenced_code', 'toc', 'attr_list'],
+            extensions=['tables', 'fenced_code', 'toc', 'attr_list', 'codehilite'],
+            extension_configs={
+                'codehilite': {
+                    'css_class': 'highlight',
+                    'guess_lang': False,
+                }
+            }
         )
 
         return f"""<!DOCTYPE html>
