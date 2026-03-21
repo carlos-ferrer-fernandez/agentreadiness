@@ -185,6 +185,16 @@ requirements derived from how agents actually process documentation.
 - Use standard callout syntax for warnings, tips, important notes
 - These become natural prioritization signals for agents
 - Format: > **ℹ️ Info:** / > **⚠️ Warning:** / > **❌ Error:** / > **💡 Tip:**
+
+### OUTPUT QUALITY STANDARDS (Inspired by Mintlify-quality documentation)
+- Write clear, scannable prose. Short paragraphs (2-3 sentences max)
+- Use bullet lists for anything with 3+ items
+- Lead each section with a one-sentence summary of what it covers
+- For multi-step procedures, use numbered lists with clear step titles
+- For code examples in multiple languages, show each language variant
+- For configuration options, always include: name, type, default, description
+- Every page should feel complete and professional, like premium docs
+- Callout hierarchy: Tip (helpful), Note/Info (important), Warning (caution), Danger (destructive)
 """
 
 
@@ -593,9 +603,18 @@ class DocumentationOptimizer:
                             {
                                 "role": "system",
                                 "content": (
-                                    "You are an expert documentation optimizer. Your SOLE purpose is to "
-                                    "rewrite documentation so it is maximally useful for AI agents "
-                                    "(Claude, GPT, Gemini, etc.) that consume it via RAG pipelines.\n\n"
+                                    "You are an expert documentation writer who produces Mintlify-quality "
+                                    "documentation optimized for AI agent consumption via RAG pipelines.\n\n"
+                                    "Your output should match the quality of the best developer documentation "
+                                    "(Stripe, Resend, Mintlify, Vercel). Clean, scannable, precise.\n\n"
+                                    "WRITING STYLE:\n"
+                                    "- Short paragraphs (2-3 sentences max). Lead with the key point.\n"
+                                    "- Use bullet lists for 3+ items. Use numbered lists for sequential steps.\n"
+                                    "- Every section starts with a one-sentence summary of what it covers.\n"
+                                    "- Tables for parameters/config (name | type | required | default | description).\n"
+                                    "- Code examples are complete: imports, setup, call, expected output.\n"
+                                    "- Callout hierarchy: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**\n"
+                                    "- No marketing fluff. No 'simply'. No 'just'. Technical precision only.\n\n"
                                     "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
                                     "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
                                     "NEVER wrap output in ```markdown fences. Start directly with --- frontmatter.\n"
@@ -610,7 +629,7 @@ class DocumentationOptimizer:
                             }
                         ],
                         temperature=0.2,
-                        max_tokens=4096,
+                        max_tokens=8192,
                     )
 
                     optimized_content = response.choices[0].message.content
@@ -717,7 +736,7 @@ class DocumentationOptimizer:
 **Headings found:** {', '.join(page.headings[:20]) if page.headings else 'None'}
 
 ### Original Content
-{page.content[:6000]}
+{page.content[:10000]}
 
 ### Existing Code Examples
 {code_examples if code_examples else 'None found'}
@@ -735,21 +754,24 @@ class DocumentationOptimizer:
 
 ## YOUR TASK
 
-Rewrite this page applying ALL 20 rules above. The output must be:
+Rewrite this page to match the quality of Stripe/Resend/Mintlify documentation,
+applying ALL 20 agent-readiness rules. The output must be:
 
-1. **Production-ready Markdown** — deployable as-is, not a draft
+1. **Production-ready Markdown** — deployable as-is on any docs platform
 2. **Start with YAML frontmatter** (title, description, version, last_updated, tags, prerequisites)
 3. **Use action-oriented headings** that match user/agent intents
 4. **Every section must be self-contained** — no "see above" or "as mentioned"
 5. **Convert ALL parameter descriptions to tables** (Parameter | Type | Required | Default | Description)
 6. **Complete ALL code examples** — add imports, setup, expected output if missing
-7. **Add error documentation** where relevant (error code | cause | fix)
-8. **Add prerequisites section** at the top
+7. **Add error documentation** where relevant (Error | Cause | Fix)
+8. **Add a Prerequisites section** at the top as a bullet list
 9. **Strip ALL marketing language** — only technical, precise content
-10. **Replace vague pronouns** — always restate the explicit subject
+10. **Short paragraphs** (2-3 sentences). Lead each section with a summary sentence.
 11. **Add expected outputs** for every API call or code example
-12. **Use callouts** for warnings, tips, and important notes
+12. **Use callout hierarchy**: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**
 13. **State intent before mechanics** — explain WHY then HOW
+14. **Use numbered lists for sequential steps**, bullet lists for non-sequential items
+15. **Every page should feel like premium documentation** — clean, scannable, precise
 
 **CRITICAL: PRESERVE THE ORIGINAL LANGUAGE.** If the original content is in French,
 the optimized output MUST also be in French. If it is in Spanish, output Spanish.
@@ -1000,36 +1022,41 @@ If you are an AI agent:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>{title}</title>
 <style>
-  :root {{ --bg: #fff; --fg: #1a1a1a; --muted: #666; --border: #e5e5e5; --accent: #2563eb; --code-bg: #f5f5f5; }}
+  :root {{ --bg: #fff; --fg: #0f172a; --muted: #64748b; --border: #e2e8f0; --accent: #059669; --accent-light: #d1fae5; --code-bg: #f8fafc; --code-border: #e2e8f0; --tip-bg: #f0fdf4; --tip-border: #86efac; --note-bg: #eff6ff; --note-border: #93c5fd; --warn-bg: #fffbeb; --warn-border: #fcd34d; --danger-bg: #fef2f2; --danger-border: #fca5a5; }}
   @media (prefers-color-scheme: dark) {{
-    :root {{ --bg: #111; --fg: #e5e5e5; --muted: #999; --border: #333; --accent: #60a5fa; --code-bg: #1e1e1e; }}
+    :root {{ --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --border: #334155; --accent: #34d399; --accent-light: #064e3b; --code-bg: #1e293b; --code-border: #334155; --tip-bg: #064e3b; --tip-border: #059669; --note-bg: #1e3a5f; --note-border: #3b82f6; --warn-bg: #451a03; --warn-border: #d97706; --danger-bg: #450a0a; --danger-border: #ef4444; }}
   }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.7; color: var(--fg); background: var(--bg); max-width: 800px; margin: 0 auto; padding: 2rem 1.5rem; }}
-  h1 {{ font-size: 2rem; margin: 2rem 0 1rem; border-bottom: 2px solid var(--border); padding-bottom: 0.5rem; }}
-  h2 {{ font-size: 1.5rem; margin: 1.8rem 0 0.8rem; color: var(--fg); }}
-  h3 {{ font-size: 1.2rem; margin: 1.5rem 0 0.6rem; }}
-  h4 {{ font-size: 1rem; margin: 1.2rem 0 0.4rem; color: var(--muted); }}
-  p {{ margin: 0.8rem 0; }}
-  a {{ color: var(--accent); text-decoration: none; }} a:hover {{ text-decoration: underline; }}
-  code {{ font-family: 'SF Mono', 'Fira Code', monospace; font-size: 0.9em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 4px; }}
-  pre {{ background: var(--code-bg); border: 1px solid var(--border); border-radius: 8px; padding: 1rem; overflow-x: auto; margin: 1rem 0; }}
-  pre code {{ background: none; padding: 0; font-size: 0.85em; }}
-  table {{ width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: 0.9rem; }}
-  th, td {{ border: 1px solid var(--border); padding: 0.6rem 0.8rem; text-align: left; }}
-  th {{ background: var(--code-bg); font-weight: 600; }}
-  blockquote {{ border-left: 4px solid var(--accent); padding: 0.5rem 1rem; margin: 1rem 0; background: var(--code-bg); border-radius: 0 6px 6px 0; }}
-  ul, ol {{ margin: 0.8rem 0; padding-left: 1.5rem; }}
-  li {{ margin: 0.3rem 0; }}
-  hr {{ border: none; border-top: 1px solid var(--border); margin: 2rem 0; }}
-  .badge {{ display: inline-block; font-size: 0.75rem; padding: 0.2em 0.6em; border-radius: 12px; background: var(--accent); color: white; margin-bottom: 1rem; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif; line-height: 1.75; color: var(--fg); background: var(--bg); max-width: 780px; margin: 0 auto; padding: 2.5rem 2rem; font-size: 15px; }}
+  h1 {{ font-size: 2rem; margin: 2.5rem 0 1rem; font-weight: 700; letter-spacing: -0.02em; }}
+  h2 {{ font-size: 1.4rem; margin: 2.5rem 0 0.75rem; font-weight: 650; letter-spacing: -0.01em; padding-top: 1.5rem; border-top: 1px solid var(--border); }}
+  h2:first-of-type {{ border-top: none; padding-top: 0; }}
+  h3 {{ font-size: 1.15rem; margin: 2rem 0 0.5rem; font-weight: 600; }}
+  h4 {{ font-size: 1rem; margin: 1.5rem 0 0.4rem; font-weight: 600; color: var(--muted); }}
+  p {{ margin: 0.75rem 0; }}
+  a {{ color: var(--accent); text-decoration: none; font-weight: 500; }} a:hover {{ text-decoration: underline; }}
+  code {{ font-family: 'SF Mono', 'Fira Code', 'JetBrains Mono', monospace; font-size: 0.875em; background: var(--code-bg); padding: 0.15em 0.4em; border-radius: 5px; border: 1px solid var(--code-border); }}
+  pre {{ background: var(--code-bg); border: 1px solid var(--code-border); border-radius: 10px; padding: 1.25rem; overflow-x: auto; margin: 1.25rem 0; }}
+  pre code {{ background: none; padding: 0; font-size: 0.85em; border: none; line-height: 1.6; }}
+  table {{ width: 100%; border-collapse: collapse; margin: 1.25rem 0; font-size: 0.9rem; }}
+  th, td {{ border: 1px solid var(--border); padding: 0.65rem 1rem; text-align: left; }}
+  th {{ background: var(--code-bg); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }}
+  blockquote {{ border-left: 3px solid var(--accent); padding: 0.75rem 1.25rem; margin: 1.25rem 0; background: var(--tip-bg); border-radius: 0 8px 8px 0; font-size: 0.95rem; }}
+  ul, ol {{ margin: 0.75rem 0; padding-left: 1.5rem; }}
+  li {{ margin: 0.35rem 0; }}
+  li > p {{ margin: 0.25rem 0; }}
+  hr {{ border: none; border-top: 1px solid var(--border); margin: 2.5rem 0; }}
+  strong {{ font-weight: 650; }}
+  .badge {{ display: inline-block; font-size: 0.7rem; padding: 0.25em 0.75em; border-radius: 99px; background: var(--accent); color: white; margin-bottom: 1.5rem; font-weight: 600; letter-spacing: 0.03em; }}
+  .meta {{ display: flex; gap: 1rem; margin-bottom: 2rem; font-size: 0.8rem; color: var(--muted); flex-wrap: wrap; }}
+  .meta span {{ background: var(--code-bg); padding: 0.25em 0.6em; border-radius: 5px; border: 1px solid var(--border); }}
 </style>
 </head>
 <body>
 <div class="badge">Agent-Optimized</div>
 {html_body}
 <hr>
-<p style="font-size:0.8rem;color:var(--muted);">Optimized by AgentReadiness. 20 rules applied.</p>
+<p style="font-size:0.8rem;color:var(--muted);text-align:center;">Optimized by <a href="https://agentreadiness.dev">AgentReadiness</a></p>
 </body>
 </html>"""
 
@@ -1095,35 +1122,38 @@ If you are an AI agent:
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Agent-Optimized Documentation</title>
 <style>
-  :root {{ --bg: #fff; --fg: #1a1a1a; --muted: #666; --border: #e5e5e5; --accent: #2563eb; --code-bg: #f5f5f5; }}
+  :root {{ --bg: #fff; --fg: #0f172a; --muted: #64748b; --border: #e2e8f0; --accent: #059669; --code-bg: #f8fafc; }}
   @media (prefers-color-scheme: dark) {{
-    :root {{ --bg: #111; --fg: #e5e5e5; --muted: #999; --border: #333; --accent: #60a5fa; --code-bg: #1e1e1e; }}
+    :root {{ --bg: #0f172a; --fg: #e2e8f0; --muted: #94a3b8; --border: #334155; --accent: #34d399; --code-bg: #1e293b; }}
   }}
   * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; line-height: 1.7; color: var(--fg); background: var(--bg); max-width: 900px; margin: 0 auto; padding: 2rem 1.5rem; }}
-  h1 {{ font-size: 2rem; margin-bottom: 0.5rem; }}
-  .subtitle {{ color: var(--muted); margin-bottom: 2rem; }}
-  .stats {{ display: flex; gap: 2rem; margin: 1.5rem 0; }}
-  .stat {{ background: var(--code-bg); padding: 1rem 1.5rem; border-radius: 8px; border: 1px solid var(--border); }}
-  .stat-value {{ font-size: 1.5rem; font-weight: 700; color: var(--accent); }}
-  .stat-label {{ font-size: 0.8rem; color: var(--muted); }}
-  table {{ width: 100%; border-collapse: collapse; margin: 1.5rem 0; }}
+  body {{ font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', system-ui, sans-serif; line-height: 1.7; color: var(--fg); background: var(--bg); max-width: 900px; margin: 0 auto; padding: 2.5rem 2rem; }}
+  h1 {{ font-size: 2rem; margin-bottom: 0.5rem; font-weight: 700; letter-spacing: -0.02em; }}
+  h2 {{ font-size: 1.3rem; margin: 2rem 0 0.75rem; font-weight: 650; }}
+  .subtitle {{ color: var(--muted); margin-bottom: 2rem; font-size: 1.05rem; }}
+  .stats {{ display: flex; gap: 1.25rem; margin: 1.5rem 0; flex-wrap: wrap; }}
+  .stat {{ background: var(--code-bg); padding: 1.25rem 1.5rem; border-radius: 12px; border: 1px solid var(--border); flex: 1; min-width: 140px; }}
+  .stat-value {{ font-size: 1.75rem; font-weight: 700; color: var(--accent); letter-spacing: -0.02em; }}
+  .stat-label {{ font-size: 0.8rem; color: var(--muted); margin-top: 0.25rem; }}
+  table {{ width: 100%; border-collapse: collapse; margin: 1.25rem 0; }}
   th, td {{ border: 1px solid var(--border); padding: 0.7rem 1rem; text-align: left; }}
-  th {{ background: var(--code-bg); font-weight: 600; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--muted); }}
+  th {{ background: var(--code-bg); font-weight: 600; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted); }}
   a {{ color: var(--accent); text-decoration: none; font-weight: 500; }} a:hover {{ text-decoration: underline; }}
-  .badge {{ display: inline-block; font-size: 0.75rem; padding: 0.2em 0.6em; border-radius: 12px; background: var(--accent); color: white; }}
-  .footer {{ margin-top: 3rem; padding-top: 1rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); }}
+  .badge {{ display: inline-block; font-size: 0.7rem; padding: 0.25em 0.75em; border-radius: 99px; background: var(--accent); color: white; font-weight: 600; letter-spacing: 0.03em; }}
+  .package-item {{ background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1rem 1.25rem; margin: 0.5rem 0; }}
+  .package-item strong {{ color: var(--accent); }}
+  .footer {{ margin-top: 3rem; padding-top: 1.25rem; border-top: 1px solid var(--border); font-size: 0.8rem; color: var(--muted); text-align: center; }}
 </style>
 </head>
 <body>
 <span class="badge">Agent-Optimized</span>
 <h1>Your Optimized Documentation</h1>
-<p class="subtitle">Every page rewritten applying 20 agent-readiness rules. Open any file below to see the result.</p>
+<p class="subtitle">Every page rewritten applying 20 agent-readiness rules. Open any file below to preview.</p>
 
 <div class="stats">
   <div class="stat"><div class="stat-value">{pages_count}</div><div class="stat-label">Pages optimized</div></div>
-  <div class="stat"><div class="stat-value">{improvements_count}</div><div class="stat-label">Improvements applied</div></div>
-  <div class="stat"><div class="stat-value">20</div><div class="stat-label">Rules per page</div></div>
+  <div class="stat"><div class="stat-value">{improvements_count}</div><div class="stat-label">Improvements</div></div>
+  <div class="stat"><div class="stat-value">20</div><div class="stat-label">Rules applied per page</div></div>
 </div>
 
 <h2>Pages</h2>
@@ -1134,15 +1164,13 @@ If you are an AI agent:
 </tbody>
 </table>
 
-<h2>What's in this package</h2>
-<ul>
-  <li><strong>html/</strong> &mdash; rendered HTML pages (you're looking at one now)</li>
-  <li><strong>markdown/</strong> &mdash; source Markdown files for your docs platform</li>
-  <li><strong>llms.txt</strong> &mdash; agent entry point (deploy at your docs root)</li>
-  <li><strong>README.md</strong> &mdash; overview and deployment instructions</li>
-</ul>
+<h2>Package contents</h2>
+<div class="package-item"><strong>html/</strong> Rendered HTML previews (you're looking at one now)</div>
+<div class="package-item"><strong>markdown/</strong> Source Markdown files for your docs platform (Mintlify, GitBook, ReadMe, Docusaurus)</div>
+<div class="package-item"><strong>llms.txt</strong> Agent entry point. Deploy at your documentation root.</div>
+<div class="package-item"><strong>README.md</strong> Overview, stats, and deployment instructions</div>
 
-<div class="footer">Optimized by AgentReadiness. 20 rules applied per page.</div>
+<div class="footer">Optimized by <a href="https://agentreadiness.dev">AgentReadiness</a></div>
 </body>
 </html>"""
 
