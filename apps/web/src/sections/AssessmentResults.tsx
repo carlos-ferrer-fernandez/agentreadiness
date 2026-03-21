@@ -235,7 +235,6 @@ export function AssessmentResults() {
   } = currentAssessment
 
   const rules = ruleResults || []
-  const price = estimatedPriceEur || 172
   const isOptimizing = hasPaid && optimizationStatus && !['complete', 'failed'].includes(optimizationStatus)
   const isOptimizationDone = hasPaid && optimizationStatus === 'complete'
   const isOptimizationFailed = hasPaid && optimizationStatus === 'failed'

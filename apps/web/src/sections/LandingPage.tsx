@@ -12,7 +12,7 @@ import {
   BarChart3,
   Clock,
   AlertTriangle,
-  Users,
+
   Building2,
   ShoppingBag,
   Briefcase,
