@@ -650,13 +650,9 @@ class DocumentationOptimizer:
         settings = get_settings()
         model = settings.openai_model
 
-        # Fallback chain: configured model -> gpt-4o -> gpt-4o-mini
-        # Supports both direct OpenAI IDs (gpt-4o) and AIML API IDs (openai/gpt-5-3-codex)
+        # Fallback chain: gpt-5.4 -> gpt-4o -> gpt-4o-mini
         models_to_try = [model]
-        fallbacks = ["gpt-4o", "gpt-4o-mini"]
-        if settings.openai_base_url:
-            # AIML API uses openai/ prefix for OpenAI models
-            fallbacks = ["openai/gpt-5-2-codex", "gpt-4o", "gpt-4o-mini"]
+        fallbacks = ["gpt-5.4", "gpt-4o", "gpt-4o-mini"]
         for fb in fallbacks:
             if fb not in models_to_try:
                 models_to_try.append(fb)
