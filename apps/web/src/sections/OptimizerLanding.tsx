@@ -23,44 +23,15 @@ import { cn } from '@/lib/utils'
 import apiClient from '@/lib/api'
 import { useUIStore } from '@/store'
 
-const pricingTiers = [
-  {
-    name: 'Starter',
-    price: 49,
-    pages: 'Up to 25 pages',
-    features: [
-      'AI-optimized content',
-      'Code examples added',
-      'Structure improvements',
-      'ZIP file delivery',
-      'Implementation guide',
-    ],
-  },
-  {
-    name: 'Standard',
-    price: 99,
-    pages: 'Up to 50 pages',
-    popular: true,
-    features: [
-      'Everything in Starter',
-      'API reference tables',
-      'Troubleshooting sections',
-      'SEO optimization',
-      'Priority support',
-    ],
-  },
-  {
-    name: 'Enterprise',
-    price: 199,
-    pages: 'Up to 100 pages',
-    features: [
-      'Everything in Standard',
-      'Custom tone & style',
-      'Multi-language support',
-      '1-on-1 consultation',
-      '30-day support',
-    ],
-  },
+const pricingFeatures = [
+  'All 20 agent-readiness rules applied',
+  'Every page individually rewritten by AI',
+  'Self-contained sections for AI retrieval',
+  'Complete examples with expected outcomes',
+  'Structured tables, error docs, and metadata',
+  'llms.txt agent entry point included',
+  'Download as ZIP, deploy in minutes',
+  '7-day money-back guarantee',
 ]
 
 const optimizationStages = [
@@ -180,9 +151,9 @@ export function OptimizerLanding() {
               transition={{ duration: 0.5, delay: 0.2 }}
               className="text-lg md:text-xl text-muted-foreground mb-8"
             >
-              We rewrite your documentation for AI agent consumption. 
+              We rewrite your documentation for AI agent consumption.
               You get optimized markdown files, ready to deploy.
-              <strong> Starting at €49.</strong>
+              <strong> $199 one-time — no subscription, no monthly fees.</strong>
             </motion.p>
           </div>
         </div>
@@ -388,47 +359,41 @@ export function OptimizerLanding() {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            {pricingTiers.map((tier, index) => (
-              <motion.div
-                key={tier.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1 }}
-                className={cn(
-                  "bg-card rounded-xl border p-6 flex flex-col",
-                  tier.popular && "border-primary ring-1 ring-primary shadow-lg scale-105"
-                )}
-              >
-                {tier.popular && (
-                  <Badge className="w-fit mb-4">Most Popular</Badge>
-                )}
-                <h3 className="text-lg font-semibold">{tier.name}</h3>
-                <div className="mt-2 flex items-baseline">
-                  <span className="text-3xl font-bold">€{tier.price}</span>
-                </div>
-                <p className="text-sm text-muted-foreground mt-1">{tier.pages}</p>
-                <ul className="mt-6 space-y-3 flex-1">
-                  {tier.features.map((feature) => (
-                    <li key={feature} className="flex items-start gap-2 text-sm">
-                      <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-                <Button 
-                  variant={tier.popular ? 'default' : 'outline'} 
-                  className="w-full mt-6"
-                  onClick={() => {
-                    document.getElementById('optimizer-form')?.scrollIntoView({ behavior: 'smooth' })
-                  }}
-                >
-                  Get Started
-                </Button>
-              </motion.div>
-            ))}
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="max-w-md mx-auto bg-card rounded-xl border-2 border-primary ring-1 ring-primary shadow-lg p-8 flex flex-col"
+          >
+            <Badge className="w-fit mb-4">One-Time Payment</Badge>
+            <h3 className="text-lg font-semibold">Optimized Documentation</h3>
+            <div className="mt-2 flex items-baseline gap-2">
+              <span className="text-4xl font-bold">$199</span>
+              <span className="text-lg text-muted-foreground">(€172)</span>
+            </div>
+            <p className="text-sm font-medium text-primary mt-2">
+              No subscription · No monthly fees · No engagement
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">
+              Pay once. Download. Deploy. That's it.
+            </p>
+            <ul className="mt-6 space-y-3 flex-1">
+              {pricingFeatures.map((feature) => (
+                <li key={feature} className="flex items-start gap-2 text-sm">
+                  <CheckCircle2 className="w-5 h-5 text-primary flex-shrink-0" />
+                  <span>{feature}</span>
+                </li>
+              ))}
+            </ul>
+            <Button
+              className="w-full mt-6"
+              onClick={() => {
+                document.getElementById('optimizer-form')?.scrollIntoView({ behavior: 'smooth' })
+              }}
+            >
+              Get Started
+            </Button>
+          </motion.div>
         </div>
       </section>
 

@@ -38,9 +38,9 @@ class PricingResponse(BaseModel):
 
 @router.post("/pricing", response_model=PricingResponse)
 async def get_pricing(request: PricingRequest):
-    """Get pricing estimate based on documentation size.
+    """Get pricing estimate. Flat $199 (€172) for everyone.
 
-    Price = max(49, estimated_api_cost × 3), rounded to end in 9.
+    No tiers, no per-page pricing. One-time payment.
     """
     from services.crawler.crawler import DocumentationCrawler
 
@@ -51,38 +51,10 @@ async def get_pricing(request: PricingRequest):
     except Exception:
         estimated_pages = 25  # Fallback estimate
 
-    # Calculate dynamic price: base + per_page, × 3 margin, min €49
-    base_cost = float(os.getenv("PRICING_BASE_COST_USD", "5.0"))
-    per_page_cost = float(os.getenv("PRICING_PER_PAGE_COST_USD", "0.40"))
-    multiplier = float(os.getenv("PRICING_MARGIN_MULTIPLIER", "3.0"))
-    min_price = float(os.getenv("PRICING_MIN_EUR", "49"))
-    max_price = float(os.getenv("PRICING_MAX_EUR", "499"))
-
-    estimated_cost = base_cost + (per_page_cost * estimated_pages)
-    raw_price = estimated_cost * multiplier
-
-    # Round to a "nice" price ending in 9
-    price = max(min_price, min(max_price, _round_to_nice_price(raw_price)))
-
     return PricingResponse(
         estimated_pages=estimated_pages,
-        price_eur=price,
+        price_eur=172,  # Flat €172 ($199 USD)
     )
-
-
-def _round_to_nice_price(raw: float) -> float:
-    """Round to a nice price ending in 9 (e.g., 89, 149, 199, 299)."""
-    if raw <= 89:
-        return 89
-    if raw <= 149:
-        return 149
-    if raw <= 199:
-        return 199
-    if raw <= 299:
-        return 299
-    if raw <= 399:
-        return 399
-    return 499
 
 
 @router.post("/start")

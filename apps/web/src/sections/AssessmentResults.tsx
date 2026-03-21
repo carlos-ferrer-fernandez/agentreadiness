@@ -235,7 +235,7 @@ export function AssessmentResults() {
   } = currentAssessment
 
   const rules = ruleResults || []
-  const price = estimatedPriceEur || 89
+  const price = estimatedPriceEur || 172
   const isOptimizing = hasPaid && optimizationStatus && !['complete', 'failed'].includes(optimizationStatus)
   const isOptimizationDone = hasPaid && optimizationStatus === 'complete'
   const isOptimizationFailed = hasPaid && optimizationStatus === 'failed'
@@ -388,7 +388,7 @@ export function AssessmentResults() {
                 size="sm"
                 onClick={() => useAssessmentStore.getState().showPaywallModal()}
               >
-                Get Optimized Docs · ${Math.round(price * 1.12)}/€{price}
+                Get Optimized Docs · $199
               </Button>
             </div>
           </motion.div>
@@ -602,7 +602,7 @@ export function AssessmentResults() {
                     </p>
                     <Button onClick={() => useAssessmentStore.getState().showPaywallModal()}>
                       <Unlock className="w-4 h-4 mr-2" />
-                      Get My Optimized Docs · ${Math.round(price * 1.12)}/€{price}
+                      Get Optimized Docs · $199 One-Time
                     </Button>
                   </div>
                 </div>
@@ -671,9 +671,9 @@ export function AssessmentResults() {
       <Dialog open={showPaywall} onOpenChange={hidePaywallModal}>
         <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle className="text-2xl">Get Your Optimized Documentation</DialogTitle>
+            <DialogTitle className="text-2xl">Unlock Your Optimized Documentation</DialogTitle>
             <DialogDescription>
-              We apply all 20 agent-readiness rules to every page. You download a ZIP and deploy.
+              We rewrite every page applying all 20 rules. You download and deploy. One-shot — no engagement, no recurring fees.
             </DialogDescription>
           </DialogHeader>
 
@@ -716,10 +716,14 @@ export function AssessmentResults() {
           <div className="mt-4 space-y-4">
             <div className="text-center">
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-3xl font-bold">€{price}</span>
+                <span className="text-3xl font-bold">$199</span>
+                <span className="text-lg text-muted-foreground">(€172)</span>
               </div>
+              <p className="text-sm font-medium text-emerald-600 mt-2">
+                One-time payment · No subscription · No monthly fees
+              </p>
               <p className="text-xs text-muted-foreground mt-1">
-                {pageCount} pages optimized. One-time payment. No subscription.
+                {pageCount} pages optimized. Pay once, download, deploy. That's it.
               </p>
             </div>
 
@@ -742,7 +746,7 @@ export function AssessmentResults() {
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Get My Optimized Docs · ${Math.round(price * 1.12)}/€{price}
+                  Pay $199 — One-Time, No Subscription
                 </>
               )}
             </Button>

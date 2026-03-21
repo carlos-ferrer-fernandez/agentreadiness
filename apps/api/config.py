@@ -54,8 +54,8 @@ class Settings(BaseSettings):
     pricing_base_cost: float = 3.0        # Fixed overhead: assessment scan, server, Stripe fees
     pricing_per_page_cost: float = 0.08   # Per-page optimization ($0.06 actual + buffer)
     pricing_margin_multiplier: float = 3.0  # 3x margin on API costs
-    pricing_min_eur: int = 89              # Minimum price ($99 USD / €89 EUR)
-    pricing_max_eur: int = 499             # Cap for very large docs
+    pricing_min_eur: int = 172             # Flat price (€172 / $199 USD)
+    pricing_max_eur: int = 172             # Flat price — no tiers, no complexity
 
     # Crawler
     max_crawl_pages: int = 100
