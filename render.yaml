@@ -21,19 +21,16 @@ services:
         source: /*
         destination: /index.html
 
-  # Backend (FastAPI) - FREE TIER
+  # Backend (FastAPI) - Docker runtime for Playwright/Chromium support
   - type: web
     name: agentreadiness-api
-    runtime: python
+    runtime: docker
     plan: free
     repo: https://github.com/carlos-ferrer-fernandez/agentreadiness
     branch: main
     rootDir: apps/api
-    buildCommand: pip install -r requirements.txt && playwright install chromium
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: ./Dockerfile
     envVars:
-      - key: PYTHON_VERSION
-        value: 3.11.0
       - key: OPENAI_API_KEY
         sync: false
       - key: STRIPE_SECRET_KEY
