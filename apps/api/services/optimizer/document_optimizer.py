@@ -801,9 +801,9 @@ class DocumentationOptimizer:
         settings = get_settings()
         model = settings.openai_model
 
-        # Fallback chain: configured model -> gpt-4o -> gpt-4o-mini
+        # Fallback chain: configured model -> gpt-5.4-mini -> gpt-4o
         models_to_try = [model]
-        fallbacks = ["gpt-4o", "gpt-4o-mini"]
+        fallbacks = ["gpt-5.4-mini", "gpt-4o"]
         for fb in fallbacks:
             if fb not in models_to_try:
                 models_to_try.append(fb)
