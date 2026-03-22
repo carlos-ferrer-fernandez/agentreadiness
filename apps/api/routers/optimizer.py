@@ -184,6 +184,82 @@ async def optimizer_diagnostics():
     return results
 
 
+@router.get("/test-single-page")
+async def test_single_page_optimization():
+    """End-to-end test: crawl 1 page of Stripe docs, optimize it, return results.
+
+    This runs synchronously (not in background) so we get the full error
+    if anything fails. Use this to debug pipeline failures.
+    """
+    import traceback
+    import resource
+    from services.optimizer.document_optimizer import DocumentationOptimizer
+
+    test_url = "https://docs.stripe.com/payments"
+    results = {"test_url": test_url, "steps": {}}
+
+    try:
+        # Step 1: Memory baseline
+        mem_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024  # KB → MB on Linux
+        results["steps"]["memory_baseline_mb"] = round(mem_mb, 1)
+
+        # Step 2: Fetch a single page with httpx
+        optimizer = DocumentationOptimizer()
+        results["steps"]["httpx_ua"] = optimizer.BROWSER_UA[:30] + "..."
+
+        page = await optimizer._fetch_page(test_url)
+        if not page:
+            results["steps"]["fetch"] = "FAILED — returned None"
+            return results
+
+        results["steps"]["fetch"] = {
+            "status": "OK",
+            "title": page.title,
+            "content_length": len(page.content),
+            "content_preview": page.content[:200] + "...",
+            "links_found": len(page.links),
+            "headings_found": len(page.headings),
+        }
+
+        # Step 3: Memory after fetch
+        mem_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        results["steps"]["memory_after_fetch_mb"] = round(mem_mb, 1)
+
+        # Step 4: Analyze page
+        analysis = optimizer._analyze_page_deep(page)
+        results["steps"]["analysis"] = {
+            "word_count": analysis.word_count,
+            "has_code_examples": analysis.has_code_examples,
+            "issues_count": len(analysis.issues),
+        }
+
+        # Step 5: Optimize with GPT-4o (the actual OpenAI call)
+        terminology_context = optimizer._build_terminology_context([page])
+        optimized = await optimizer._optimize_page(page, analysis, terminology_context)
+        results["steps"]["optimization"] = {
+            "status": "OK",
+            "improvements_count": len(optimized.improvements),
+            "improvements": optimized.improvements[:5],
+            "output_length": len(optimized.optimized_content),
+            "output_preview": optimized.optimized_content[:300] + "...",
+        }
+
+        # Step 6: Memory after optimization
+        mem_mb = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / 1024
+        results["steps"]["memory_after_optimize_mb"] = round(mem_mb, 1)
+
+        results["overall"] = "ALL STEPS PASSED"
+
+    except Exception as e:
+        results["overall"] = f"FAILED: {type(e).__name__}: {str(e)}"
+        results["traceback"] = traceback.format_exc()
+
+    finally:
+        await optimizer._close_browser()
+
+    return results
+
+
 async def _run_optimization(job_id: str, url: str):
     """Run the optimization in background."""
     job = _optimization_jobs[job_id]
