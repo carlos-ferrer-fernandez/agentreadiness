@@ -51,156 +51,119 @@ logger = logging.getLogger(__name__)
 #   Structured  — humans and machines can parse it reliably
 # =============================================================================
 
-OPTIMIZATION_RULES = """
-## AGENT-READINESS OPTIMIZATION RULES
-## Based on consensus from 8 major AI agents (Claude, GPT, Kimi, Grok, Deepseek, Manus, Gemini, KimiClaw)
+SYSTEM_PROMPT = """\
+You are a source-faithful documentation rewriter and optimizer.
 
-You are rewriting documentation to be optimized for AI agent consumption.
-Apply ALL of the following rules. These are not suggestions — they are
-requirements derived from how agents actually process documentation.
+Your job is to transform a crawled documentation page into production-ready Markdown optimized for AI retrieval and RAG systems, while preserving the full technical substance of the source.
 
-### RULE 1: SELF-CONTAINED SECTIONS (Highest priority — unanimous across all agents)
-- Every section MUST make sense if read in complete isolation
-- NEVER use "as mentioned above", "see previous section", "as described earlier"
-- Re-state context at the start of each section. Redundancy is a FEATURE, not a bug
-- Each important workflow should have ONE canonical section that stands on its own
-- Think: "If a RAG system retrieves ONLY this section, can it answer the question?"
+INSTRUCTION PRIORITY
+1. Follow the user-supplied metadata exactly.
+2. Preserve the source content's meaning, scope, and technical detail.
+3. Improve structure, clarity, retrieval quality, and formatting.
+4. Never invent unsupported facts.
 
-### RULE 2: ACTION-ORIENTED, TASK-SHAPED HEADINGS
-- Headings should resemble actual user/agent intents and questions
-- GOOD: "Authenticate with an API key", "Send your first transactional email"
-- BAD: "Authentication", "Emails", "Getting Started", "Advanced Topics"
-- Headings are retrieval anchors — agents use them to decide relevance
-- Use strict H1 → H2 → H3 hierarchy. Never skip levels. Never use headings for styling
+CORE BEHAVIOR
+- This is a REWRITE, not a summary.
+- Preserve all unique technical content from the source.
+- Do not remove, collapse, or gloss over technical detail in order to make the page shorter or more "scannable".
+- If the source is long and detailed, the output must remain long and detailed.
+- Short paragraphs are allowed, but only by splitting content into clearer units. Never use brevity as a reason to condense content.
+- Preserve all substantive items that appear in the source, including:
+  - technical explanations
+  - steps and workflows
+  - links and link intent
+  - warnings, notes, and limitations
+  - parameter names and descriptions
+  - code blocks
+  - error messages and troubleshooting content
+  - constraints, defaults, requirements, and edge cases
+  - version statements
+  - literal strings that matter for retrieval
 
-### RULE 3: STRUCTURED PARAMETER TABLES (Not prose)
-- ALWAYS use tables for parameters, options, return values, config settings
-- Table format: | Parameter | Type | Required | Default | Description |
-- NEVER describe parameters in running prose paragraphs
-- Include constraints, valid ranges, enum values in the Description column
+ZERO FABRICATION
+- Never add facts that are not supported by the source or explicit user metadata.
+- Never invent API endpoints, SDK calls, parameters, defaults, limits, versions, dates, error codes, outputs, responses, prerequisites, or migration steps.
+- Never "complete" partial code by guessing missing lines.
+- Never add error sections unless the source contains error-related content.
+- Never add expected outputs unless they are present in the source.
+- Never add a Prerequisites section unless prerequisites are explicitly stated in the source.
+- If a formatting rule would require invented content, skip that formatting rule rather than fabricate.
 
-### RULE 4: COMPLETE, RUNNABLE CODE EXAMPLES
-- Every code example MUST include: imports, setup/init, the actual call, expected output
-- Code blocks MUST have explicit language tags (```python, ```javascript, etc.)
-- NEVER use "..." or "// ..." to skip code. Show the FULL working example
-- Add inline comments explaining WHY (not what) for key lines
-- If the product has multiple SDKs, provide examples in each language
-- Add a "Minimal Reproducible Example" that can be copy-pasted and run immediately
+ALLOWED IMPROVEMENTS
+You MAY:
+- reorganize sections
+- rewrite headings to be more action-oriented
+- convert existing parameter/config/reference prose into tables
+- add YAML frontmatter
+- add callout formatting
+- restate existing facts to make sections self-contained
+- improve terminology consistency
+- rewrite for clarity and retrieval quality
+- translate faithfully when the user explicitly provides a TARGET_LANGUAGE
 
-### RULE 5: EXPLICIT OVER IMPLICIT (Agents have zero intuition)
-- State ALL defaults explicitly: "Default timeout is 30 seconds"
-- State ALL constraints: "Maximum 100 items per request"
-- State ALL requirements: "The region parameter is required"
-- NEVER use: "typically...", "usually...", "you may want to...", "simply..."
-- Replace EVERY vague pronoun ("it", "this", "that") with the explicit subject
-- If something matters operationally, say it in plain text, not in a footnote
+LANGUAGE RULES
+- If the user provides TARGET_LANGUAGE, output the entire document in TARGET_LANGUAGE.
+- If TARGET_LANGUAGE differs from the crawled page language, treat TARGET_LANGUAGE as authoritative and translate faithfully without adding or removing meaning.
+- If TARGET_LANGUAGE is not provided, preserve the source language.
+- Do not mix languages, except:
+  - frontmatter field names remain in English
+  - code syntax remains as-is
+- In non-English output, frontmatter field values must be in the output language.
 
-### RULE 6: FIRST-CLASS ERROR DOCUMENTATION
-- Document EVERY error code with: exact error message string, likely causes,
-  diagnosis steps, fix steps, and whether retrying is safe
-- Create dedicated troubleshooting sections, not afterthoughts
-- Include the exact literal error strings users will see (for retrieval matching)
-- Structure as: Error Code → When it happens → How to fix it
-- Document: auth failures, rate limits, invalid payloads, permission issues,
-  webhook failures, migration breakages
+FRONTMATTER RULES
+- Output must start with YAML frontmatter.
+- Use these field names when supported:
+  - title
+  - description
+  - version
+  - last_updated
+  - tags
+  - prerequisites
+- Set last_updated to the exact value of TODAY_UTC provided by the user.
+- If TODAY_UTC is not provided, omit last_updated.
+- Never guess, infer, or hallucinate a date.
+- Include version only if it is explicitly stated in the source. Otherwise omit it.
+- tags must be derived from concepts explicitly present in the source.
+- prerequisites must contain only prerequisites explicitly present in the source; otherwise use an empty list.
 
-### RULE 7: CONSISTENT TERMINOLOGY
-- Use ONE term per concept throughout the ENTIRE documentation
-- NEVER alternate between synonyms (e.g., "user"/"account"/"customer" for same thing)
-- If original docs have inconsistent terms, pick the most precise one and use it everywhere
-- Create a terminology note at the top if the original used multiple terms
+CONTENT-PRESERVATION RULES
+- Preserve coverage, depth, and specificity.
+- Do not reduce a detailed section to bullets if the source contains explanatory prose.
+- Do not replace detailed examples with summaries.
+- Do not merge multiple distinct concepts into one generic section.
+- If you convert prose to a table, keep any important nuance in prose below the table.
+- If the source contains a landing page or link hub, preserve it as a landing page or link hub. Do not turn it into a tutorial.
 
-### RULE 8: FRONTMATTER METADATA ON EVERY PAGE
-- Add YAML frontmatter to every document:
-  ---
-  title: "Action-oriented title"
-  description: "One-sentence summary of what this page helps you do"
-  version: "API/SDK version this applies to"
-  last_updated: "YYYY-MM-DD"
-  tags: ["relevant", "search", "terms"]
-  prerequisites: ["What the reader needs before starting"]
-  ---
+STRUCTURE AND STYLE
+- Use clear H1 → H2 → H3 hierarchy.
+- Use action-oriented headings where faithful to the source.
+- Make each section self-contained for retrieval.
+- Lead sections with a one-sentence summary when helpful, but do not add fluff.
+- Use numbered lists for procedures and bullet lists for non-sequential items.
+- Use callouts only when supported by source content.
+- No marketing language.
+- No "simply", "just", or vague filler.
+- No conclusion or summary section.
+- Code blocks must be top-level, not nested inside list items.
+- Never wrap the whole output in ```markdown fences.
 
-### RULE 9: PREREQUISITES UP FRONT
-- State ALL prerequisites at the very start of each page/section:
-  account requirements, permissions/scopes, API keys needed,
-  SDK version, runtime requirements, feature flags, plan/tier restrictions
-- Format as a clear checklist, not buried in prose
+CONFLICT RESOLUTION
+If any optimization rule conflicts with source-faithfulness, source-faithfulness wins.
 
-### RULE 10: EXPECTED OUTPUTS (Not just inputs)
-- For EVERY API call or code example, show what SUCCESS looks like:
-  expected response body, expected status code, expected logs, expected behavior
-- This enables agents to verify their understanding and help users confirm correct operation
+FINAL OUTPUT RULES
+- Output ONLY the final Markdown document.
+- No commentary, no explanations, no separator lines, no "improvements made" list.
+- Start directly with YAML frontmatter.
 
-### RULE 11: CROSS-REFERENCES WITH FULL CONTEXT
-- NEVER write: "See the Authentication guide" or "Click here"
-- ALWAYS write: "For authentication details, see [Authentication Guide](/auth)
-  which covers API keys, OAuth2, and JWT tokens"
-- Every link must have enough context that the reader understands what they'll find
-
-### RULE 12: SEPARATE CONCEPTUAL / HOW-TO / REFERENCE CONTENT
-- Conceptual: What it is, why it exists, when to use it
-- How-to: Step-by-step task completion with full examples
-- Reference: Exact schema, parameters, limits, return types, enum values
-- Never mix these in a confusing way. Each section should be clearly one type
-
-### RULE 13: VERSION CLARITY
-- State the API/SDK version prominently at the top of every page
-- If content applies to specific versions, say so explicitly
-- Mark deprecated content with clear warnings and migration paths
-- Never let old examples exist without version context
-
-### RULE 14: DECISION DOCUMENTATION
-- Include "When should I use X vs Y?" sections where relevant
-- Structure as: use X when..., use Y when..., trade-offs, limits, migration path
-- Agents frequently need to answer comparative questions
-
-### RULE 15: SAFETY BOUNDARIES
-- Clearly document: destructive actions, irreversible operations, billing implications,
-  side effects, rate limits, quotas
-- Use callout/admonition syntax: > **⚠️ Warning:** This action is irreversible.
-- If an action can send emails, delete data, trigger workflows, or incur cost, say it plainly
-
-### RULE 16: STRIP ANTI-PATTERNS
-- REMOVE all marketing language from technical docs ("seamlessly", "world-class", "unlock")
-- REMOVE "Contact support" as documentation — replace with actual self-service resolution
-- REMOVE content that depends on JavaScript rendering, tabs, accordions, or UI widgets
-- REPLACE "see section above" with actual re-statement of the information
-- REPLACE vague link text ("click here", "learn more") with descriptive text
-- REMOVE image-only or UI-only content — ensure all critical info exists as text
-
-### RULE 17: OPTIMIZE FOR RETRIEVAL CHUNKS
-- Each section should have: clear heading, clear scope, enough context to stand alone
-- Keep sections focused — not too long, not too dependent on previous paragraphs
-- Include concrete nouns and exact identifiers (not just pronouns)
-- Useful rule: Each chunk should still make sense if read completely alone
-
-### RULE 18: STATE INTENT BEFORE MECHANICS
-- ALWAYS explain WHY before HOW
-- BAD: "Call POST /webhooks to create a webhook"
-- GOOD: "To receive real-time notifications when events occur, create a webhook
-  by calling POST /webhooks"
-
-### RULE 19: DOCUMENT STATE TRANSITIONS & LIFECYCLE
-- Where applicable, document systems as state machines:
-  draft → scheduled → sent → delivered → bounced
-- Include: state meanings, transitions, triggers, terminal states,
-  retry semantics, webhook/event emissions
-
-### RULE 20: CALLOUTS & ADMONITIONS
-- Use standard callout syntax for warnings, tips, important notes
-- These become natural prioritization signals for agents
-- Format: > **ℹ️ Info:** / > **⚠️ Warning:** / > **❌ Error:** / > **💡 Tip:**
-
-### OUTPUT QUALITY STANDARDS (Inspired by Mintlify-quality documentation)
-- Write clear, scannable prose. Short paragraphs (2-3 sentences max)
-- Use bullet lists for anything with 3+ items
-- Lead each section with a one-sentence summary of what it covers
-- For multi-step procedures, use numbered lists with clear step titles
-- For code examples in multiple languages, show each language variant
-- For configuration options, always include: name, type, default, description
-- Every page should feel complete and professional, like premium docs
-- Callout hierarchy: Tip (helpful), Note/Info (important), Warning (caution), Danger (destructive)
+SILENT SELF-CHECK BEFORE FINALIZING
+Verify all of the following:
+- Output language matches TARGET_LANGUAGE if provided, otherwise source language.
+- last_updated exactly matches TODAY_UTC if provided.
+- version is omitted unless explicitly present in source.
+- No invented technical content was added.
+- No substantive source content was removed.
+- Output is not shorter in substance than the source.
+- Output starts with frontmatter and contains only Markdown.
 """
 
 
@@ -265,7 +228,11 @@ class DocumentationOptimizer:
     def __init__(self):
         self.client = httpx.AsyncClient(
             timeout=30.0,
-            headers={"User-Agent": self.BROWSER_UA},
+            headers={
+                "User-Agent": self.BROWSER_UA,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
+            },
             follow_redirects=True,
         )
         self._playwright = None
@@ -830,52 +797,7 @@ class DocumentationOptimizer:
                         messages=[
                             {
                                 "role": "system",
-                                "content": (
-                                    "You are an expert documentation writer who produces Mintlify-quality "
-                                    "documentation optimized for AI agent consumption via RAG pipelines.\n\n"
-                                    "Your output should match the quality of the best documentation "
-                                    "(Stripe, Resend, Mintlify, Vercel). Clean, scannable, precise.\n\n"
-                                    "WRITING STYLE:\n"
-                                    "- Short paragraphs (2-3 sentences max). Lead with the key point.\n"
-                                    "- Use bullet lists for 3+ items. Use numbered lists for sequential steps.\n"
-                                    "- Every section starts with a one-sentence summary of what it covers.\n"
-                                    "- Tables for parameters/config (name | type | required | default | description).\n"
-                                    "- Code examples are complete: imports, setup, call, expected output.\n"
-                                    "- Callout hierarchy: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**\n"
-                                    "- No marketing fluff. No 'simply'. No 'just'. Technical precision only.\n\n"
-                                    "CRITICAL RULES — ZERO FABRICATION:\n"
-                                    "- ONLY restructure and improve content that EXISTS in the original. "
-                                    "NEVER invent, fabricate, or hallucinate new technical content.\n"
-                                    "- NEVER add code examples that are not in the original.\n"
-                                    "- NEVER add API endpoints, error codes, parameters, or features not in the original.\n"
-                                    "- NEVER add troubleshooting tables unless the original has error documentation.\n"
-                                    "- If the original is a landing page with just links and descriptions, "
-                                    "your output should be a well-structured landing page with those same links "
-                                    "and descriptions. Do NOT pad it with tutorials, code, or API details.\n"
-                                    "- The ONLY things you may add that aren't in the original are: "
-                                    "YAML frontmatter, callout formatting (Tip/Warning/Note), and structural "
-                                    "improvements (tables, numbered lists, heading restructuring).\n"
-                                    "- NEVER add a 'Conclusion' or 'Summary' section. Premium docs don't have them.\n"
-                                    "- For frontmatter: use today's date for last_updated. For version, use the "
-                                    "version mentioned in the content, or omit the field if none is mentioned.\n"
-                                    "- Code blocks must be at the TOP LEVEL of the document (not indented inside "
-                                    "list items) to ensure proper rendering. If you need code in a step, end the "
-                                    "list, show the code block, then continue.\n\n"
-                                    "CRITICAL — LANGUAGE PRESERVATION:\n"
-                                    "- ALWAYS output in the SAME language as the original content.\n"
-                                    "- If the input is French, ALL output must be French (prose, headings, "
-                                    "descriptions, tips, warnings — everything).\n"
-                                    "- If Spanish, output Spanish. If German, output German. Etc.\n"
-                                    "- NEVER translate to English unless the original is already in English.\n"
-                                    "- Frontmatter field NAMES stay in English (title, description, tags) "
-                                    "but their VALUES must be in the original language.\n"
-                                    "- The ONLY English allowed in a non-English doc: frontmatter field names "
-                                    "and code syntax.\n\n"
-                                    "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
-                                    "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
-                                    "NEVER wrap output in ```markdown fences. Start directly with --- frontmatter.\n"
-                                    "The output must be production-ready documentation that can be deployed as-is."
-                                )
+                                "content": SYSTEM_PROMPT,
                             },
                             {
                                 "role": "user",
@@ -883,7 +805,7 @@ class DocumentationOptimizer:
                             }
                         ],
                         temperature=0.2,
-                        max_tokens=8192,
+                        max_completion_tokens=8192,
                     )
 
                     optimized_content = response.choices[0].message.content
@@ -967,13 +889,40 @@ class DocumentationOptimizer:
             file_name=file_name
         )
 
+    @staticmethod
+    def _detect_content_language(text: str) -> str:
+        """Detect the natural language of content using common word heuristics.
+
+        Returns an ISO 639-1 code (e.g. 'en', 'fr', 'es', 'de').
+        Falls back to 'en' if uncertain.
+        """
+        sample = text[:2000].lower()
+
+        lang_markers = {
+            'fr': [' les ', ' des ', ' une ', ' pour ', ' avec ', ' dans ', ' votre ', ' sont ', ' cette '],
+            'es': [' los ', ' las ', ' una ', ' para ', ' con ', ' esta ', ' como ', ' más ', ' tiene '],
+            'de': [' die ', ' das ', ' und ', ' für ', ' mit ', ' eine ', ' wird ', ' sich ', ' auch '],
+            'pt': [' para ', ' uma ', ' com ', ' dos ', ' são ', ' como ', ' mais ', ' esta ', ' você '],
+            'it': [' per ', ' una ', ' con ', ' del ', ' sono ', ' come ', ' dalla ', ' nella ', ' questo '],
+        }
+
+        scores = {}
+        for lang, markers in lang_markers.items():
+            scores[lang] = sum(1 for m in markers if m in sample)
+
+        best_lang = max(scores, key=scores.get) if scores else 'en'
+        if scores.get(best_lang, 0) >= 3:
+            return best_lang
+        return 'en'
+
     def _build_optimization_prompt(
         self,
         page: DocPage,
         analysis: PageAnalysis,
         terminology_context: str
     ) -> str:
-        """Build the optimization prompt encoding all 20 rules."""
+        """Build the optimization prompt using the GPT-5.4-designed template."""
+        from datetime import date
 
         nl = chr(10)
         code_examples = nl.join(
@@ -983,88 +932,164 @@ class DocumentationOptimizer:
         issues_list = nl.join(['- ' + issue for issue in analysis.issues])
         strengths_list = nl.join(['- ' + s for s in analysis.strengths])
 
-        return f"""{OPTIMIZATION_RULES}
+        today_utc = date.today().isoformat()
+        detected_lang = self._detect_content_language(page.content)
+        # Target language is English unless the site is genuinely non-English
+        # (the crawler sends Accept-Language: en, so English sites return English)
+        target_language = detected_lang
 
----
+        headings_str = ', '.join(page.headings[:20]) if page.headings else 'None'
 
-## PAGE TO OPTIMIZE
+        return f"""## JOB METADATA
 
-**Title:** {page.title}
-**URL:** {page.url}
-**Word count:** {analysis.word_count}
-**Headings found:** {', '.join(page.headings[:20]) if page.headings else 'None'}
+TARGET_LANGUAGE: {target_language}
+DETECTED_PAGE_LANGUAGE: {detected_lang}
+TODAY_UTC: {today_utc}
+PAGE_TITLE: {page.title}
+PAGE_URL: {page.url}
+ORIGINAL_WORD_COUNT: {analysis.word_count}
+MIN_OUTPUT_WORD_COUNT: {analysis.word_count}
+HEADINGS_FOUND: {headings_str}
 
-### Original Content
-{page.content[:10000]}
+## TASK
 
-### Existing Code Examples
-{code_examples if code_examples else 'None found'}
+Rewrite the page into production-ready Markdown optimized for AI agent consumption and RAG retrieval.
 
-### Issues Detected (MUST fix all of these)
+This is a rewrite, NOT a summary.
+
+Non-negotiable requirements:
+- Preserve all unique technical content from the source.
+- Preserve technical depth, specificity, examples, links, warnings, constraints, and edge cases.
+- Do not shorten or compress the page into an outline.
+- Target output length: at least MIN_OUTPUT_WORD_COUNT words, unless the source clearly contains duplicated navigation/footer boilerplate. Even then, preserve all unique documentation content.
+- If TARGET_LANGUAGE is provided, output in TARGET_LANGUAGE even if the crawled page appears in another language.
+- Use TODAY_UTC exactly for frontmatter.last_updated.
+- Omit version unless it is explicitly stated in the source.
+- Output only the final Markdown document.
+
+When applying optimization rules, use this priority:
+1. Source fidelity and completeness
+2. Correct output language
+3. Correct frontmatter date
+4. Structural and retrieval improvements
+
+## OPTIMIZATION RULES
+
+Apply these rules ONLY when they can be satisfied from the source content itself:
+
+1. Self-contained sections
+- Each section should make sense on its own.
+- Replace context-dependent phrasing with explicit restatements of existing facts.
+
+2. Action-oriented headings
+- Use headings that match user intent where faithful to the source.
+- Keep a strict H1 → H2 → H3 hierarchy.
+
+3. Structured reference content
+- Convert parameters, options, fields, config, and return values into tables when those details exist in the source.
+- Do not drop nuance when converting prose to tables.
+
+4. Code examples
+- Preserve every existing code example.
+- You may reformat or label existing examples for clarity.
+- Do NOT invent missing imports, setup, calls, or outputs.
+- If a source example is partial, keep it partial rather than guessing.
+
+5. Explicit statements
+- Surface defaults, limits, requirements, and constraints when explicitly present in the source.
+- Do not infer unstated defaults or limits.
+
+6. Error documentation
+- If the source includes errors or troubleshooting, structure that material clearly.
+- If the source does not include error content, do not add it.
+
+7. Terminology consistency
+- Use one consistent term per concept.
+- If the source uses multiple terms for the same concept, normalize carefully without changing meaning.
+
+8. Frontmatter
+- Add YAML frontmatter at the top.
+- last_updated must equal TODAY_UTC exactly.
+- version only if explicit in source.
+- tags must come from source concepts.
+- prerequisites must contain only explicit prerequisites from the source, otherwise use [].
+
+9. Prerequisites
+- If prerequisites are explicitly present anywhere in the source, gather them near the top.
+- Do not invent prerequisites.
+
+10. Expected outputs
+- If expected outputs or results are present in the source, place them near the relevant example.
+- Do not invent outputs.
+
+11. Contextual links
+- Keep links descriptive and give enough context for retrieval.
+
+12. Separate content types
+- Keep conceptual, procedural, and reference content clearly organized.
+
+13. Version clarity
+- Preserve explicit version applicability and deprecation notes from the source.
+- Do not invent version ranges or migration paths.
+
+14. Decision guidance
+- If the source compares options, make that comparison clearer.
+- Do not add new comparisons not supported by the source.
+
+15. Safety boundaries
+- Preserve and emphasize destructive actions, billing implications, quotas, and irreversible operations when present.
+
+16. Remove anti-patterns
+- Strip marketing fluff and vague filler.
+- Replace weak phrasing with precise technical prose.
+- Do not remove substantive content.
+
+17. Retrieval optimization
+- Make sections focused and self-contained.
+- Use exact identifiers and concrete nouns from the source.
+
+18. Intent before mechanics
+- Explain why a task is done before how, using only source-supported information.
+
+19. Lifecycle/state transitions
+- If the source describes states or lifecycles, structure them clearly.
+
+20. Callouts
+- Use callouts for warnings, notes, tips, and errors only when supported by source content.
+
+## ISSUES DETECTED (fix when possible without inventing content)
+
 {issues_list if issues_list else 'No major issues detected'}
 
-### Strengths (preserve these)
+## STRENGTHS TO PRESERVE
+
 {strengths_list if strengths_list else 'None detected'}
 
-### Terminology Context
+## TERMINOLOGY CONTEXT
+
 {terminology_context}
 
----
+## ORIGINAL CONTENT
 
-## YOUR TASK
+{page.content[:12000]}
 
-Rewrite this page to match the quality of Stripe/Resend/Mintlify documentation,
-applying ALL 20 agent-readiness rules. The output must be:
+## EXISTING CODE EXAMPLES
 
-1. **Production-ready Markdown** — deployable as-is on any docs platform
-2. **Start with YAML frontmatter** (title, description, version, last_updated, tags, prerequisites)
-3. **Use action-oriented headings** that match user/agent intents
-4. **Every section must be self-contained** — no "see above" or "as mentioned"
-5. **Convert ALL parameter descriptions to tables** (Parameter | Type | Required | Default | Description)
-6. **Complete code examples that exist** — add imports, setup, expected output ONLY if the original has code
-7. **Add error documentation** where relevant (Error | Cause | Fix)
-8. **Add a Prerequisites section** at the top as a bullet list
-9. **Strip ALL marketing language** — only technical, precise content
-10. **Short paragraphs** (2-3 sentences). Lead each section with a summary sentence.
-11. **Add expected outputs** for every API call or code example
-12. **Use callout hierarchy**: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**
-13. **State intent before mechanics** — explain WHY then HOW
-14. **Use numbered lists for sequential steps**, bullet lists for non-sequential items
-15. **Every page should feel like premium documentation** -- clean, scannable, precise
-16. **ABSOLUTE ZERO FABRICATION** -- NEVER add code examples, API endpoints, error tables,
-    parameters, or technical details that are NOT in the original content above. If the
-    original is a navigation/landing page, the output should be a well-structured
-    navigation/landing page. Do NOT invent tutorials or code to "fill" thin pages.
-17. **NEVER add a Conclusion or Summary section** -- premium docs don't have them
-18. **Code blocks must be at the TOP LEVEL** -- never indent code fences inside list items.
-    If a step needs code, end the list, show the code block unindented, then continue.
-19. **For version/date in frontmatter** -- use the version from the content, or omit if unknown.
-    Use today's date for last_updated. NEVER invent version numbers.
+{code_examples if code_examples else 'None found'}
 
-**CRITICAL: PRESERVE THE ORIGINAL LANGUAGE.** If the original content is in French,
-the optimized output MUST also be in French. If it is in Spanish, output Spanish.
-NEVER translate to English. The structural improvements (frontmatter keys, headings
-style, tables) should follow the rules, but all prose content stays in the original language.
-Frontmatter field NAMES stay in English (title, description, tags, etc.) but their VALUES
-must be in the original language.
+## OUTPUT REQUIREMENTS
 
-Output the optimized Markdown first, then after a separator line, list the specific
-improvements you made. Use this exact format:
-
-[Start with --- frontmatter, then the full optimized content]
-
-<!-- IMPROVEMENTS -->
-- [specific improvement 1, mentioning what section/content was changed]
-- [specific improvement 2]
-- [specific improvement 3]
-
-The improvements MUST be specific to THIS page. Do not use generic descriptions.
-BAD: "Added frontmatter metadata"
-GOOD: "Added YAML frontmatter with tags for event categories and registration management"
-BAD: "Converted headings"
-GOOD: "Restructured 'Assurance Annulation' and 'Paiements' into task-oriented headings"
-
-Do NOT wrap the output in ```markdown or ``` fences. Start directly with the --- frontmatter."""
+Your output must:
+- start with YAML frontmatter
+- be valid Markdown only
+- contain no commentary before or after the document
+- contain no separator lines and no "improvements made" section
+- preserve the source page's technical depth
+- preserve all substantive content from the source
+- use TARGET_LANGUAGE
+- use TODAY_UTC exactly for last_updated
+- omit version if not explicitly present in the source
+- avoid any invented facts"""
 
     # =========================================================================
     # LLMS.TXT GENERATION
@@ -1139,8 +1164,25 @@ If you are an AI agent:
 
         Detects code blocks and error/troubleshooting tables that appear
         in the optimized output but have no basis in the original content.
-        These are hallmarks of LLM fabrication on thin pages.
+        Also fixes fabricated dates in YAML frontmatter.
         """
+        from datetime import date
+
+        # Fix fabricated dates in frontmatter — replace any last_updated
+        # that doesn't match today's date with the correct date
+        today = date.today().isoformat()
+        date_pattern = re.compile(
+            r'^(last_updated:\s*["\']?)(\d{4}-\d{2}-\d{2})(["\']?\s*)$',
+            re.MULTILINE,
+        )
+        match = date_pattern.search(optimized)
+        if match and match.group(2) != today:
+            logger.info(
+                f"Fabrication validator: fixed date {match.group(2)} → {today}"
+            )
+            optimized = date_pattern.sub(
+                rf'\g<1>{today}\g<3>', optimized
+            )
         original_lower = original_content.lower()
         original_code_strings = {
             cb['code'].strip().lower()[:100] for cb in original_code_blocks
