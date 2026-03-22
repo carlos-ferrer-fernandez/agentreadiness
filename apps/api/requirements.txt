@@ -20,6 +20,7 @@ httpx==0.25.2
 beautifulsoup4==4.12.2
 lxml==4.9.3
 markdown==3.5.1
+playwright>=1.40.0
 
 # AI
 openai>=1.12.0

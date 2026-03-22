@@ -24,6 +24,12 @@ from bs4 import BeautifulSoup
 import openai
 import markdown
 
+try:
+    from playwright.async_api import async_playwright
+    HAS_PLAYWRIGHT = True
+except ImportError:
+    HAS_PLAYWRIGHT = False
+
 logger = logging.getLogger(__name__)
 
 openai.api_key = os.getenv('OPENAI_API_KEY')
@@ -251,6 +257,9 @@ class DocumentationOptimizer:
 
     def __init__(self):
         self.client = httpx.AsyncClient(timeout=30.0)
+        self._playwright = None
+        self._browser = None
+        self._needs_js_rendering = False  # Set to True after first JS-rendered page detected
 
     async def _notify_progress(self, callback, stage: str, progress: float):
         """Call progress callback, handling both sync and async callbacks."""
@@ -277,8 +286,20 @@ class DocumentationOptimizer:
         # Step 1: Crawl documentation
         await self._notify_progress(progress_callback, "crawling", 0.1)
 
-        pages = await self._crawl_documentation(start_url)
+        try:
+            pages = await self._crawl_documentation(start_url)
+        finally:
+            # Always close the Playwright browser after crawling
+            await self._close_browser()
         logger.info(f"Crawled {len(pages)} pages")
+
+        if len(pages) == 0:
+            raise ValueError(
+                f"Crawling {start_url} produced 0 pages with usable content. "
+                "The site may be JavaScript-rendered, behind authentication, "
+                "or have no accessible documentation content. "
+                "Please verify the URL points to a public documentation site."
+            )
 
         # Step 2: Deep analysis of each page against agent-readiness rules
         await self._notify_progress(progress_callback, "analyzing", 0.3)
@@ -382,12 +403,18 @@ class DocumentationOptimizer:
     async def _fetch_page(self, url: str) -> Optional[DocPage]:
         """Fetch and parse a single page.
 
-        Resolves both absolute and relative links so the crawler
-        can discover the full documentation tree.
+        First tries a fast httpx fetch. If the rendered content is too thin
+        (< 100 chars — typical for JS-rendered SPAs), falls back to a
+        headless Playwright browser that executes JavaScript before parsing.
         """
         from urllib.parse import urljoin
 
         try:
+            # If we already know this site is JS-rendered, go straight to Playwright
+            if self._needs_js_rendering and HAS_PLAYWRIGHT:
+                return await self._fetch_page_with_playwright(url)
+
+            # --- Fast path: plain HTTP ---
             response = await self.client.get(url, follow_redirects=True)
             if response.status_code != 200:
                 return None
@@ -396,72 +423,129 @@ class DocumentationOptimizer:
             if 'text/html' not in content_type and 'text/plain' not in content_type:
                 return None
 
-            soup = BeautifulSoup(response.content, 'html.parser')
+            page = self._parse_html_to_page(response.text, url)
 
-            # Remove nav, footer, sidebar, cookie banners etc
-            for tag in soup.find_all(['nav', 'footer', 'aside', 'header']):
-                tag.decompose()
-            for tag in soup.find_all(class_=re.compile(
-                r'(nav|footer|sidebar|cookie|banner|menu|breadcrumb|toc)',
-                re.IGNORECASE
-            )):
-                tag.decompose()
+            # --- Fallback: JS rendering via Playwright ---
+            if page and len(page.content.strip()) < 100 and HAS_PLAYWRIGHT:
+                logger.info(f"Thin content from {url} — retrying with Playwright (JS rendering)")
+                rendered_page = await self._fetch_page_with_playwright(url)
+                if rendered_page and len(rendered_page.content.strip()) > len(page.content.strip()):
+                    # This site needs JS — skip httpx for future pages
+                    self._needs_js_rendering = True
+                    return rendered_page
 
-            title = soup.find('title')
-            title_text = title.get_text(strip=True) if title else "Untitled"
-
-            main = (soup.find('main') or soup.find('article') or
-                    soup.find('div', class_='content') or
-                    soup.find('div', role='main') or
-                    soup.find('div', class_=re.compile(r'(docs|documentation|page-content|markdown)', re.IGNORECASE)))
-            if not main:
-                main = soup.find('body')
-
-            content = main.get_text(separator='\n', strip=True) if main else ""
-
-            code_blocks = []
-            for pre in (main or soup).find_all('pre'):
-                code = pre.find('code')
-                if code:
-                    language = self._detect_language(code.get('class', []))
-                    code_blocks.append({
-                        'language': language,
-                        'code': code.get_text(strip=True)
-                    })
-
-            headings = []
-            for h in (main or soup).find_all(['h1', 'h2', 'h3', 'h4']):
-                headings.append(h.get_text(strip=True))
-
-            # Collect ALL links: resolve relative links to absolute
-            links = []
-            skip_patterns = re.compile(
-                r'(\.png|\.jpg|\.gif|\.svg|\.css|\.js|\.woff|\.pdf|'
-                r'mailto:|javascript:|#$|/login|/signup|/auth|/console|'
-                r'/search\?|/changelog|/blog)',
-                re.IGNORECASE
-            )
-            for a in soup.find_all('a', href=True):
-                href = a['href']
-                if skip_patterns.search(href):
-                    continue
-                # Resolve relative URLs to absolute
-                absolute = urljoin(url, href)
-                if absolute.startswith('http'):
-                    links.append(absolute)
-
-            return DocPage(
-                url=url,
-                title=title_text,
-                content=content,
-                code_blocks=code_blocks,
-                headings=headings,
-                links=links
-            )
+            return page
 
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
             return None
+
+    async def _ensure_browser(self):
+        """Lazily start a shared Playwright browser (one per optimization run)."""
+        if self._browser is None and HAS_PLAYWRIGHT:
+            self._playwright = await async_playwright().start()
+            self._browser = await self._playwright.chromium.launch(headless=True)
+            logger.info("Playwright browser launched for JS rendering")
+
+    async def _close_browser(self):
+        """Close the shared Playwright browser."""
+        if self._browser:
+            await self._browser.close()
+            self._browser = None
+        if self._playwright:
+            await self._playwright.stop()
+            self._playwright = None
+
+    async def _fetch_page_with_playwright(self, url: str) -> Optional[DocPage]:
+        """Fetch a page using the shared headless browser for JS rendering."""
+        try:
+            await self._ensure_browser()
+            if not self._browser:
+                return None
+
+            context = await self._browser.new_context(
+                user_agent="AgentReadinessBot/1.0 (Documentation Analysis)"
+            )
+            page = await context.new_page()
+
+            await page.goto(url, wait_until="networkidle", timeout=30000)
+            # Extra wait for late-rendering SPAs
+            await page.wait_for_timeout(2000)
+
+            html = await page.content()
+            await context.close()
+
+            return self._parse_html_to_page(html, url)
+
+        except Exception as e:
+            logger.warning(f"Playwright fetch failed for {url}: {e}")
+            return None
+
+    def _parse_html_to_page(self, html: str, url: str) -> DocPage:
+        """Parse raw HTML string into a DocPage with content, headings, links."""
+        from urllib.parse import urljoin
+
+        soup = BeautifulSoup(html, 'html.parser')
+
+        # Remove nav, footer, sidebar, cookie banners etc
+        for tag in soup.find_all(['nav', 'footer', 'aside', 'header']):
+            tag.decompose()
+        for tag in soup.find_all(class_=re.compile(
+            r'(nav|footer|sidebar|cookie|banner|menu|breadcrumb|toc)',
+            re.IGNORECASE
+        )):
+            tag.decompose()
+
+        title = soup.find('title')
+        title_text = title.get_text(strip=True) if title else "Untitled"
+
+        main = (soup.find('main') or soup.find('article') or
+                soup.find('div', class_='content') or
+                soup.find('div', role='main') or
+                soup.find('div', class_=re.compile(r'(docs|documentation|page-content|markdown)', re.IGNORECASE)))
+        if not main:
+            main = soup.find('body')
+
+        content = main.get_text(separator='\n', strip=True) if main else ""
+
+        code_blocks = []
+        for pre in (main or soup).find_all('pre'):
+            code = pre.find('code')
+            if code:
+                language = self._detect_language(code.get('class', []))
+                code_blocks.append({
+                    'language': language,
+                    'code': code.get_text(strip=True)
+                })
+
+        headings = []
+        for h in (main or soup).find_all(['h1', 'h2', 'h3', 'h4']):
+            headings.append(h.get_text(strip=True))
+
+        # Collect ALL links: resolve relative links to absolute
+        links = []
+        skip_patterns = re.compile(
+            r'(\.png|\.jpg|\.gif|\.svg|\.css|\.js|\.woff|\.pdf|'
+            r'mailto:|javascript:|#$|/login|/signup|/auth|/console|'
+            r'/search\?|/changelog|/blog)',
+            re.IGNORECASE
+        )
+        for a in soup.find_all('a', href=True):
+            href = a['href']
+            if skip_patterns.search(href):
+                continue
+            absolute = urljoin(url, href)
+            if absolute.startswith('http'):
+                links.append(absolute)
+
+        return DocPage(
+            url=url,
+            title=title_text,
+            content=content,
+            code_blocks=code_blocks,
+            headings=headings,
+            links=links
+        )
 
     # =========================================================================
     # DEEP ANALYSIS
