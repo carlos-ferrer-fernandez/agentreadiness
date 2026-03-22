@@ -133,6 +133,7 @@ CONTENT-PRESERVATION RULES
 - Do not merge multiple distinct concepts into one generic section.
 - If you convert prose to a table, keep any important nuance in prose below the table.
 - If the source contains a landing page or link hub, preserve it as a landing page or link hub. Do not turn it into a tutorial.
+- Padding with restatements is worse than being concise. Never restate the same information in multiple section structures just to increase output length. If you have already covered a fact, do not repeat it in a "navigation map", "page scope", "link intent", or summary-of-sections block.
 
 STRUCTURE AND STYLE
 - Use clear H1 → H2 → H3 hierarchy.
@@ -962,6 +963,7 @@ Non-negotiable requirements:
 - Preserve technical depth, specificity, examples, links, warnings, constraints, and edge cases.
 - Do not shorten or compress the page into an outline.
 - Target output length: at least MIN_OUTPUT_WORD_COUNT words, unless the source clearly contains duplicated navigation/footer boilerplate. Even then, preserve all unique documentation content.
+- IMPORTANT: Padding with restatements is WORSE than being concise. Never restate the same facts in multiple section structures just to increase length. If the source is a short landing page, the output should be a short, well-structured landing page. Do not add "navigation map", "page scope", "link intent", or meta-commentary sections that repackage existing content.
 - If TARGET_LANGUAGE is provided, output in TARGET_LANGUAGE even if the crawled page appears in another language.
 - Use TODAY_UTC exactly for frontmatter.last_updated.
 - Omit version unless it is explicitly stated in the source.
