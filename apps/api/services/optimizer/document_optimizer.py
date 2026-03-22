@@ -356,10 +356,13 @@ class DocumentationOptimizer:
         """
         from urllib.parse import urljoin, urldefrag
 
+        from config import get_settings
+        settings = get_settings()
+
         pages = []
         visited = set()
         to_visit = [start_url]
-        max_pages = 100
+        max_pages = settings.max_crawl_pages
 
         parsed_base = urlparse(start_url)
         base_domain = parsed_base.netloc
@@ -1339,6 +1342,10 @@ If you are an AI agent:
 
     def _generate_index_html(self, docs: List[OptimizedDoc], metadata: Dict) -> str:
         """Generate an HTML index page that links to all optimized doc pages."""
+        from config import get_settings
+        settings = get_settings()
+        max_pages = settings.max_crawl_pages
+
         pages_count = len(docs)
         improvements_count = sum(len(d.improvements) for d in docs)
 
@@ -1351,6 +1358,18 @@ If you are an AI agent:
 <td>{len(doc.improvements)}</td>
 <td style="font-size:0.85rem;color:var(--muted)">{top_improvement}</td>
 </tr>\n"""
+
+        more_pages_banner = ""
+        if pages_count >= max_pages:
+            more_pages_banner = f"""
+<div style="background:var(--code-bg);border:1px solid var(--accent);border-radius:10px;padding:1.25rem;margin:1.5rem 0;">
+  <strong style="color:var(--accent);">Need more pages?</strong>
+  <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--muted);">
+    This delivery includes the top {pages_count} pages. Your site has more content available.
+    Additional pages are <strong>included in your purchase</strong> at no extra cost.
+    Email <a href="mailto:support@agentreadiness.dev">support@agentreadiness.dev</a> to request them.
+  </p>
+</div>"""
 
         return f"""<!DOCTYPE html>
 <html lang="en">
@@ -1386,7 +1405,7 @@ If you are an AI agent:
 <span class="badge">Agent-Optimized</span>
 <h1>Your Optimized Documentation</h1>
 <p class="subtitle">Every page rewritten applying 20 agent-readiness rules. Open any file below to preview.</p>
-
+{more_pages_banner}
 <div class="stats">
   <div class="stat"><div class="stat-value">{pages_count}</div><div class="stat-label">Pages optimized</div></div>
   <div class="stat"><div class="stat-value">{improvements_count}</div><div class="stat-label">Improvements</div></div>
@@ -1413,6 +1432,10 @@ If you are an AI agent:
 
     def _generate_readme(self, metadata: Dict) -> str:
         """Generate README for the optimized documentation package."""
+        from config import get_settings
+        settings = get_settings()
+        max_pages = settings.max_crawl_pages
+
         nl = chr(10)
         pages_list = nl.join(
             [f"- `{p['file_name']}` - {p['title']} ({len(p['improvements'])} improvements)"
@@ -1421,6 +1444,23 @@ If you are an AI agent:
         improvements_list = nl.join(
             [f"- {imp}" for imp in metadata.get('unique_improvements', [])[:15]]
         )
+
+        pages_optimized = metadata['pages_optimized']
+        more_pages_note = ""
+        if pages_optimized >= max_pages:
+            more_pages_note = f"""
+## 📦 Need More Pages?
+
+This delivery includes the **top {pages_optimized} pages** from your documentation,
+prioritized by importance (starting from the root and following the most
+linked-to pages first).
+
+Your site likely has more pages. **Additional pages are included in your
+purchase** — just reply to your confirmation email or contact
+support@agentreadiness.dev and we'll optimize the rest at no extra charge.
+
+No additional payment required. This is included in your one-time $199 purchase.
+"""
 
         return f"""# Agent-Optimized Documentation
 
@@ -1431,10 +1471,10 @@ the Agent-Readiness Doctrine.
 **{metadata.get('doctrine', '')}**
 
 ## Stats
-- **Pages optimized**: {metadata['pages_optimized']}
+- **Pages optimized**: {pages_optimized}
 - **Total improvements**: {metadata['total_improvements']}
 - **Rules applied per page**: {metadata.get('optimization_rules_applied', 20)}
-
+{more_pages_note}
 ## Package Contents
 
 ### `html/`
