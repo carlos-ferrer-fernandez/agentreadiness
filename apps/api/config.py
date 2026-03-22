@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     # OpenAI / LLM Provider
     openai_api_key: str = ""
     openai_base_url: str = ""  # Leave empty for direct OpenAI. Set for proxies (e.g. AIML API)
-    openai_model: str = "gpt-5.4"  # Frontier model. Override via OPENAI_MODEL env var.
+    openai_model: str = "gpt-4o"  # Frontier model. Override via OPENAI_MODEL env var.
 
     # Stripe
     stripe_secret_key: str = ""
@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     # Dynamic pricing (EUR)
     # Price = max(min_price, ceil(estimated_api_cost * margin_multiplier))
     # estimated_api_cost = base_cost + per_page_cost * page_count
-    # Costs based on GPT-5.4 via OpenAI (check current pricing)
+    # Costs based on GPT-4o via OpenAI (check current pricing)
     # ~6K tokens in + ~3K tokens out per page ≈ $0.08/page
     pricing_base_cost: float = 3.0        # Fixed overhead: assessment scan, server, Stripe fees
     pricing_per_page_cost: float = 0.08   # Per-page optimization ($0.06 actual + buffer)

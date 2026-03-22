@@ -32,7 +32,7 @@ except ImportError:
 
 logger = logging.getLogger(__name__)
 
-openai.api_key = os.getenv('OPENAI_API_KEY')
+# API key is passed to AsyncOpenAI constructor (not the deprecated module-level assignment)
 
 
 # =============================================================================
@@ -378,11 +378,12 @@ class DocumentationOptimizer:
 
             try:
                 page = await self._fetch_page(url)
+                visited.add(url)  # Always mark visited, even on failure
+
                 if page:
                     # Only add pages with meaningful content (not just nav/landing)
                     if page.content and len(page.content.strip()) > 50:
                         pages.append(page)
-                    visited.add(url)
 
                     # Discover new links (both absolute and relative)
                     for link in page.links:
@@ -395,6 +396,7 @@ class DocumentationOptimizer:
                                     to_visit.append(normalized)
 
             except Exception as e:
+                visited.add(url)  # Mark visited on error too
                 logger.warning(f"Failed to fetch {url}: {e}")
 
         logger.info(f"Crawled {len(pages)} content pages from {len(visited)} URLs visited")
@@ -734,9 +736,9 @@ class DocumentationOptimizer:
         settings = get_settings()
         model = settings.openai_model
 
-        # Fallback chain: gpt-5.4 -> gpt-4o -> gpt-4o-mini
+        # Fallback chain: configured model -> gpt-4o -> gpt-4o-mini
         models_to_try = [model]
-        fallbacks = ["gpt-5.4", "gpt-4o", "gpt-4o-mini"]
+        fallbacks = ["gpt-4o", "gpt-4o-mini"]
         for fb in fallbacks:
             if fb not in models_to_try:
                 models_to_try.append(fb)
@@ -751,7 +753,10 @@ class DocumentationOptimizer:
 
             for attempt in range(max_retries):
                 try:
-                    client_kwargs = {"timeout": 120.0}
+                    client_kwargs = {
+                        "api_key": settings.openai_api_key,
+                        "timeout": 120.0,
+                    }
                     if settings.openai_base_url:
                         client_kwargs["base_url"] = settings.openai_base_url
                     client = openai.AsyncOpenAI(**client_kwargs)
