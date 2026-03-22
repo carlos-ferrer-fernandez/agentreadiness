@@ -253,8 +253,13 @@ export function AssessmentResults() {
   }
 
   const getOptimizationStageLabel = () => {
-    const stage = currentAssessment.optimizationStage
-    if (stage === 'crawling') return 'Crawling your documentation...'
+    const stage = currentAssessment.optimizationStage || ''
+    if (stage.startsWith('crawling')) {
+      // Stage format: "crawling (3/10 pages)" or just "crawling"
+      const match = stage.match(/\((\d+)\/(\d+)/)
+      if (match) return `Crawling your documentation... (${match[1]} of ${match[2]} pages found)`
+      return 'Crawling your documentation...'
+    }
     if (stage === 'analyzing') return 'Analyzing against 20 agent-readiness rules...'
     if (stage === 'optimizing') return 'Rewriting pages for AI agents...'
     if (stage === 'generating_llms_txt') return 'Generating llms.txt entry point...'

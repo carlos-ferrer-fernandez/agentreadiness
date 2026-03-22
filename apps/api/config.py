@@ -58,11 +58,11 @@ class Settings(BaseSettings):
     pricing_max_eur: int = 172             # Flat price — no tiers, no complexity
 
     # Crawler
-    # 30 pages keeps optimization under ~15 min on free tier (512MB RAM).
-    # At $0.08/page GPT-4o cost, 30 pages = $5.40 → 37x margin on $199.
+    # 10 pages keeps optimization under ~8 min on free tier (512MB RAM).
+    # At $0.08/page GPT-4o cost, 10 pages = $3.80 → 52x margin on $199.
     # Override via MAX_CRAWL_PAGES env var to serve larger sites.
-    max_crawl_pages: int = 30
-    crawl_delay_seconds: float = 0.5
+    max_crawl_pages: int = 10
+    crawl_delay_seconds: float = 0.3
 
     # Rate limiting
     rate_limit_per_minute: int = 60

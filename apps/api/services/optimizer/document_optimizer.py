@@ -294,11 +294,11 @@ class DocumentationOptimizer:
         """
         logger.info(f"Starting optimization of {start_url}")
 
-        # Step 1: Crawl documentation
-        await self._notify_progress(progress_callback, "crawling", 0.1)
+        # Step 1: Crawl documentation (progress 0.05 → 0.25)
+        await self._notify_progress(progress_callback, "crawling", 0.05)
 
         try:
-            pages = await self._crawl_documentation(start_url)
+            pages = await self._crawl_documentation(start_url, progress_callback)
         finally:
             # Always close the Playwright browser after crawling
             await self._close_browser()
@@ -358,7 +358,7 @@ class DocumentationOptimizer:
     # CRAWLING
     # =========================================================================
 
-    async def _crawl_documentation(self, start_url: str) -> List[DocPage]:
+    async def _crawl_documentation(self, start_url: str, progress_callback=None) -> List[DocPage]:
         """Crawl documentation site and extract pages.
 
         Follows both absolute and relative links within the same domain.
@@ -391,6 +391,7 @@ class DocumentationOptimizer:
                 continue
 
             try:
+                logger.info(f"Crawling page {len(pages)+1}/{max_pages}: {url}")
                 page = await self._fetch_page(url)
                 visited.add(url)  # Always mark visited, even on failure
 
@@ -398,6 +399,13 @@ class DocumentationOptimizer:
                     # Only add pages with meaningful content (not just nav/landing)
                     if page.content and len(page.content.strip()) > 50:
                         pages.append(page)
+                        # Report crawl progress (0.05 → 0.25 range)
+                        crawl_progress = 0.05 + (0.20 * len(pages) / max_pages)
+                        await self._notify_progress(
+                            progress_callback,
+                            f"crawling ({len(pages)}/{max_pages} pages)",
+                            crawl_progress,
+                        )
 
                     # Discover new links (both absolute and relative)
                     for link in page.links:
@@ -408,6 +416,10 @@ class DocumentationOptimizer:
                                 # Stay within the docs scope
                                 if not base_path or parsed_link.path.startswith(base_path):
                                     to_visit.append(normalized)
+
+                # Brief delay to be polite to the target server
+                import asyncio
+                await asyncio.sleep(settings.crawl_delay_seconds)
 
             except Exception as e:
                 visited.add(url)  # Mark visited on error too

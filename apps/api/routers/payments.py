@@ -285,8 +285,12 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
                 except Exception:
                     pass  # Progress updates are best-effort
 
-            docs, metadata = await optimizer.optimize_documentation(
-                url, progress_callback=progress_callback
+            # 10-minute timeout: if the process hangs, mark as failed
+            # instead of staying "running" forever
+            import asyncio
+            docs, metadata = await asyncio.wait_for(
+                optimizer.optimize_documentation(url, progress_callback=progress_callback),
+                timeout=600,  # 10 minutes max
             )
             zip_path = await optimizer.create_zip_package(docs, metadata)
 
