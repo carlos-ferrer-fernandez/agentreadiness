@@ -260,7 +260,10 @@ class AgentReadinessAnalyzer:
             content = page.content or ''
             if param_keywords.search(content):
                 pages_with_params += 1
-                if table_pattern.search(content):
+                # Check for markdown tables OR HTML tables (via crawler's has_tables flag)
+                has_markdown_table = bool(table_pattern.search(content))
+                has_html_table = getattr(page, 'has_tables', False)
+                if has_markdown_table or has_html_table:
                     pages_with_tables += 1
 
         if pages_with_params == 0:
@@ -284,7 +287,7 @@ class AgentReadinessAnalyzer:
         )
 
     def _rule_04_complete_code(self, pages: list) -> RuleResult:
-        """Rule 4: Complete, runnable code examples with imports."""
+        """Rule 4: Complete, runnable code examples with imports or language tags."""
         pages_with_code = 0
         pages_with_complete_code = 0
 
@@ -300,12 +303,13 @@ class AgentReadinessAnalyzer:
                     import_patterns.search(cb.get('code', ''))
                     for cb in page.code_blocks
                 )
-                # Check if code blocks have language tags
+                # Check if code blocks have language tags (on <code> or <pre>)
                 has_lang = any(
                     cb.get('language') and cb['language'] != 'text'
                     for cb in page.code_blocks
                 )
-                if has_imports and has_lang:
+                # Relaxed: pass if code has imports OR language tags (not both required)
+                if has_imports or has_lang:
                     pages_with_complete_code += 1
 
         if pages_with_code == 0:
@@ -314,7 +318,7 @@ class AgentReadinessAnalyzer:
         else:
             ratio = pages_with_complete_code / pages_with_code
             score = round(ratio * 100)
-            finding = f'{pages_with_complete_code}/{pages_with_code} pages have complete code examples (with imports & language tags)'
+            finding = f'{pages_with_complete_code}/{pages_with_code} pages have complete code examples (with imports or language tags)'
 
         return RuleResult(
             rule_id=4,
@@ -404,9 +408,18 @@ class AgentReadinessAnalyzer:
         )
 
     def _rule_07_consistent_terminology(self, pages: list, all_content_lower: str) -> RuleResult:
-        """Rule 7: Consistent terminology across all pages."""
+        """Rule 7: Consistent terminology across all pages.
+
+        Only flags a conflict when 3+ terms from the same synonym group appear,
+        because many domains legitimately use 2 related-but-distinct terms
+        (e.g. 'user' and 'customer' are different concepts in Stripe/payment docs).
+        """
+        # Domain-specific groups where multiple terms are often legitimate are
+        # excluded entirely — they cause false positives on platforms like Stripe,
+        # AWS, Auth0, etc.
         term_groups = [
-            (['user', 'account', 'customer', 'client', 'member'], 'user entity'),
+            # Excluded: 'user entity' group — user/account/customer/client are
+            # genuinely distinct concepts in most SaaS/payment/platform docs.
             (['workspace', 'organization', 'org', 'team', 'project'], 'workspace entity'),
             (['token', 'api key', 'secret', 'credential'], 'authentication credential'),
             (['endpoint', 'route', 'path'], 'API endpoint'),
@@ -416,10 +429,11 @@ class AgentReadinessAnalyzer:
         total_groups = 0
         for terms, label in term_groups:
             found = [t for t in terms if re.search(r'\b' + re.escape(t) + r'\b', all_content_lower)]
-            if len(found) >= 2:
+            if len(found) >= 3:
+                # Only flag as conflict when 3+ synonyms appear — 2 is usually fine
                 total_groups += 1
                 conflicts += 1
-            elif len(found) == 1:
+            elif len(found) >= 1:
                 total_groups += 1
 
         if total_groups == 0:
@@ -429,7 +443,7 @@ class AgentReadinessAnalyzer:
             consistency_ratio = (total_groups - conflicts) / total_groups
             score = round(consistency_ratio * 100)
             if conflicts > 0:
-                finding = f'{conflicts} terminology conflict(s) detected — inconsistent terms for the same concepts'
+                finding = f'{conflicts} terminology conflict(s) detected — 3+ synonyms used for the same concept'
             else:
                 finding = 'Terminology is consistent across all pages'
 
@@ -473,15 +487,26 @@ class AgentReadinessAnalyzer:
     def _rule_09_prerequisites(self, pages: list) -> RuleResult:
         """Rule 9: Prerequisites stated up front."""
         prereq_patterns = re.compile(
-            r'\b(prerequisite|before\s+you\s+begin|requirements?|what\s+you\s+need|'
-            r'before\s+starting|you\'ll\s+need|make\s+sure\s+you\s+have)\b',
+            r'\b(prerequisite|before\s+you\s+begin|before\s+you\s+start|'
+            r'requirements?|what\s+you\s+need|what\s+you\'ll\s+need|'
+            r'before\s+starting|you\'ll\s+need|you\s+need\s+to\s+have|'
+            r'you\s+need\s+a|you\s+must\s+have|must\s+have\s+a|'
+            r'make\s+sure\s+you\s+have|make\s+sure\s+you\'ve|'
+            r'ensure\s+you\s+have|ensure\s+that\s+you|'
+            r'set\s+up\s+your|sign\s+up\s+for|create\s+an?\s+account|'
+            r'required|requires?\s+a|need\s+an?\s+account|'
+            r'first,?\s+you\s+(need|must|should)|'
+            r'to\s+follow\s+this|to\s+complete\s+this|'
+            r'to\s+get\s+started|getting\s+started)\b',
             re.IGNORECASE
         )
 
         # Only check how-to / guide / tutorial pages
         how_to_pages = [p for p in pages if any(
             kw in (p.title or '').lower()
-            for kw in ['how', 'guide', 'tutorial', 'start', 'setup', 'install', 'quick']
+            for kw in ['how', 'guide', 'tutorial', 'start', 'setup', 'install',
+                        'quick', 'get started', 'getting started', 'build',
+                        'create', 'set up', 'configure', 'integrate', 'accept']
         )]
 
         if not how_to_pages:

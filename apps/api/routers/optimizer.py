@@ -170,7 +170,7 @@ async def optimizer_diagnostics():
         response = await client.chat.completions.create(
             model=settings.openai_model,
             messages=[{"role": "user", "content": "Say OK"}],
-            max_tokens=5,
+            max_completion_tokens=5,
         )
         results["openai_api_works"] = True
         results["openai_response"] = response.choices[0].message.content

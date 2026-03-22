@@ -37,6 +37,7 @@ class Page:
     code_blocks: Optional[List[Dict]] = None
     links: Optional[List[str]] = None
     last_modified: Optional[str] = None
+    has_tables: bool = False
 
 
 class DocumentationCrawler:
@@ -305,17 +306,26 @@ class DocumentationCrawler:
         code_blocks = []
         for pre in search_scope.find_all('pre'):
             code = pre.find('code')
-            if code:
-                language = None
-                classes = code.get('class', [])
-                for cls in classes:
+            language = None
+
+            # Check language class on <code> tag first, then <pre> tag
+            for tag in ([code] if code else []) + [pre]:
+                if language:
+                    break
+                for cls in (tag.get('class', []) if tag else []):
                     if cls.startswith('language-') or cls.startswith('lang-'):
                         language = cls.split('-', 1)[1]
                         break
+
+            text = (code or pre).get_text(strip=True)
+            if text:
                 code_blocks.append({
                     'language': language,
-                    'code': code.get_text(strip=True),
+                    'code': text,
                 })
+
+        # Detect HTML tables in content container
+        has_tables = len(search_scope.find_all('table')) > 0
 
         # Extract links
         links = []
@@ -333,6 +343,7 @@ class DocumentationCrawler:
             heading_hierarchy=headings,
             code_blocks=code_blocks,
             links=list(set(links)),
+            has_tables=has_tables,
         )
     
     def _is_same_domain(self, url: str) -> bool:
