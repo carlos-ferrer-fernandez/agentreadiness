@@ -227,7 +227,6 @@ export function AssessmentResults() {
     siteName,
     url,
     pageCount,
-    estimatedPriceEur,
     hasPaid,
     optimizationStatus,
     optimizationProgress,
