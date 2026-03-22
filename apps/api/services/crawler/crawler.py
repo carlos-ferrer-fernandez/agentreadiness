@@ -11,10 +11,18 @@ from dataclasses import dataclass
 from urllib.parse import urljoin, urlparse
 import xml.etree.ElementTree as ET
 
+import re
+
 import httpx
 from bs4 import BeautifulSoup
 
 logger = logging.getLogger(__name__)
+
+# Chrome browser UA — many doc sites (Next.js, Nuxt) block bots but serve full HTML to browsers
+BROWSER_UA = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+)
 
 
 @dataclass
@@ -59,7 +67,9 @@ class DocumentationCrawler:
             timeout=30.0,
             follow_redirects=True,
             headers={
-                "User-Agent": "AgentReadinessBot/1.0 (Documentation Analysis)"
+                "User-Agent": BROWSER_UA,
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.9",
             }
         )
         return self
@@ -211,23 +221,30 @@ class DocumentationCrawler:
                 return None
             
             content_type = response.headers.get('content-type', '')
-            
-            if 'text/html' in content_type:
+
+            if 'text/html' in content_type or 'xhtml' in content_type or not content_type:
+                # Default to HTML parsing (most doc sites serve HTML)
                 return self._parse_html(response.text, url)
             elif 'text/markdown' in content_type or 'text/plain' in content_type:
                 return Page(url=url, content=response.text)
             else:
-                logger.warning(f"Unsupported content type for {url}: {content_type}")
-                return None
+                # Try HTML parsing as fallback — many servers mis-report content type
+                logger.info(f"Unexpected content type for {url}: {content_type}, trying HTML parse")
+                return self._parse_html(response.text, url)
         
         except Exception as e:
             logger.error(f"Error fetching {url}: {e}")
             return None
     
     def _parse_html(self, html: str, url: str) -> Page:
-        """Parse HTML content and extract structured data."""
+        """Parse HTML content and extract structured data.
+
+        Key: find the content container FIRST, then clean noise inside it.
+        Never remove elements from the full soup before locating content,
+        because class-name removal (e.g. 'sidebar') can destroy parent wrappers.
+        """
         soup = BeautifulSoup(html, 'html.parser')
-        
+
         # Extract title
         title = None
         title_tag = soup.find('title')
@@ -237,63 +254,77 @@ class DocumentationCrawler:
             h1 = soup.find('h1')
             if h1:
                 title = h1.get_text(strip=True)
-        
+
         # Extract description
         description = None
         meta_desc = soup.find('meta', attrs={'name': 'description'})
         if meta_desc:
             description = meta_desc.get('content')
         else:
-            # Use first paragraph as fallback
             first_p = soup.find('p')
             if first_p:
                 description = first_p.get_text(strip=True)[:200]
-        
-        # Extract main content
-        # Try to find main content area
-        main_content = soup.find('main') or soup.find('article') or soup.find('div', class_='content')
-        if main_content:
-            content = main_content.get_text(separator='\n', strip=True)
+
+        # --- Find content container FIRST (before any cleanup) ---
+        main_content = (
+            soup.find('article') or
+            soup.find('main') or
+            soup.find('div', role='main') or
+            soup.find('div', class_=re.compile(
+                r'(docs-content|documentation|page-content|markdown-body|'
+                r'article-content|post-content|entry-content|Content-article)',
+                re.IGNORECASE
+            )) or
+            soup.find('div', class_='content')
+        )
+
+        if not main_content:
+            # Fallback: use body but remove obvious noise
+            main_content = soup.find('body')
+            if main_content:
+                for tag in main_content.find_all(['nav', 'footer', 'aside', 'header', 'script', 'style', 'noscript']):
+                    tag.decompose()
         else:
-            # Fallback: body content
-            body = soup.find('body')
-            content = body.get_text(separator='\n', strip=True) if body else ""
-        
-        # Extract heading hierarchy
+            # Clean noise INSIDE the content container only
+            for tag in main_content.find_all(['nav', 'footer', 'script', 'style', 'noscript']):
+                tag.decompose()
+
+        content = main_content.get_text(separator='\n', strip=True) if main_content else ""
+
+        # Extract heading hierarchy from content container (not full page)
+        search_scope = main_content or soup
         headings = []
         for level in range(1, 7):
-            for h in soup.find_all(f'h{level}'):
+            for h in search_scope.find_all(f'h{level}'):
                 headings.append({
                     'level': level,
                     'text': h.get_text(strip=True),
                 })
-        
-        # Extract code blocks
+
+        # Extract code blocks from content container
         code_blocks = []
-        for pre in soup.find_all('pre'):
+        for pre in search_scope.find_all('pre'):
             code = pre.find('code')
             if code:
-                # Try to detect language
                 language = None
                 classes = code.get('class', [])
                 for cls in classes:
                     if cls.startswith('language-') or cls.startswith('lang-'):
-                        language = cls.split('-')[1]
+                        language = cls.split('-', 1)[1]
                         break
-                
                 code_blocks.append({
                     'language': language,
                     'code': code.get_text(strip=True),
                 })
-        
+
         # Extract links
         links = []
-        for a in soup.find_all('a', href=True):
+        for a in search_scope.find_all('a', href=True):
             href = a['href']
             full_url = urljoin(url, href)
             if self._is_same_domain(full_url):
                 links.append(full_url)
-        
+
         return Page(
             url=url,
             title=title,
