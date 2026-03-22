@@ -22,6 +22,7 @@ import {
   XCircle,
   AlertCircle,
   Check,
+  RefreshCw,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -92,6 +93,7 @@ export function AssessmentResults() {
   const [promoError, setPromoError] = useState<string | null>(null)
   const [showPromoInput, setShowPromoInput] = useState(false)
   const [isApplyingPromo, setIsApplyingPromo] = useState(false)
+  const [isRetrying, setIsRetrying] = useState(false)
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
   // Poll optimization status when paid + not complete
@@ -356,11 +358,36 @@ export function AssessmentResults() {
           >
             <div className="flex items-start gap-3">
               <AlertTriangle className="w-5 h-5 text-destructive flex-shrink-0 mt-0.5" />
-              <div>
-                <p className="font-medium text-sm">Optimization failed. Please contact support.</p>
+              <div className="flex-1">
+                <p className="font-medium text-sm">Optimization failed. You can retry or contact support.</p>
                 <p className="text-xs text-muted-foreground mt-1">
                   Your payment is safe. We'll either fix this or issue a full refund.
                 </p>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="mt-3"
+                  disabled={isRetrying}
+                  onClick={async () => {
+                    if (!currentAssessment) return
+                    setIsRetrying(true)
+                    try {
+                      await assessmentsApi.retryOptimization(currentAssessment.id)
+                      setOptimizationStatus('queued', 0, 'queued')
+                    } catch {
+                      // ignore
+                    } finally {
+                      setIsRetrying(false)
+                    }
+                  }}
+                >
+                  {isRetrying ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  )}
+                  Retry Optimization
+                </Button>
               </div>
             </div>
           </motion.div>

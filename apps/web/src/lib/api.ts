@@ -51,6 +51,8 @@ export const assessmentsApi = {
     }),
   getOptimizationStatus: (assessmentId: string) =>
     apiClient.get(`/api/assessments/${assessmentId}/optimization-status`),
+  retryOptimization: (assessmentId: string) =>
+    apiClient.post(`/api/assessments/${assessmentId}/retry-optimization`),
   getDownloadUrl: (assessmentId: string) =>
     `${API_BASE_URL}/api/assessments/${assessmentId}/download`,
 }

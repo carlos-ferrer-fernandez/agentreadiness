@@ -208,6 +208,42 @@ async def get_optimization_status(assessment_id: str, db: AsyncSession = Depends
     }
 
 
+@router.post("/{assessment_id}/retry-optimization")
+async def retry_optimization(
+    assessment_id: str,
+    background_tasks: BackgroundTasks,
+    db: AsyncSession = Depends(get_db),
+):
+    """Retry a failed optimization. Only works if status is 'failed'."""
+    result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
+    assessment = result.scalar_one_or_none()
+    if not assessment:
+        raise HTTPException(status_code=404, detail="Assessment not found")
+
+    if not assessment.has_paid:
+        raise HTTPException(status_code=403, detail="Payment required")
+
+    if assessment.optimization_status not in ("failed", None):
+        raise HTTPException(status_code=400, detail=f"Cannot retry: status is '{assessment.optimization_status}'")
+
+    # Reset status and queue retry
+    assessment.optimization_status = "queued"
+    assessment.optimization_progress = 0
+    assessment.optimization_stage = "queued"
+    assessment.optimization_error = None
+    await db.commit()
+
+    from routers.payments import _run_optimization_pipeline
+    background_tasks.add_task(
+        _run_optimization_pipeline,
+        assessment_id,
+        assessment.url,
+    )
+
+    logger.info(f"Retrying optimization for {assessment_id}")
+    return {"status": "queued", "message": "Optimization retry started"}
+
+
 @router.get("/{assessment_id}/download")
 async def download_optimized_docs(assessment_id: str, db: AsyncSession = Depends(get_db)):
     """Download the optimized documentation ZIP."""

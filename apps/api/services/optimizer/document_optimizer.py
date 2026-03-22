@@ -462,7 +462,12 @@ class DocumentationOptimizer:
             self._playwright = None
 
     async def _fetch_page_with_playwright(self, url: str) -> Optional[DocPage]:
-        """Fetch a page using the shared headless browser for JS rendering."""
+        """Fetch a page using the shared headless browser for JS rendering.
+
+        Uses 'domcontentloaded' (not 'networkidle') because sites like Stripe
+        have endless analytics/tracking requests that prevent networkidle from
+        ever firing, causing 30s hangs per page.
+        """
         try:
             await self._ensure_browser()
             if not self._browser:
@@ -473,9 +478,13 @@ class DocumentationOptimizer:
             )
             page = await context.new_page()
 
-            await page.goto(url, wait_until="networkidle", timeout=30000)
-            # Extra wait for late-rendering SPAs
-            await page.wait_for_timeout(2000)
+            # Block analytics/tracking to speed up page loads
+            await page.route("**/{analytics,tracking,gtag,gtm,segment,hotjar,intercom,mixpanel,sentry}**", lambda route: route.abort())
+            await page.route("**/*.{png,jpg,jpeg,gif,svg,ico,woff,woff2,ttf}", lambda route: route.abort())
+
+            await page.goto(url, wait_until="domcontentloaded", timeout=15000)
+            # Short wait for JS frameworks to render content after DOM is ready
+            await page.wait_for_timeout(1500)
 
             html = await page.content()
             await context.close()
