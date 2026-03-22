@@ -255,8 +255,19 @@ class DocumentationOptimizer:
     concrete optimization rules applied to every page.
     """
 
+    # Use a real browser user-agent so SSR sites (Next.js, Nuxt, etc.)
+    # return full server-rendered HTML instead of empty JS shells.
+    BROWSER_UA = (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+    )
+
     def __init__(self):
-        self.client = httpx.AsyncClient(timeout=30.0)
+        self.client = httpx.AsyncClient(
+            timeout=30.0,
+            headers={"User-Agent": self.BROWSER_UA},
+            follow_redirects=True,
+        )
         self._playwright = None
         self._browser = None
         self._needs_js_rendering = False  # Set to True after first JS-rendered page detected
@@ -408,9 +419,10 @@ class DocumentationOptimizer:
     async def _fetch_page(self, url: str) -> Optional[DocPage]:
         """Fetch and parse a single page.
 
-        First tries a fast httpx fetch. If the rendered content is too thin
-        (< 100 chars — typical for JS-rendered SPAs), falls back to a
-        headless Playwright browser that executes JavaScript before parsing.
+        Uses httpx with a browser user-agent (works for most SSR sites like
+        Next.js, Nuxt, etc.). Only falls back to Playwright for truly
+        client-side-only SPAs where httpx returns < 200 chars of content.
+        Playwright is memory-heavy (~300MB) so we avoid it when possible.
         """
         from urllib.parse import urljoin
 
@@ -419,8 +431,8 @@ class DocumentationOptimizer:
             if self._needs_js_rendering and HAS_PLAYWRIGHT:
                 return await self._fetch_page_with_playwright(url)
 
-            # --- Fast path: plain HTTP ---
-            response = await self.client.get(url, follow_redirects=True)
+            # --- Fast path: plain HTTP with browser user-agent ---
+            response = await self.client.get(url)
             if response.status_code != 200:
                 return None
 
@@ -430,12 +442,13 @@ class DocumentationOptimizer:
 
             page = self._parse_html_to_page(response.text, url)
 
-            # --- Fallback: JS rendering via Playwright ---
-            if page and len(page.content.strip()) < 100 and HAS_PLAYWRIGHT:
-                logger.info(f"Thin content from {url} — retrying with Playwright (JS rendering)")
+            # --- Fallback: JS rendering via Playwright (last resort) ---
+            # Most SSR sites (Next.js, Nuxt) serve full HTML to browser UAs.
+            # Only fall back to Playwright for truly client-only SPAs.
+            if page and len(page.content.strip()) < 200 and HAS_PLAYWRIGHT:
+                logger.info(f"Thin content ({len(page.content.strip())} chars) from {url} — trying Playwright")
                 rendered_page = await self._fetch_page_with_playwright(url)
                 if rendered_page and len(rendered_page.content.strip()) > len(page.content.strip()):
-                    # This site needs JS — skip httpx for future pages
                     self._needs_js_rendering = True
                     return rendered_page
 
@@ -449,7 +462,17 @@ class DocumentationOptimizer:
         """Lazily start a shared Playwright browser (one per optimization run)."""
         if self._browser is None and HAS_PLAYWRIGHT:
             self._playwright = await async_playwright().start()
-            self._browser = await self._playwright.chromium.launch(headless=True)
+            self._browser = await self._playwright.chromium.launch(
+                headless=True,
+                args=[
+                    "--no-sandbox",
+                    "--disable-dev-shm-usage",   # Critical for Docker — /dev/shm is only 64MB
+                    "--disable-gpu",
+                    "--disable-extensions",
+                    "--disable-background-networking",
+                    "--single-process",           # Saves ~100MB RAM
+                ],
+            )
             logger.info("Playwright browser launched for JS rendering")
 
     async def _close_browser(self):

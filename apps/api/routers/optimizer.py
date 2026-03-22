@@ -129,7 +129,12 @@ async def download_optimized_docs(job_id: str):
 async def optimizer_diagnostics():
     """Check optimizer dependencies: Playwright, OpenAI key, model."""
     import os
+    from config import get_settings
     results = {}
+
+    # 0. Code version — helps confirm the right deploy is live
+    results["code_version"] = "v2-httpx-browser-ua"
+    results["max_crawl_pages"] = get_settings().max_crawl_pages
 
     # 1. Check OpenAI API key
     key = os.getenv("OPENAI_API_KEY", "")
@@ -137,7 +142,6 @@ async def optimizer_diagnostics():
     results["openai_key_prefix"] = key[:8] + "..." if len(key) > 8 else "(empty)"
 
     # 2. Check model config
-    from config import get_settings
     settings = get_settings()
     results["openai_model"] = settings.openai_model
     results["openai_base_url"] = settings.openai_base_url or "(direct OpenAI)"
