@@ -531,29 +531,47 @@ class DocumentationOptimizer:
             return None
 
     def _parse_html_to_page(self, html: str, url: str) -> DocPage:
-        """Parse raw HTML string into a DocPage with content, headings, links."""
+        """Parse raw HTML string into a DocPage with content, headings, links.
+
+        IMPORTANT: We extract the main content container FIRST, then clean up
+        noise inside it. The previous approach of removing nav/sidebar/etc by
+        class name BEFORE finding content was destroying the content itself
+        (e.g. Stripe wraps everything in a div with class 'Sidebar--expanded').
+        """
         from urllib.parse import urljoin
 
         soup = BeautifulSoup(html, 'html.parser')
 
-        # Remove nav, footer, sidebar, cookie banners etc
-        for tag in soup.find_all(['nav', 'footer', 'aside', 'header']):
-            tag.decompose()
-        for tag in soup.find_all(class_=re.compile(
-            r'(nav|footer|sidebar|cookie|banner|menu|breadcrumb|toc)',
-            re.IGNORECASE
-        )):
-            tag.decompose()
-
         title = soup.find('title')
         title_text = title.get_text(strip=True) if title else "Untitled"
 
-        main = (soup.find('main') or soup.find('article') or
-                soup.find('div', class_='content') or
+        # Step 1: Find the main content container FIRST (before any cleanup)
+        main = (soup.find('article') or
+                soup.find('main') or
                 soup.find('div', role='main') or
-                soup.find('div', class_=re.compile(r'(docs|documentation|page-content|markdown)', re.IGNORECASE)))
+                soup.find('div', class_=re.compile(
+                    r'(docs-content|documentation|page-content|markdown-body|'
+                    r'article-content|post-content|entry-content|Content-article)',
+                    re.IGNORECASE
+                )) or
+                soup.find('div', class_='content'))
+
         if not main:
+            # Last resort: use body, but clean up noise first
             main = soup.find('body')
+            if main:
+                # Only remove noise tags when using body as container
+                for tag in main.find_all(['nav', 'footer', 'aside', 'header', 'script', 'style', 'noscript']):
+                    tag.decompose()
+                for tag in main.find_all(class_=re.compile(
+                    r'^(nav|footer|cookie|banner)$',  # Strict match, not partial
+                    re.IGNORECASE
+                )):
+                    tag.decompose()
+        else:
+            # Clean up noise INSIDE the content container (not parents)
+            for tag in main.find_all(['nav', 'footer', 'script', 'style', 'noscript']):
+                tag.decompose()
 
         content = main.get_text(separator='\n', strip=True) if main else ""
 
@@ -571,7 +589,7 @@ class DocumentationOptimizer:
         for h in (main or soup).find_all(['h1', 'h2', 'h3', 'h4']):
             headings.append(h.get_text(strip=True))
 
-        # Collect ALL links: resolve relative links to absolute
+        # Collect ALL links from the page (not just main) for crawl discovery
         links = []
         skip_patterns = re.compile(
             r'(\.png|\.jpg|\.gif|\.svg|\.css|\.js|\.woff|\.pdf|'
