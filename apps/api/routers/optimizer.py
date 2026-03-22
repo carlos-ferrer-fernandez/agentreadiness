@@ -125,6 +125,61 @@ async def download_optimized_docs(job_id: str):
     )
 
 
+@router.get("/diagnostics")
+async def optimizer_diagnostics():
+    """Check optimizer dependencies: Playwright, OpenAI key, model."""
+    import os
+    results = {}
+
+    # 1. Check OpenAI API key
+    key = os.getenv("OPENAI_API_KEY", "")
+    results["openai_key_set"] = bool(key) and key != "sk-your-openai-key"
+    results["openai_key_prefix"] = key[:8] + "..." if len(key) > 8 else "(empty)"
+
+    # 2. Check model config
+    from config import get_settings
+    settings = get_settings()
+    results["openai_model"] = settings.openai_model
+    results["openai_base_url"] = settings.openai_base_url or "(direct OpenAI)"
+
+    # 3. Check Playwright
+    try:
+        from playwright.async_api import async_playwright
+        results["playwright_installed"] = True
+        # Try to launch browser
+        try:
+            pw = await async_playwright().start()
+            browser = await pw.chromium.launch(headless=True)
+            results["playwright_browser_works"] = True
+            await browser.close()
+            await pw.stop()
+        except Exception as e:
+            results["playwright_browser_works"] = False
+            results["playwright_browser_error"] = str(e)
+    except ImportError:
+        results["playwright_installed"] = False
+
+    # 4. Quick OpenAI test
+    try:
+        import openai
+        client = openai.AsyncOpenAI(api_key=settings.openai_api_key, timeout=10.0)
+        response = await client.chat.completions.create(
+            model=settings.openai_model,
+            messages=[{"role": "user", "content": "Say OK"}],
+            max_tokens=5,
+        )
+        results["openai_api_works"] = True
+        results["openai_response"] = response.choices[0].message.content
+    except Exception as e:
+        results["openai_api_works"] = False
+        results["openai_api_error"] = str(e)
+
+    # 5. Check Stripe
+    results["stripe_key_set"] = bool(settings.stripe_secret_key)
+
+    return results
+
+
 async def _run_optimization(job_id: str, url: str):
     """Run the optimization in background."""
     job = _optimization_jobs[job_id]
