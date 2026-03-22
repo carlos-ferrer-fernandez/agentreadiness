@@ -843,23 +843,37 @@ class DocumentationOptimizer:
                                     "- Code examples are complete: imports, setup, call, expected output.\n"
                                     "- Callout hierarchy: > **💡 Tip:** / > **ℹ️ Note:** / > **⚠️ Warning:** / > **❌ Danger:**\n"
                                     "- No marketing fluff. No 'simply'. No 'just'. Technical precision only.\n\n"
-                                    "CRITICAL RULES:\n"
-                                    "- ONLY restructure and improve content that exists in the original. "
-                                    "NEVER invent, fabricate, or hallucinate new technical content, code examples, "
-                                    "API endpoints, error codes, or features that are not in the original.\n"
-                                    "- If the original content is thin (e.g., a landing page with just links), "
-                                    "restructure what exists. Do NOT pad it with made-up tutorials.\n"
+                                    "CRITICAL RULES — ZERO FABRICATION:\n"
+                                    "- ONLY restructure and improve content that EXISTS in the original. "
+                                    "NEVER invent, fabricate, or hallucinate new technical content.\n"
+                                    "- NEVER add code examples that are not in the original.\n"
+                                    "- NEVER add API endpoints, error codes, parameters, or features not in the original.\n"
+                                    "- NEVER add troubleshooting tables unless the original has error documentation.\n"
+                                    "- If the original is a landing page with just links and descriptions, "
+                                    "your output should be a well-structured landing page with those same links "
+                                    "and descriptions. Do NOT pad it with tutorials, code, or API details.\n"
+                                    "- The ONLY things you may add that aren't in the original are: "
+                                    "YAML frontmatter, callout formatting (Tip/Warning/Note), and structural "
+                                    "improvements (tables, numbered lists, heading restructuring).\n"
                                     "- NEVER add a 'Conclusion' or 'Summary' section. Premium docs don't have them.\n"
                                     "- For frontmatter: use today's date for last_updated. For version, use the "
                                     "version mentioned in the content, or omit the field if none is mentioned.\n"
                                     "- Code blocks must be at the TOP LEVEL of the document (not indented inside "
                                     "list items) to ensure proper rendering. If you need code in a step, end the "
                                     "list, show the code block, then continue.\n\n"
+                                    "CRITICAL — LANGUAGE PRESERVATION:\n"
+                                    "- ALWAYS output in the SAME language as the original content.\n"
+                                    "- If the input is French, ALL output must be French (prose, headings, "
+                                    "descriptions, tips, warnings — everything).\n"
+                                    "- If Spanish, output Spanish. If German, output German. Etc.\n"
+                                    "- NEVER translate to English unless the original is already in English.\n"
+                                    "- Frontmatter field NAMES stay in English (title, description, tags) "
+                                    "but their VALUES must be in the original language.\n"
+                                    "- The ONLY English allowed in a non-English doc: frontmatter field names "
+                                    "and code syntax.\n\n"
                                     "You follow the AGENT-READINESS OPTIMIZATION RULES precisely.\n"
                                     "You output ONLY the optimized Markdown. No commentary, no preamble.\n"
                                     "NEVER wrap output in ```markdown fences. Start directly with --- frontmatter.\n"
-                                    "CRITICAL: Always preserve the original language. If the input is French, "
-                                    "output French. If Spanish, output Spanish. NEVER translate to English.\n"
                                     "The output must be production-ready documentation that can be deployed as-is."
                                 )
                             },
@@ -935,6 +949,11 @@ class DocumentationOptimizer:
                 file_name=self._generate_file_name(page.title, page.url)
             )
 
+        # Post-processing: validate no fabrication
+        optimized_content = self._validate_no_fabrication(
+            optimized_content, page.content, page.code_blocks
+        )
+
         # Extract improvements and clean up
         improvements = self._extract_improvements(optimized_content, analysis)
         optimized_content = self._clean_optimized_content(optimized_content)
@@ -1002,7 +1021,7 @@ applying ALL 20 agent-readiness rules. The output must be:
 3. **Use action-oriented headings** that match user/agent intents
 4. **Every section must be self-contained** — no "see above" or "as mentioned"
 5. **Convert ALL parameter descriptions to tables** (Parameter | Type | Required | Default | Description)
-6. **Complete ALL code examples** — add imports, setup, expected output if missing
+6. **Complete code examples that exist** — add imports, setup, expected output ONLY if the original has code
 7. **Add error documentation** where relevant (Error | Cause | Fix)
 8. **Add a Prerequisites section** at the top as a bullet list
 9. **Strip ALL marketing language** — only technical, precise content
@@ -1012,7 +1031,10 @@ applying ALL 20 agent-readiness rules. The output must be:
 13. **State intent before mechanics** — explain WHY then HOW
 14. **Use numbered lists for sequential steps**, bullet lists for non-sequential items
 15. **Every page should feel like premium documentation** -- clean, scannable, precise
-16. **NEVER fabricate content** -- only restructure and improve what exists in the original
+16. **ABSOLUTE ZERO FABRICATION** -- NEVER add code examples, API endpoints, error tables,
+    parameters, or technical details that are NOT in the original content above. If the
+    original is a navigation/landing page, the output should be a well-structured
+    navigation/landing page. Do NOT invent tutorials or code to "fill" thin pages.
 17. **NEVER add a Conclusion or Summary section** -- premium docs don't have them
 18. **Code blocks must be at the TOP LEVEL** -- never indent code fences inside list items.
     If a step needs code, end the list, show the code block unindented, then continue.
@@ -1109,6 +1131,91 @@ If you are an AI agent:
     # =========================================================================
     # POST-PROCESSING & PACKAGING
     # =========================================================================
+
+    def _validate_no_fabrication(
+        self, optimized: str, original_content: str, original_code_blocks: List[Dict]
+    ) -> str:
+        """Post-processing check: remove likely fabricated content.
+
+        Detects code blocks and error/troubleshooting tables that appear
+        in the optimized output but have no basis in the original content.
+        These are hallmarks of LLM fabrication on thin pages.
+        """
+        original_lower = original_content.lower()
+        original_code_strings = {
+            cb['code'].strip().lower()[:100] for cb in original_code_blocks
+        }
+        # Check if the original had ANY code
+        has_original_code = bool(original_code_blocks) or '```' in original_content
+
+        lines = optimized.split('\n')
+        cleaned_lines = []
+        in_suspect_code_block = False
+        in_suspect_table = False
+        skip_until_fence = False
+        fabrication_removed = False
+
+        i = 0
+        while i < len(lines):
+            line = lines[i]
+
+            # Detect code fences that weren't in original
+            if line.strip().startswith('```') and not skip_until_fence:
+                if not has_original_code:
+                    # Original had NO code at all — this is fabricated
+                    skip_until_fence = True
+                    fabrication_removed = True
+                    i += 1
+                    continue
+                else:
+                    # Original had code — keep it
+                    cleaned_lines.append(line)
+                    i += 1
+                    continue
+            elif skip_until_fence:
+                if line.strip().startswith('```'):
+                    skip_until_fence = False  # End of fabricated block
+                i += 1
+                continue
+
+            # Detect troubleshooting/error tables on pages without error docs
+            if (line.strip().startswith('|') and
+                    ('error' in line.lower() or 'troubleshoot' in line.lower() or
+                     'cause' in line.lower() and 'fix' in line.lower()) and
+                    'error' not in original_lower and
+                    'troubleshoot' not in original_lower):
+                # Skip this table row and surrounding table
+                in_suspect_table = True
+                fabrication_removed = True
+                i += 1
+                continue
+            elif in_suspect_table:
+                if line.strip().startswith('|'):
+                    i += 1
+                    continue
+                else:
+                    in_suspect_table = False
+
+            # Detect fabricated headings like "Troubleshooting" or "Common Errors"
+            # on pages that don't mention errors at all
+            if (line.strip().startswith('#') and
+                    any(kw in line.lower() for kw in ['troubleshoot', 'common error', 'error code']) and
+                    'error' not in original_lower and
+                    'troubleshoot' not in original_lower):
+                fabrication_removed = True
+                i += 1
+                # Skip content under this heading until next heading
+                while i < len(lines) and not lines[i].strip().startswith('#'):
+                    i += 1
+                continue
+
+            cleaned_lines.append(line)
+            i += 1
+
+        if fabrication_removed:
+            logger.info("Fabrication validator: removed suspected fabricated content")
+
+        return '\n'.join(cleaned_lines)
 
     def _extract_improvements(self, content: str, analysis: PageAnalysis) -> List[str]:
         """Extract improvements from GPT's output, falling back to static analysis."""
