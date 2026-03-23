@@ -40,8 +40,8 @@ apiClient.interceptors.response.use(
 
 // --- Public Assessments API (no auth required) ---
 export const assessmentsApi = {
-  analyze: (data: { url: string; email: string; full_name?: string; role?: string }) =>
-    apiClient.post<AssessmentResult>('/api/assessments/analyze', data),
+  analyze: (data: { url: string; email: string; full_name?: string; role?: string }, signal?: AbortSignal) =>
+    apiClient.post<AssessmentResult>('/api/assessments/analyze', data, { signal }),
   get: (id: string) =>
     apiClient.get<AssessmentResult>(`/api/assessments/${id}`),
   verifyPromo: (assessmentId: string, code: string) =>

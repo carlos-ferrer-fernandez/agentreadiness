@@ -505,13 +505,17 @@ export function LandingPage() {
       setLiveMessage((prev) => (prev + 1) % liveStatusMessages.length)
     }, 3000)
 
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 45000)
+
     try {
       const response = await assessmentsApi.analyze({
         url: validatedUrl,
         email,
         full_name: fullName || undefined,
         role: role || undefined,
-      })
+      }, controller.signal)
+      clearTimeout(timeoutId)
       clearInterval(stageInterval)
       clearInterval(messageInterval)
 
@@ -556,9 +560,17 @@ export function LandingPage() {
 
       navigate('/assessment')
     } catch (err: any) {
+      clearTimeout(timeoutId)
       clearInterval(stageInterval)
       clearInterval(messageInterval)
-      const message = err.response?.data?.detail || 'Analysis failed. Please check the URL and try again.'
+      let message: string
+      if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
+        message = 'Scan is taking longer than expected. Please try a smaller or more accessible URL.'
+      } else if (err.response?.status === 400) {
+        message = err.response?.data?.detail || 'We couldn\'t reach this URL. Please check it\'s publicly accessible and try again.'
+      } else {
+        message = err.response?.data?.detail || 'Analysis failed. Please check the URL and try again.'
+      }
       setAssessmentError(message)
       setError(message)
     }
