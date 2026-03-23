@@ -265,37 +265,41 @@ async def download_optimized_docs(assessment_id: str, db: AsyncSession = Depends
 
     # Prefer DB-stored docs (survives redeploys); fall back to file path
     if assessment.optimization_docs:
-        from dataclasses import dataclass
-        from services.optimizer.document_optimizer import DocumentationOptimizer, OptimizedDoc
+        try:
+            from services.optimizer.document_optimizer import DocumentationOptimizer, OptimizedDoc
 
-        docs = [
-            OptimizedDoc(
-                original_url=d["original_url"],
-                title=d["title"],
-                optimized_content=d["optimized_content"],
-                improvements=d["improvements"],
-                file_name=d["file_name"],
+            docs = [
+                OptimizedDoc(
+                    original_url=d["original_url"],
+                    title=d["title"],
+                    optimized_content=d["optimized_content"],
+                    improvements=d["improvements"],
+                    file_name=d["file_name"],
+                )
+                for d in assessment.optimization_docs
+            ]
+            metadata = assessment.optimization_metadata or {}
+
+            optimizer = DocumentationOptimizer()
+            zip_path = await optimizer.create_zip_package(docs, metadata)
+
+            filename = f"{assessment.site_name}-optimized-docs.zip"
+
+            # Stream the zip and clean up the temp file after
+            def iter_zip():
+                with open(zip_path, "rb") as f:
+                    yield from iter(lambda: f.read(8192), b"")
+                os.unlink(zip_path)
+
+            return StreamingResponse(
+                iter_zip(),
+                media_type="application/zip",
+                headers={"Content-Disposition": f'attachment; filename="{filename}"'},
             )
-            for d in assessment.optimization_docs
-        ]
-        metadata = assessment.optimization_metadata or {}
-
-        optimizer = DocumentationOptimizer()
-        zip_path = await optimizer.create_zip_package(docs, metadata)
-
-        filename = f"{assessment.site_name}-optimized-docs.zip"
-
-        # Stream the zip and clean up the temp file after
-        def iter_zip():
-            with open(zip_path, "rb") as f:
-                yield from iter(lambda: f.read(8192), b"")
-            os.unlink(zip_path)
-
-        return StreamingResponse(
-            iter_zip(),
-            media_type="application/zip",
-            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
-        )
+        except Exception as e:
+            import logging
+            logging.getLogger(__name__).error(f"ZIP generation failed for {assessment_id}: {e}", exc_info=True)
+            raise HTTPException(status_code=500, detail=f"Failed to generate ZIP: {str(e)[:200]}")
 
     # Legacy fallback: try file path (only works if no redeploy since optimization)
     zip_path = assessment.optimization_zip_path
