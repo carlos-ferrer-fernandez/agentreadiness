@@ -16,7 +16,7 @@ class Settings(BaseSettings):
 
     # Stored as comma-separated string to avoid pydantic-settings JSON parsing.
     # Use the .cors_origins property to get the parsed list.
-    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://groundocs.com,https://www.groundocs.com,https://agentreadiness-web.onrender.com"
+    allowed_origins: str = "http://localhost:3000,http://localhost:5173,https://groundocs.com,https://www.groundocs.com,https://groundocs-web.onrender.com,https://agentreadiness-web.onrender.com"
 
     @property
     def cors_origins(self) -> list[str]:

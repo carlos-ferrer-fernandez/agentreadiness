@@ -1,7 +1,7 @@
 services:
   # Frontend (React + Vite) - FREE TIER
   - type: web
-    name: agentreadiness-web
+    name: groundocs-web
     runtime: static
     repo: https://github.com/carlos-ferrer-fernandez/agentreadiness
     branch: main
@@ -12,18 +12,18 @@ services:
       - key: NODE_VERSION
         value: 20.11.0
       - key: VITE_API_URL
-        value: https://agentreadiness-api.onrender.com
+        value: https://groundocs-api.onrender.com
     routes:
       - type: rewrite
         source: /api/*
-        destination: https://agentreadiness-api.onrender.com/api/*
+        destination: https://groundocs-api.onrender.com/api/*
       - type: rewrite
         source: /*
         destination: /index.html
 
   # Backend (FastAPI) - Docker runtime for Playwright/Chromium support
   - type: web
-    name: agentreadiness-api
+    name: groundocs-api
     runtime: docker
     plan: free
     repo: https://github.com/carlos-ferrer-fernandez/agentreadiness
