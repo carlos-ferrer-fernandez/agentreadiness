@@ -292,19 +292,18 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
                 optimizer.optimize_documentation(url, progress_callback=progress_callback),
                 timeout=600,  # 10 minutes max
             )
-            zip_path = await optimizer.create_zip_package(docs, metadata)
-
-            # Move ZIP to persistent storage directory (survives container restarts)
-            persist_dir = Path("/opt/render/project/src/data/zips")
-            if "RENDER" in os.environ:
-                persist_dir.mkdir(parents=True, exist_ok=True)
-            else:
-                persist_dir = Path("./data/zips")
-                persist_dir.mkdir(parents=True, exist_ok=True)
-
-            import shutil
-            persistent_path = str(persist_dir / f"{assessment_id}.zip")
-            shutil.move(zip_path, persistent_path)
+            # Serialize optimized docs to JSON for DB storage
+            # (Render has ephemeral disk — files are lost on redeploy)
+            docs_json = [
+                {
+                    "original_url": doc.original_url,
+                    "title": doc.title,
+                    "optimized_content": doc.optimized_content,
+                    "improvements": doc.improvements,
+                    "file_name": doc.file_name,
+                }
+                for doc in docs
+            ]
 
             # Update assessment with results
             result = await db.execute(
@@ -315,7 +314,7 @@ async def _run_optimization_pipeline(assessment_id: str, url: str):
                 assessment.optimization_status = "complete"
                 assessment.optimization_progress = 1.0
                 assessment.optimization_stage = "complete"
-                assessment.optimization_zip_path = persistent_path
+                assessment.optimization_docs = docs_json
                 assessment.optimization_metadata = metadata
                 assessment.optimization_completed_at = datetime.now(timezone.utc)
                 await db.commit()

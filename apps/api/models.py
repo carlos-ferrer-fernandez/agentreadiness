@@ -202,7 +202,8 @@ class Assessment(Base):
     optimization_status: Mapped[str | None] = mapped_column(String(20), nullable=True)  # queued, running, complete, failed
     optimization_progress: Mapped[float] = mapped_column(Float, default=0.0)
     optimization_stage: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    optimization_zip_path: Mapped[str | None] = mapped_column(String(2048), nullable=True)
+    optimization_zip_path: Mapped[str | None] = mapped_column(String(2048), nullable=True)  # Legacy — kept for compat
+    optimization_docs: Mapped[list | None] = mapped_column(JSON, nullable=True)  # Optimized doc content (survives redeploys)
     optimization_error: Mapped[str | None] = mapped_column(Text, nullable=True)
     optimization_metadata: Mapped[dict | None] = mapped_column(JSON, nullable=True)
     optimization_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)

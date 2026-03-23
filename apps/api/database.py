@@ -70,6 +70,7 @@ async def init_db():
         ("assessments", "optimization_metadata", "TEXT"),
         ("assessments", "optimization_error", "TEXT"),
         ("assessments", "optimization_zip_path", "VARCHAR(500)"),
+        ("assessments", "optimization_docs", "TEXT"),  # JSON — optimized content stored in DB
     ]
     async with engine.begin() as conn:
         for table, column, col_type in _migration_columns:
