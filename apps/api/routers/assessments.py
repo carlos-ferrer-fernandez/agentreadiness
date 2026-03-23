@@ -266,7 +266,13 @@ async def download_optimized_docs(assessment_id: str, db: AsyncSession = Depends
     # Prefer DB-stored docs (survives redeploys); fall back to file path
     if assessment.optimization_docs:
         try:
+            import json as _json
             from services.optimizer.document_optimizer import DocumentationOptimizer, OptimizedDoc
+
+            # SQLite TEXT column may store JSON as string; parse if needed
+            raw_docs = assessment.optimization_docs
+            if isinstance(raw_docs, str):
+                raw_docs = _json.loads(raw_docs)
 
             docs = [
                 OptimizedDoc(
@@ -276,9 +282,11 @@ async def download_optimized_docs(assessment_id: str, db: AsyncSession = Depends
                     improvements=d["improvements"],
                     file_name=d["file_name"],
                 )
-                for d in assessment.optimization_docs
+                for d in raw_docs
             ]
             metadata = assessment.optimization_metadata or {}
+            if isinstance(metadata, str):
+                metadata = _json.loads(metadata)
 
             optimizer = DocumentationOptimizer()
             zip_path = await optimizer.create_zip_package(docs, metadata)
