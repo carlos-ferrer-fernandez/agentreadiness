@@ -156,7 +156,7 @@ const beforeAfterSlides = [
       ],
     },
     after: {
-      label: 'After AgentReadiness',
+      label: 'After GrounDocs',
       lines: [
         { text: '## Import Contacts from a CSV File', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
@@ -189,7 +189,7 @@ const beforeAfterSlides = [
       ],
     },
     after: {
-      label: 'After AgentReadiness',
+      label: 'After GrounDocs',
       lines: [
         { text: '| Field      | Type     | Required | Values               |', type: 'table-header' as const },
         { text: '|------------|----------|----------|----------------------|', type: 'table-sep' as const },
@@ -218,7 +218,7 @@ const beforeAfterSlides = [
       ],
     },
     after: {
-      label: 'After AgentReadiness',
+      label: 'After GrounDocs',
       lines: [
         { text: '| Error              | Cause                | Fix                  |', type: 'table-header' as const },
         { text: '|--------------------|----------------------|----------------------|', type: 'table-sep' as const },
@@ -252,7 +252,7 @@ const beforeAfterSlides = [
       ],
     },
     after: {
-      label: 'After AgentReadiness',
+      label: 'After GrounDocs',
       lines: [
         { text: '## Create and Send an Email Template', type: 'heading-good' as const },
         { text: '', type: 'gap' as const },
@@ -286,7 +286,7 @@ const beforeAfterSlides = [
       ],
     },
     after: {
-      label: 'After AgentReadiness',
+      label: 'After GrounDocs',
       lines: [
         { text: '## Prerequisites', type: 'heading-good' as const },
         { text: '- Active account (free trial: 100 messages)', type: 'normal' as const },
@@ -578,7 +578,7 @@ export function LandingPage() {
               <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-semibold tracking-tight">AgentReadiness</span>
+              <span className="text-lg font-semibold tracking-tight">GrounDocs</span>
             </div>
 
             <div className="hidden md:flex items-center gap-1">
@@ -911,7 +911,7 @@ export function LandingPage() {
               Not just for developers
             </h2>
             <p className="text-muted-foreground text-lg">
-              Any business with online content that AI agents read can benefit from AgentReadiness.
+              Any business with online content that AI agents read can benefit from GrounDocs.
             </p>
           </div>
 
@@ -1338,7 +1338,7 @@ export function LandingPage() {
               />
               <FaqItem
                 q="Is this only for developer documentation?"
-                a="Not at all. AgentReadiness works for any content that AI agents read: API docs, help centers, knowledge bases, product pages, marketplace listings, FAQ pages. If you're a B2B SaaS, an e-commerce platform, a marketplace, or any business with online documentation, this is for you. AI agents don't just help developers; they help everyone find products and services."
+                a="Not at all. GrounDocs works for any content that AI agents read: API docs, help centers, knowledge bases, product pages, marketplace listings, FAQ pages. If you're a B2B SaaS, an e-commerce platform, a marketplace, or any business with online documentation, this is for you. AI agents don't just help developers; they help everyone find products and services."
               />
               <FaqItem
                 q="Where do these 20 rules come from?"
@@ -1390,7 +1390,7 @@ export function LandingPage() {
               <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
-              <span className="text-lg font-semibold">AgentReadiness</span>
+              <span className="text-lg font-semibold">GrounDocs</span>
             </div>
 
             <div className="flex items-center gap-6">
@@ -1409,7 +1409,7 @@ export function LandingPage() {
             </div>
 
             <p className="text-sm text-muted-foreground">
-              &copy; {new Date().getFullYear()} AgentReadiness
+              &copy; {new Date().getFullYear()} GrounDocs
             </p>
           </div>
         </div>

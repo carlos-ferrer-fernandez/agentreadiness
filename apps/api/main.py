@@ -1,5 +1,5 @@
 """
-AgentReadiness Platform - FastAPI Backend
+GrounDocs Platform - FastAPI Backend
 
 Main entry point with proper lifespan management, database initialization,
 and structured configuration.
@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Application lifespan: initialize DB on startup, close on shutdown."""
-    logger.info("Starting AgentReadiness API...")
+    logger.info("Starting GrounDocs API...")
     await init_db()
     logger.info("Database initialized")
     yield
-    logger.info("Shutting down AgentReadiness API...")
+    logger.info("Shutting down GrounDocs API...")
     await close_db()
 
 

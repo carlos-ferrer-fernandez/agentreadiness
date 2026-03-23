@@ -277,7 +277,7 @@ export function AssessmentResults() {
               <div className="w-8 h-8 bg-gradient-to-br from-primary to-primary/70 rounded-lg flex items-center justify-center">
                 <Zap className="w-5 h-5 text-primary-foreground" />
               </div>
-              <span className="text-xl font-bold">AgentReadiness</span>
+              <span className="text-xl font-bold">GrounDocs</span>
             </div>
             <Button variant="outline" size="sm" onClick={() => navigate('/')}>
               New Assessment

@@ -1,5 +1,5 @@
 """
-SQLAlchemy ORM models for AgentReadiness.
+SQLAlchemy ORM models for GrounDocs.
 """
 
 import uuid

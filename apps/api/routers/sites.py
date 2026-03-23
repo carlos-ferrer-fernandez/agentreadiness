@@ -189,8 +189,8 @@ async def get_verification_token(
     site = await _get_user_site(site_id, user, db)
     return {
         "token": site.verification_token,
-        "meta_tag": f'<meta name="agentreadiness-verification" content="{site.verification_token}">',
-        "dns_txt": f"agentreadiness-verification={site.verification_token}",
+        "meta_tag": f'<meta name="groundocs-verification" content="{site.verification_token}">',
+        "dns_txt": f"groundocs-verification={site.verification_token}",
     }
 
 

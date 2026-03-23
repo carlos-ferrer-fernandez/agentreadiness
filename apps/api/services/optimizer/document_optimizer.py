@@ -477,7 +477,7 @@ class DocumentationOptimizer:
                 return None
 
             context = await self._browser.new_context(
-                user_agent="AgentReadinessBot/1.0 (Documentation Analysis)"
+                user_agent="GrounDocsBot/1.0 (Documentation Analysis)"
             )
             page = await context.new_page()
 
@@ -1509,7 +1509,7 @@ If you are an AI agent:
 <div class="badge">Agent-Optimized</div>
 {html_body}
 <hr>
-<p style="font-size:0.8rem;color:var(--muted);text-align:center;">Optimized by <a href="https://agentreadiness.dev">AgentReadiness</a></p>
+<p style="font-size:0.8rem;color:var(--muted);text-align:center;">Optimized by <a href="https://groundocs.com">GrounDocs</a></p>
 </body>
 </html>"""
 
@@ -1580,7 +1580,7 @@ If you are an AI agent:
   <p style="margin:0.5rem 0 0;font-size:0.9rem;color:var(--muted);">
     This delivery includes the top {pages_count} pages. Your site has more content available.
     Additional pages are <strong>included in your purchase</strong> at no extra cost.
-    Email <a href="mailto:support@agentreadiness.dev">support@agentreadiness.dev</a> to request them.
+    Email <a href="mailto:support@groundocs.com">support@groundocs.com</a> to request them.
   </p>
 </div>"""
 
@@ -1639,7 +1639,7 @@ If you are an AI agent:
 <div class="package-item"><strong>llms.txt</strong> Agent entry point. Deploy at your documentation root.</div>
 <div class="package-item"><strong>README.md</strong> Overview, stats, and deployment instructions</div>
 
-<div class="footer">Optimized by <a href="https://agentreadiness.dev">AgentReadiness</a></div>
+<div class="footer">Optimized by <a href="https://groundocs.com">GrounDocs</a></div>
 </body>
 </html>"""
 
@@ -1670,7 +1670,7 @@ linked-to pages first).
 
 Your site likely has more pages. **Additional pages are included in your
 purchase** — just reply to your confirmation email or contact
-support@agentreadiness.dev and we'll optimize the rest at no extra charge.
+support@groundocs.com and we'll optimize the rest at no extra charge.
 
 No additional payment required. This is included in your one-time $199 purchase.
 """
@@ -1722,7 +1722,7 @@ Gemini, KimiClaw). Key changes:
 
 ---
 
-*Optimized by [AgentReadiness](https://agentreadiness.dev)*
+*Optimized by [GrounDocs](https://groundocs.com)*
 """
 
     def _generate_deployment_guide(self) -> str:
@@ -1769,10 +1769,10 @@ about your product. You should see:
 
 ## Step 5: Monitor
 
-Re-run your AgentReadiness assessment periodically to track improvements
+Re-run your GrounDocs assessment periodically to track improvements
 in your agent-readiness score.
 
 ---
 
-*Questions? Visit https://agentreadiness.dev*
+*Questions? Visit https://groundocs.com*
 """
