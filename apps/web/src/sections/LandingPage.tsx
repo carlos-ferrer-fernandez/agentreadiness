@@ -745,7 +745,7 @@ export function LandingPage() {
                   <Button
                     size="lg"
                     onClick={handleAnalyze}
-                    disabled={isAssessing || !url || !email}
+                    disabled={isAssessing || !url || !email || !email.includes('@') || !email.includes('.')}
                     className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white h-12"
                   >
                     {isAssessing ? (
