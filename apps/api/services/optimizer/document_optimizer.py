@@ -80,6 +80,18 @@ CORE BEHAVIOR
   - version statements
   - literal strings that matter for retrieval
 
+PAGE-TYPE BEHAVIOR
+- PAGE_TYPE is authoritative.
+- If PAGE_TYPE = content:
+  - Treat the page as a normal documentation page.
+  - Preserve full technical depth and detail.
+- If PAGE_TYPE = hub:
+  - Treat the page as a landing page / index / navigation hub.
+  - Your job is to clean structure, preserve categories, preserve link text, preserve one-line descriptions, and improve heading hierarchy and formatting.
+  - Do NOT turn a hub page into a tutorial, conceptual deep-dive, API reference, troubleshooting page, or code-heavy page unless the source already contains that content.
+  - Do NOT add technical depth, examples, errors, workflows, prerequisites, or explanatory sections that are not explicitly present.
+  - For hub pages, realistic improvements are structural and formatting improvements, not invented substance.
+
 ZERO FABRICATION
 - Never add facts that are not supported by the source or explicit user metadata.
 - Never invent API endpoints, SDK calls, parameters, defaults, limits, versions, dates, error codes, outputs, responses, prerequisites, or migration steps.
@@ -88,6 +100,36 @@ ZERO FABRICATION
 - Never add expected outputs unless they are present in the source.
 - Never add a Prerequisites section unless prerequisites are explicitly stated in the source.
 - If a formatting rule would require invented content, skip that formatting rule rather than fabricate.
+
+LINK FIDELITY RULES
+- Preserve link targets exactly when they are explicitly provided in the source or user metadata.
+- If the user provides an EXTRACTED_LINKS block, treat it as authoritative for link destinations.
+- If a link target cannot be determined from the source, NEVER guess or fabricate a URL.
+- NEVER default unresolved links to PAGE_URL.
+- NEVER assign multiple distinct links to the same URL unless the source explicitly shows that they share the same target.
+- If a target is unresolved:
+  - prefer a same-document anchor if the link clearly points to a section present in the output
+  - otherwise use a safe local fragment based on the descriptive text, such as [Link Text](#link-text)
+  - if even that would be misleading, keep the label as plain text rather than inventing a URL
+- Preserve link intent even when the exact external target is unavailable.
+
+MISSING / THIN CONTENT RULES
+- If the source briefly mentions a topic but does not provide details, include only a brief faithful mention or a link/reference if available.
+- Do NOT expand thin mentions into explanatory paragraphs.
+- Do NOT write meta-commentary about what the source contains.
+- Never refer to:
+  - "the source page"
+  - "the source"
+  - "this page indicates"
+  - "the documentation states"
+  - or similar framing
+- The output IS the documentation, not commentary about the documentation.
+
+TRUNCATION RULES
+- If the source appears truncated or ends abruptly mid-section, do NOT attempt to complete, summarize, infer, or describe the missing remainder.
+- End the document cleanly at the last complete section supported by the source.
+- Do NOT add placeholder paragraphs for missing material.
+- Do NOT write sentences that merely announce that a topic exists without source-backed content.
 
 ALLOWED IMPROVEMENTS
 You MAY:
@@ -125,6 +167,7 @@ FRONTMATTER RULES
 - Include version only if it is explicitly stated in the source. Otherwise omit it.
 - tags must be derived from concepts explicitly present in the source.
 - prerequisites must contain only prerequisites explicitly present in the source; otherwise use an empty list.
+- An empty prerequisites list is correct metadata, not a substantive section that needs elaboration.
 
 CONTENT-PRESERVATION RULES
 - Preserve coverage, depth, and specificity.
@@ -133,7 +176,9 @@ CONTENT-PRESERVATION RULES
 - Do not merge multiple distinct concepts into one generic section.
 - If you convert prose to a table, keep any important nuance in prose below the table.
 - If the source contains a landing page or link hub, preserve it as a landing page or link hub. Do not turn it into a tutorial.
-- Padding with restatements is worse than being concise. Never restate the same information in multiple section structures just to increase output length. If you have already covered a fact, do not repeat it in a "navigation map", "page scope", "link intent", or summary-of-sections block.
+- Padding with restatements is worse than being concise. Never restate the same information in multiple section structures just to increase output length.
+- If you have already covered a fact, do not repeat it in a "navigation map", "page scope", "link intent", or summary-of-sections block.
+- MIN_OUTPUT_WORD_COUNT is a completeness guard, not a license to pad, repeat, or invent content.
 
 STRUCTURE AND STYLE
 - Use clear H1 → H2 → H3 hierarchy.
@@ -164,6 +209,10 @@ Verify all of the following:
 - No invented technical content was added.
 - No substantive source content was removed.
 - Output is not shorter in substance than the source.
+- If PAGE_TYPE = hub, the output remains a hub/index page and does not invent depth.
+- No meta-commentary about "the source" appears anywhere.
+- No distinct unresolved links were collapsed onto PAGE_URL or the same fabricated URL.
+- If the source is truncated, the document ends cleanly at the last supported complete section.
 - Output starts with frontmatter and contains only Markdown.
 """
 
@@ -377,7 +426,8 @@ class DocumentationOptimizer:
 
                     # Discover new links (both absolute and relative)
                     for link in page.links:
-                        normalized = urldefrag(link)[0].rstrip('/')
+                        href = link['href'] if isinstance(link, dict) else link
+                        normalized = urldefrag(href)[0].rstrip('/')
                         if normalized and normalized not in visited:
                             parsed_link = urlparse(normalized)
                             if parsed_link.netloc == base_domain:
@@ -557,7 +607,7 @@ class DocumentationOptimizer:
         for h in (main or soup).find_all(['h1', 'h2', 'h3', 'h4']):
             headings.append(h.get_text(strip=True))
 
-        # Collect ALL links from the page (not just main) for crawl discovery
+        # Collect ALL links from the page with text + URL for link fidelity
         links = []
         skip_patterns = re.compile(
             r'(\.png|\.jpg|\.gif|\.svg|\.css|\.js|\.woff|\.pdf|'
@@ -570,8 +620,9 @@ class DocumentationOptimizer:
             if skip_patterns.search(href):
                 continue
             absolute = urljoin(url, href)
-            if absolute.startswith('http'):
-                links.append(absolute)
+            text = a.get_text(strip=True)
+            if absolute.startswith('http') and text:
+                links.append({'text': text, 'href': absolute})
 
         return DocPage(
             url=url,
@@ -916,6 +967,119 @@ class DocumentationOptimizer:
             return best_lang
         return 'en'
 
+    @staticmethod
+    def _detect_page_type(page: 'DocPage', analysis: 'PageAnalysis') -> str:
+        """Classify page as 'hub' (navigation/index) or 'content' (documentation).
+
+        Uses a scoring heuristic: hub pages have many links, little prose,
+        no code blocks, and titles that look like category names.
+        Content pages override if they have code, tables, or detailed steps.
+        """
+        content = page.content
+        link_count = len(page.links) if page.links else 0
+        code_block_count = len(page.code_blocks) if page.code_blocks else 0
+        word_count = analysis.word_count
+        heading_count = analysis.heading_count
+
+        # Count long paragraphs (80+ words) — proxy for explanatory prose
+        paragraphs = content.split('\n\n')
+        long_paragraph_count = sum(
+            1 for p in paragraphs
+            if len(p.split()) >= 80 and not p.strip().startswith(('|', '-', '*', '#', '```'))
+        )
+
+        # Count ordered list items (proxy for step-by-step procedures)
+        import re
+        ordered_steps = len(re.findall(r'^\d+\.', content, re.MULTILINE))
+
+        # Check title/headings for hub-like signals
+        title = (page.title or '').lower()
+        headings_text = ' '.join(page.headings or []).lower()
+        combined = title + ' ' + headings_text
+        hub_title_terms = [
+            'overview', 'get started', 'getting started', 'docs', 'guides',
+            'products', 'topics', 'use cases', 'resources', 'documentation',
+        ]
+        title_hub_signal = any(term in combined for term in hub_title_terms)
+
+        hub_score = 0
+        content_score = 0
+
+        # Hub signals
+        if link_count >= 8:
+            hub_score += 2
+        if word_count > 0 and (word_count / max(link_count, 1)) <= 40:
+            hub_score += 2
+        if code_block_count == 0:
+            hub_score += 1
+        if not analysis.has_parameter_tables:
+            hub_score += 1
+        if ordered_steps <= 3:
+            hub_score += 1
+        if long_paragraph_count <= 2:
+            hub_score += 1
+        if title_hub_signal:
+            hub_score += 1
+
+        # Content signals (strong overrides)
+        if code_block_count >= 1:
+            content_score += 3
+        if analysis.has_parameter_tables:
+            content_score += 2
+        if ordered_steps >= 4:
+            content_score += 2
+        if long_paragraph_count >= 3:
+            content_score += 2
+        if analysis.has_error_docs:
+            content_score += 2
+
+        # Content overrides hub
+        if content_score >= 4:
+            return 'content'
+        if hub_score >= 5 and content_score <= 2:
+            return 'hub'
+        # Conservative default
+        return 'content'
+
+    @staticmethod
+    def _extract_links(page: 'DocPage') -> str:
+        """Build an EXTRACTED_LINKS block from the page's link data.
+
+        Returns a formatted string listing visible text -> URL or UNRESOLVED.
+        """
+        if not page.links:
+            return 'None found'
+
+        lines = []
+        seen = set()
+        for link in page.links[:50]:  # Cap at 50 links
+            if isinstance(link, dict):
+                text = link.get('text', '').strip()
+                href = link.get('href', '').strip()
+            elif isinstance(link, str):
+                text = link
+                href = ''
+            else:
+                continue
+
+            if not text or text in seen:
+                continue
+            seen.add(text)
+
+            if href and href != '#' and not href.startswith('javascript:'):
+                lines.append(f'- {text} -> {href}')
+            else:
+                lines.append(f'- {text} -> UNRESOLVED')
+
+        return '\n'.join(lines) if lines else 'None found'
+
+    @staticmethod
+    def _detect_truncation(content: str, max_chars: int) -> str:
+        """Detect if content was likely truncated at the character limit."""
+        if len(content) >= max_chars - 100:
+            return 'possibly_truncated'
+        return 'complete'
+
     def _build_optimization_prompt(
         self,
         page: DocPage,
@@ -940,6 +1104,12 @@ class DocumentationOptimizer:
         target_language = detected_lang
 
         headings_str = ', '.join(page.headings[:20]) if page.headings else 'None'
+        page_type = self._detect_page_type(page, analysis)
+        content_limit = 12000
+        source_content_status = self._detect_truncation(page.content, content_limit)
+        extracted_links = self._extract_links(page)
+        link_count = len(page.links) if page.links else 0
+        code_block_count = len(page.code_blocks) if page.code_blocks else 0
 
         return f"""## JOB METADATA
 
@@ -948,26 +1118,39 @@ DETECTED_PAGE_LANGUAGE: {detected_lang}
 TODAY_UTC: {today_utc}
 PAGE_TITLE: {page.title}
 PAGE_URL: {page.url}
+PAGE_TYPE: {page_type}
+SOURCE_CONTENT_STATUS: {source_content_status}
 ORIGINAL_WORD_COUNT: {analysis.word_count}
 MIN_OUTPUT_WORD_COUNT: {analysis.word_count}
 HEADINGS_FOUND: {headings_str}
+LINK_COUNT: {link_count}
+CODE_BLOCK_COUNT: {code_block_count}
 
 ## TASK
 
 Rewrite the page into production-ready Markdown optimized for AI agent consumption and RAG retrieval.
 
-This is a rewrite, NOT a summary.
+Follow these page-specific rules:
+- Treat PAGE_TYPE as authoritative.
+- If PAGE_TYPE = hub:
+  - Preserve the page as a hub / index / navigation page.
+  - Focus on clean heading hierarchy, faithful link formatting, concise descriptions, and structural cleanup.
+  - Do NOT add technical depth, tutorials, workflows, code examples, troubleshooting, prerequisites, or error documentation unless explicitly present in the source.
+- If PAGE_TYPE = content:
+  - Preserve all technical depth, detail, examples, warnings, and retrieval-relevant literals.
+- MIN_OUTPUT_WORD_COUNT is a completeness guard against omission, not a target to hit by padding.
+- If SOURCE_CONTENT_STATUS = possibly_truncated, or if the content ends abruptly mid-section, stop cleanly at the last complete section.
+- Do NOT complete missing sections.
+- Do NOT write placeholder paragraphs.
+- Do NOT refer to "the source", "the source page", or similar meta-language.
+- If a topic is only mentioned briefly, keep it brief unless the source provides more detail.
 
-Non-negotiable requirements:
-- Preserve all unique technical content from the source.
-- Preserve technical depth, specificity, examples, links, warnings, constraints, and edge cases.
-- Do not shorten or compress the page into an outline.
-- Target output length: at least MIN_OUTPUT_WORD_COUNT words, unless the source clearly contains duplicated navigation/footer boilerplate. Even then, preserve all unique documentation content.
-- IMPORTANT: Padding with restatements is WORSE than being concise. Never restate the same facts in multiple section structures just to increase length. If the source is a short landing page, the output should be a short, well-structured landing page. Do not add "navigation map", "page scope", "link intent", or meta-commentary sections that repackage existing content.
-- If TARGET_LANGUAGE is provided, output in TARGET_LANGUAGE even if the crawled page appears in another language.
-- Use TODAY_UTC exactly for frontmatter.last_updated.
-- Omit version unless it is explicitly stated in the source.
-- Output only the final Markdown document.
+Link handling rules:
+- Use explicit link targets exactly as provided.
+- If EXTRACTED_LINKS includes a resolved URL, use it.
+- If a link target is unresolved or missing, NEVER guess and NEVER default to PAGE_URL.
+- For unresolved targets, use a same-page anchor when justified, or a safe local fragment based on the visible link text.
+- Never map multiple distinct links to the same URL unless that target is explicitly present in the source.
 
 When applying optimization rules, use this priority:
 1. Source fidelity and completeness
@@ -1071,9 +1254,13 @@ Apply these rules ONLY when they can be satisfied from the source content itself
 
 {terminology_context}
 
+## EXTRACTED LINKS
+
+{extracted_links}
+
 ## ORIGINAL CONTENT
 
-{page.content[:12000]}
+{page.content[:content_limit]}
 
 ## EXISTING CODE EXAMPLES
 
@@ -1091,7 +1278,10 @@ Your output must:
 - use TARGET_LANGUAGE
 - use TODAY_UTC exactly for last_updated
 - omit version if not explicitly present in the source
-- avoid any invented facts"""
+- avoid any invented facts
+- if PAGE_TYPE = hub, remain a hub page with no invented depth
+- if SOURCE_CONTENT_STATUS = possibly_truncated, end cleanly at last complete section
+- never refer to "the source page" or "the source" — the output IS the documentation"""
 
     # =========================================================================
     # LLMS.TXT GENERATION
@@ -1278,7 +1468,9 @@ If you are an AI agent:
                 if improvements:
                     return improvements[:8]  # Cap at 8 improvements
 
-        # Fallback: static analysis-based improvements (less specific)
+        # Fallback: static analysis-based improvements
+        # Only claim improvements that are verifiable — never claim content was
+        # "added" if the source didn't have the raw material for it.
         improvements = []
 
         if analysis.has_vague_references:
@@ -1291,17 +1483,23 @@ If you are an AI agent:
             improvements.append("Completed code examples with imports, setup, and expected output")
         if analysis.has_implicit_pronouns:
             improvements.append("Replaced vague language with explicit, precise statements")
-        if not analysis.has_error_docs:
-            improvements.append("Added structured error documentation with codes, causes, and fixes")
+        # Only claim error docs improvement if the source HAD error content to restructure
+        if not analysis.has_error_docs and analysis.has_code_examples:
+            # Check if the optimized output actually contains error content
+            if 'error' in content.lower() and ('| error' in content.lower() or '| code' in content.lower()):
+                improvements.append("Structured error documentation with codes, causes, and fixes")
         if not analysis.has_frontmatter:
             improvements.append("Added YAML frontmatter metadata (title, version, tags)")
-        if not analysis.has_prerequisites:
+        # Don't claim "added prerequisites" if they're empty — that's just correct metadata
+        if not analysis.has_prerequisites and 'prerequisites:' in content and '- ' in content.split('prerequisites:')[1][:100] if 'prerequisites:' in content else False:
             improvements.append("Added explicit prerequisites section")
-        if not analysis.has_expected_output:
-            improvements.append("Added expected outputs for API calls and code examples")
+        # Only claim expected outputs if the output actually contains them
+        if not analysis.has_expected_output and analysis.has_code_examples:
+            if '```' in content and ('output' in content.lower() or 'response' in content.lower() or 'returns' in content.lower()):
+                improvements.append("Added expected outputs for API calls and code examples")
         if analysis.has_marketing_language:
             improvements.append("Stripped marketing language, technical precision only")
-        if not analysis.has_version_info:
+        if not analysis.has_version_info and 'version' in content.lower():
             improvements.append("Added version context and clarity")
 
         if not improvements:
