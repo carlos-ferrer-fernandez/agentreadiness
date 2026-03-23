@@ -1870,7 +1870,7 @@ Your site likely has more pages. **Additional pages are included in your
 purchase** — just reply to your confirmation email or contact
 support@groundocs.com and we'll optimize the rest at no extra charge.
 
-No additional payment required. This is included in your one-time $199 purchase.
+No additional payment required. This is included in your one-time $99 purchase.
 """
 
         return f"""# Agent-Optimized Documentation

@@ -418,7 +418,7 @@ export function AssessmentResults() {
                 size="sm"
                 onClick={() => useAssessmentStore.getState().showPaywallModal()}
               >
-                Get Optimized Docs · $199
+                Get Optimized Docs · $99
               </Button>
             </div>
           </motion.div>
@@ -632,7 +632,7 @@ export function AssessmentResults() {
                     </p>
                     <Button onClick={() => useAssessmentStore.getState().showPaywallModal()}>
                       <Unlock className="w-4 h-4 mr-2" />
-                      Get Optimized Docs · $199 One-Time
+                      Get Optimized Docs · $99 One-Time
                     </Button>
                   </div>
                 </div>
@@ -746,8 +746,8 @@ export function AssessmentResults() {
           <div className="mt-4 space-y-4">
             <div className="text-center">
               <div className="flex items-baseline justify-center gap-2">
-                <span className="text-3xl font-bold">$199</span>
-                <span className="text-lg text-muted-foreground">(€172)</span>
+                <span className="text-3xl font-bold">$99</span>
+                <span className="text-lg text-muted-foreground">(€84)</span>
               </div>
               <p className="text-sm font-medium text-emerald-600 mt-2">
                 One-time payment · No subscription · No monthly fees
@@ -776,7 +776,7 @@ export function AssessmentResults() {
               ) : (
                 <>
                   <CreditCard className="w-4 h-4 mr-2" />
-                  Pay $199 — One-Time, No Subscription
+                  Pay $99 — One-Time, No Subscription
                 </>
               )}
             </Button>

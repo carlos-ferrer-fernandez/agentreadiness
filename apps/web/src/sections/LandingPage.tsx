@@ -1074,7 +1074,7 @@ export function LandingPage() {
                 icon: Download,
                 title: 'Download Fixed Content',
                 description: 'Every page rewritten applying all 20 rules. Download a ZIP with optimized content + llms.txt. Deploy in minutes.',
-                highlight: '$199 one-time',
+                highlight: '$99 one-time',
               },
             ].map((item, index) => (
               <motion.div
@@ -1203,7 +1203,7 @@ export function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs">Pricing</Badge>
             <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">
-              Free score first. Pay only if you want the optimized docs. $199 one-time — no subscription, no monthly fees, no engagement.
+              Free score first. Pay only if you want the optimized docs. $99 one-time — no subscription, no monthly fees, no engagement.
             </p>
           </div>
 
@@ -1263,8 +1263,8 @@ export function LandingPage() {
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-1">Optimized Documentation</h3>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">$199</span>
-                  <span className="text-sm text-muted-foreground">(€172)</span>
+                  <span className="text-4xl font-bold">$99</span>
+                  <span className="text-sm text-muted-foreground">(€84)</span>
                 </div>
                 <p className="text-sm font-medium text-emerald-600 mt-2">
                   One-time payment · No subscription · No monthly fees
@@ -1361,11 +1361,11 @@ export function LandingPage() {
               />
               <FaqItem
                 q="What do I get for free vs. the paid product?"
-                a="The free scan gives you your score and a rule-by-rule breakdown showing exactly what's passing and failing. The paid product ($199 one-time) gives you the actual optimized content files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy. No subscription, no recurring fees — you pay once."
+                a="The free scan gives you your score and a rule-by-rule breakdown showing exactly what's passing and failing. The paid product ($99 one-time) gives you the actual optimized content files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy. No subscription, no recurring fees — you pay once."
               />
               <FaqItem
                 q="How is the price calculated?"
-                a="It's a flat $199 (€172) for everyone. No tiers, no per-page pricing, no complexity. Every page gets individually analyzed and rewritten applying all 20 rules. One-time payment — no subscription, no monthly fees, no engagement. You pay once, download your optimized docs, and you're done."
+                a="It's a flat $99 (€84) for everyone. No tiers, no per-page pricing, no complexity. Every page gets individually analyzed and rewritten applying all 20 rules. One-time payment — no subscription, no monthly fees, no engagement. You pay once, download your optimized docs, and you're done."
               />
               <FaqItem
                 q="How long does it take?"

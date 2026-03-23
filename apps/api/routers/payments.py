@@ -61,7 +61,7 @@ async def create_checkout_session(
     if assessment.has_paid:
         raise HTTPException(status_code=400, detail="Already purchased")
 
-    price_eur = assessment.estimated_price_eur or 172
+    price_eur = assessment.estimated_price_eur or 84
     amount_cents = int(price_eur * 100)  # Stripe requires integer cents
 
     if amount_cents < 50:

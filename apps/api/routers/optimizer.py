@@ -38,7 +38,7 @@ class PricingResponse(BaseModel):
 
 @router.post("/pricing", response_model=PricingResponse)
 async def get_pricing(request: PricingRequest):
-    """Get pricing estimate. Flat $199 (€172) for everyone.
+    """Get pricing estimate. Flat $99 (€84) for everyone.
 
     No tiers, no per-page pricing. One-time payment.
     """
@@ -53,7 +53,7 @@ async def get_pricing(request: PricingRequest):
 
     return PricingResponse(
         estimated_pages=estimated_pages,
-        price_eur=172,  # Flat €172 ($199 USD)
+        price_eur=84,  # Flat €84 ($99 USD)
     )
 
 

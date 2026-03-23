@@ -153,7 +153,7 @@ export function OptimizerLanding() {
             >
               We rewrite your documentation for AI agent consumption.
               You get optimized markdown files, ready to deploy.
-              <strong> $199 one-time — no subscription, no monthly fees.</strong>
+              <strong> $99 one-time — no subscription, no monthly fees.</strong>
             </motion.p>
           </div>
         </div>
@@ -368,8 +368,8 @@ export function OptimizerLanding() {
             <Badge className="w-fit mb-4">One-Time Payment</Badge>
             <h3 className="text-lg font-semibold">Optimized Documentation</h3>
             <div className="mt-2 flex items-baseline gap-2">
-              <span className="text-4xl font-bold">$199</span>
-              <span className="text-lg text-muted-foreground">(€172)</span>
+              <span className="text-4xl font-bold">$99</span>
+              <span className="text-lg text-muted-foreground">(€84)</span>
             </div>
             <p className="text-sm font-medium text-primary mt-2">
               No subscription · No monthly fees · No engagement
