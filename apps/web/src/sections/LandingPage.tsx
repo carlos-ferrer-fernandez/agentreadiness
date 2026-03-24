@@ -665,10 +665,10 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.1 }}
-              className="text-4xl md:text-5xl lg:text-[3.5rem] font-bold tracking-tight leading-[1.1] mb-6"
+              className="font-serif text-4xl md:text-5xl lg:text-[3.5rem] tracking-[-0.01em] leading-[1.1] mb-6"
             >
               Make AI agents{' '}
-              <span className="bg-gradient-to-r from-emerald-600 to-cyan-600 dark:from-emerald-400 dark:to-cyan-400 bg-clip-text text-transparent">
+              <span className="text-forest">
                 find you and recommend you
               </span>
             </motion.h1>
