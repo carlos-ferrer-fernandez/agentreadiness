@@ -92,6 +92,25 @@ PAGE-TYPE BEHAVIOR
   - Do NOT add technical depth, examples, errors, workflows, prerequisites, or explanatory sections that are not explicitly present.
   - For hub pages, realistic improvements are structural and formatting improvements, not invented substance.
 
+SITE CHROME AND BOILERPLATE
+- Exclude non-content page chrome unless it is central to the page's purpose.
+- Do NOT preserve:
+  - skip links
+  - logo links
+  - home links
+  - generic sign-in or create-account prompts
+  - footer, support, sales, legal, or contact links
+  - docs framework credits or tooling credits (for example, Markdoc)
+  - repeated global navigation blocks
+  - generic cross-site navigation repeated on many pages
+  - links to llms.txt unless the page is specifically about machine-readable docs or agent navigation
+- Preserve only content that contributes to the page's actual documentation meaning, task completion, or page-specific navigation intent.
+
+UI ARTIFACT FILTERING
+- Do not preserve interface controls as documentation content unless they carry meaningful standalone information.
+- Exclude tabs, chips, filters, toggles, carousels, pagination labels, search prompts, and visual navigation controls when they are merely UI selectors.
+- If labels such as "Most popular", "Online", "In-person", "Subscriptions", or similar appear without substantive explanatory content, omit them rather than listing them as content bullets.
+
 ZERO FABRICATION
 - Never add facts that are not supported by the source or explicit user metadata.
 - Never invent API endpoints, SDK calls, parameters, defaults, limits, versions, dates, error codes, outputs, responses, prerequisites, or migration steps.
@@ -112,6 +131,19 @@ LINK FIDELITY RULES
   - otherwise use a safe local fragment based on the descriptive text, such as [Link Text](#link-text)
   - if even that would be misleading, keep the label as plain text rather than inventing a URL
 - Preserve link intent even when the exact external target is unavailable.
+
+NAVIGATION CLEANUP
+- Preserve page-relevant links, but avoid repeating global site navigation.
+- Remove duplicate navigation blocks that point to the same destinations with no added meaning.
+- Remove self-links unless they serve as meaningful same-page anchors.
+- If multiple navigation sections overlap heavily, keep the most page-relevant one and omit the rest.
+- For hub pages, prefer one concise related-links section over multiple overlapping navigation or footer-style sections.
+
+LINK PRESENTATION
+- Avoid isolated standalone links between paragraphs unless the source clearly uses that format intentionally and meaningfully.
+- Fold orphan links into surrounding prose or a short related-links list when that improves clarity without changing meaning.
+- On hub pages, prefer compact, well-labeled link groups over disconnected one-line link fragments.
+- Do not leave bare navigational links floating between sections when they can be integrated cleanly into the surrounding structure.
 
 MISSING / THIN CONTENT RULES
 - If the source briefly mentions a topic but does not provide details, include only a brief faithful mention or a link/reference if available.
@@ -169,6 +201,12 @@ FRONTMATTER RULES
 - prerequisites must contain only prerequisites explicitly present in the source; otherwise use an empty list.
 - An empty prerequisites list is correct metadata, not a substantive section that needs elaboration.
 
+DESCRIPTION AND SCOPE DISCIPLINE
+- The frontmatter description must be conservative and limited to the actual page scope.
+- For hub pages, describe the page as an overview, landing page, index, or collection of related resources when appropriate.
+- Do not imply comprehensive coverage unless the source clearly provides it.
+- Do not use wording that makes the page sound more complete, polished, or exhaustive than the source supports.
+
 CONTENT-PRESERVATION RULES
 - Preserve coverage, depth, and specificity.
 - Do not reduce a detailed section to bullets if the source contains explanatory prose.
@@ -214,6 +252,9 @@ Verify all of the following:
 - No distinct unresolved links were collapsed onto PAGE_URL or the same fabricated URL.
 - If the source is truncated, the document ends cleanly at the last supported complete section.
 - Output starts with frontmatter and contains only Markdown.
+- Site chrome, footer junk, and generic global navigation were removed unless clearly relevant.
+- UI controls or filter labels were not preserved as documentation content unless they carry standalone meaning.
+- Duplicate nav blocks, orphan links, and unnecessary self-links were cleaned up.
 """
 
 
@@ -591,6 +632,10 @@ class DocumentationOptimizer:
             for tag in main.find_all(['nav', 'footer', 'script', 'style', 'noscript']):
                 tag.decompose()
 
+        # Step 3: Strip site chrome deterministically (before text extraction)
+        if main:
+            self._strip_site_chrome(main)
+
         content = main.get_text(separator='\n', strip=True) if main else ""
 
         code_blocks = []
@@ -632,6 +677,46 @@ class DocumentationOptimizer:
             headings=headings,
             links=links
         )
+
+    @staticmethod
+    def _strip_site_chrome(container) -> None:
+        """Deterministically remove site chrome / boilerplate from parsed HTML.
+
+        This runs BEFORE text extraction so the GPT prompt never sees
+        skip-links, logo links, framework credits, or repeated nav blocks.
+        """
+        # 1. Remove skip-links (e.g. "Skip to content")
+        for a in container.find_all('a', string=re.compile(
+            r'skip\s+to\s+(content|main|navigation)',
+            re.IGNORECASE
+        )):
+            a.decompose()
+
+        # 2. Remove elements whose text is pure chrome
+        chrome_patterns = re.compile(
+            r'^(Skip to content|Home|Read llms\.txt|The .+ logo|'
+            r'Create account|Sign in|Sign up|Log in|Contact [Ss]ales|'
+            r'Markdoc|Built with .+|Powered by .+)$',
+            re.IGNORECASE
+        )
+        for el in container.find_all(string=chrome_patterns):
+            parent = el.parent
+            if parent and parent.name in ('a', 'span', 'div', 'p', 'li'):
+                parent.decompose()
+
+        # 3. Remove breadcrumb / global-nav containers
+        for el in container.find_all(class_=re.compile(
+            r'(breadcrumb|global-nav|site-nav|site-header|'
+            r'top-bar|topbar|cookie-banner|footer-nav)',
+            re.IGNORECASE
+        )):
+            el.decompose()
+
+        # 4. Remove aria-label="breadcrumb" or role="navigation" at top-level
+        for el in container.find_all(attrs={'aria-label': re.compile(
+            r'breadcrumb', re.IGNORECASE
+        )}):
+            el.decompose()
 
     # =========================================================================
     # DEEP ANALYSIS
@@ -1125,6 +1210,9 @@ MIN_OUTPUT_WORD_COUNT: {analysis.word_count}
 HEADINGS_FOUND: {headings_str}
 LINK_COUNT: {link_count}
 CODE_BLOCK_COUNT: {code_block_count}
+MAIN_CONTENT_ONLY: true
+REMOVE_SITE_CHROME: true
+REMOVE_GLOBAL_NAV_DUPLICATES: true
 
 ## TASK
 
@@ -1144,6 +1232,10 @@ Follow these page-specific rules:
 - Do NOT write placeholder paragraphs.
 - Do NOT refer to "the source", "the source page", or similar meta-language.
 - If a topic is only mentioned briefly, keep it brief unless the source provides more detail.
+
+Additional cleanup rules:
+- Remove site chrome, footer links, repeated global navigation, and UI control labels unless they are clearly part of the page's substantive documentation.
+- Prefer page-relevant links over global site navigation.
 
 Link handling rules:
 - Use explicit link targets exactly as provided.
