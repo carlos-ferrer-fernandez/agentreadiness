@@ -1150,15 +1150,15 @@ export function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.02 }}
-                className="bg-card p-4 rounded-xl border hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group"
+                className="bg-card p-4 rounded-xl border hover:border-forest/30 hover:bg-forest-light/30 transition-all group"
               >
                 <div className="flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-emerald-500/10 transition-colors">
-                    <rule.icon className="w-4 h-4 text-muted-foreground group-hover:text-emerald-600 transition-colors" />
+                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center flex-shrink-0 group-hover:bg-forest-light transition-colors">
+                    <rule.icon className="w-4 h-4 text-muted-foreground group-hover:text-forest transition-colors" />
                   </div>
                   <div>
-                    <p className="font-medium text-sm leading-tight">
-                      <span className="text-muted-foreground mr-1 text-xs">#{rule.id}</span>
+                    <p className="font-mono text-xs leading-tight text-foreground">
+                      <span className="text-muted-foreground mr-1">#{rule.id}</span>
                       {rule.name}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1 leading-relaxed">
