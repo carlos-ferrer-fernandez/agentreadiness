@@ -171,7 +171,11 @@ async def verify_promo_code(
     background_tasks: BackgroundTasks,
     db: AsyncSession = Depends(get_db),
 ):
-    """Verify a promo code, unlock the assessment, and trigger optimization."""
+    """Verify a promo code and reduce price to €1 for testing.
+
+    Instead of bypassing Stripe, promo codes set the price to €1
+    so the full payment + optimization pipeline is always tested.
+    """
     result = await db.execute(select(Assessment).where(Assessment.id == assessment_id))
     assessment = result.scalar_one_or_none()
     if not assessment:
@@ -181,20 +185,16 @@ async def verify_promo_code(
     if request.code.upper() not in valid_promos:
         raise HTTPException(status_code=400, detail="Invalid promo code")
 
-    assessment.has_paid = True
+    # Set price to €1 — user still goes through Stripe checkout
+    assessment.estimated_price_eur = 1
     assessment.paid_plan = "promo"
-    assessment.optimization_status = "queued"
     await db.flush()
 
-    # Trigger optimization in background (same pipeline as paid flow)
-    from routers.payments import _run_optimization_pipeline
-    background_tasks.add_task(
-        _run_optimization_pipeline,
-        assessment_id,
-        assessment.url,
-    )
-
-    return {"success": True, "message": "Promo code applied! Your optimized docs are being generated."}
+    return {
+        "success": True,
+        "discounted_price_eur": 1,
+        "message": "Promo code applied! Price reduced to €1. Proceed to checkout.",
+    }
 
 
 @router.get("/{assessment_id}/optimization-status")

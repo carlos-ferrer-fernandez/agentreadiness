@@ -200,15 +200,24 @@ export function AssessmentResults() {
     setIsApplyingPromo(true)
     setPromoError(null)
     try {
-      await assessmentsApi.verifyPromo(currentAssessment.id, promoCode)
-      markAsPaid()
-      hidePaywallModal()
-      setPromoCode('')
-      setShowPromoInput(false)
+      const promoResponse = await assessmentsApi.verifyPromo(currentAssessment.id, promoCode)
+      const discountedPrice = promoResponse.data.discounted_price_eur
       addNotification({
         type: 'success',
-        message: 'Promo code applied! Your optimized docs are being generated...',
+        message: `Promo code applied! Price reduced to €${discountedPrice}. Redirecting to checkout...`,
       })
+      setPromoCode('')
+      setShowPromoInput(false)
+      hidePaywallModal()
+      // Redirect to Stripe checkout at the discounted price
+      const response = await paymentsApi.createCheckout({
+        assessment_id: currentAssessment.id,
+        success_url: `${window.location.origin}/assessment`,
+        cancel_url: `${window.location.origin}/assessment`,
+      })
+      if (response.data.url) {
+        window.location.href = response.data.url
+      }
     } catch (err: any) {
       setPromoError(err.response?.data?.detail || 'Invalid promo code')
     } finally {
