@@ -881,7 +881,7 @@ export function LandingPage() {
       {/* The Problem - Context setter */}
       <section className="py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-3xl mx-auto text-center">
+          <div className="max-w-3xl mx-auto">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
@@ -909,7 +909,7 @@ export function LandingPage() {
       {/* Who it's for */}
       <section className="py-16 lg:py-20 border-y bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="max-w-2xl mb-12">
             <Badge variant="outline" className="mb-4 text-xs">Who it's for</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               Not just for developers
@@ -1031,7 +1031,7 @@ export function LandingPage() {
       {/* Features Section - Mintlify card grid */}
       <section id="how-it-works" className="py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="max-w-2xl mb-16">
             <Badge variant="outline" className="mb-4 text-xs">How it works</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               From assessment to deployment in minutes
@@ -1111,8 +1111,8 @@ export function LandingPage() {
       {/* Before/After Slideshow - Dark section */}
       <section className="py-20 lg:py-24 bg-slate-950 text-white border-y">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
-            <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30 text-xs">
+          <div className="max-w-2xl mb-12">
+            <Badge className="mb-4 bg-white/10 text-white border-white/20 hover:bg-white/20 text-xs">
               Before and after
             </Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4 text-white">
@@ -1131,7 +1131,7 @@ export function LandingPage() {
       {/* The 20 Rules */}
       <section id="rules" className="py-20 lg:py-24">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-12">
+          <div className="max-w-2xl mb-12">
             <Badge variant="outline" className="mb-4 text-xs">Our methodology</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               The 20 Agent-Readiness Rules
@@ -1185,7 +1185,7 @@ export function LandingPage() {
       {/* Pricing Section - Mintlify-inspired clean pricing */}
       <section id="pricing" className="py-20 lg:py-24 bg-muted/30 border-y">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center max-w-2xl mx-auto mb-16">
+          <div className="max-w-2xl mb-16">
             <Badge variant="outline" className="mb-4 text-xs">Pricing</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">
@@ -1323,7 +1323,7 @@ export function LandingPage() {
       {/* FAQ Section - Mintlify-style accordion */}
       <section id="faq" className="py-20 lg:py-24">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
+          <div className="mb-12">
             <Badge variant="outline" className="mb-4 text-xs">FAQ</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em]">Frequently asked questions</h2>
           </div>
