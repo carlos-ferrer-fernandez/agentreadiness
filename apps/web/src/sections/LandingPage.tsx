@@ -888,7 +888,7 @@ export function LandingPage() {
               viewport={{ once: true }}
             >
               <Badge variant="outline" className="mb-6 text-xs">The new distribution channel</Badge>
-              <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
+              <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-6">
                 Your content is your storefront in the agent economy
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-4">
@@ -911,7 +911,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <Badge variant="outline" className="mb-4 text-xs">Who it's for</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               Not just for developers
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -1033,7 +1033,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 text-xs">How it works</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               From assessment to deployment in minutes
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -1115,7 +1115,7 @@ export function LandingPage() {
             <Badge className="mb-4 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30 text-xs">
               Before and after
             </Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4 text-white">
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4 text-white">
               See what we fix, rule by rule
             </h2>
             <p className="text-slate-400 text-lg">
@@ -1133,7 +1133,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-12">
             <Badge variant="outline" className="mb-4 text-xs">Our methodology</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
               The 20 Agent-Readiness Rules
             </h2>
             <p className="text-muted-foreground text-lg">
@@ -1187,7 +1187,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center max-w-2xl mx-auto mb-16">
             <Badge variant="outline" className="mb-4 text-xs">Pricing</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">Simple, transparent pricing</h2>
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">
               Free score first. Pay only if you want the optimized docs. $99 one-time — no subscription, no monthly fees, no engagement.
             </p>
@@ -1325,7 +1325,7 @@ export function LandingPage() {
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-12">
             <Badge variant="outline" className="mb-4 text-xs">FAQ</Badge>
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Frequently asked questions</h2>
+            <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em]">Frequently asked questions</h2>
           </div>
 
           <div className="border rounded-2xl bg-card divide-y">
@@ -1366,7 +1366,7 @@ export function LandingPage() {
       {/* Final CTA */}
       <section className="py-20 lg:py-24 border-t bg-muted/20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-4">
+          <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
             Make AI agents your best sales channel
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
