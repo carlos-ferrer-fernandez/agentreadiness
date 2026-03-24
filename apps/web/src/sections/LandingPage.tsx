@@ -56,29 +56,21 @@ const features = [
     icon: Bot,
     title: 'Multi-Agent Simulation',
     description: 'We test your content the way Claude, GPT, Gemini, and 5 other AI agents actually read it. Not how humans browse it.',
-    gradient: 'from-blue-500/10 to-cyan-500/10',
-    iconColor: 'text-blue-500',
   },
   {
     icon: BarChart3,
     title: 'Agent-Readiness Score',
     description: 'Get a 0-100 score with a letter grade and rule-by-rule breakdown. Know exactly what AI agents struggle with on your site.',
-    gradient: 'from-violet-500/10 to-purple-500/10',
-    iconColor: 'text-violet-500',
   },
   {
     icon: FileCode,
     title: 'Rewritten Content',
     description: 'Not a report. Not tips. We rewrite your actual pages applying all 20 rules. Download and deploy in minutes.',
-    gradient: 'from-emerald-500/10 to-green-500/10',
-    iconColor: 'text-emerald-500',
   },
   {
     icon: Globe,
     title: 'llms.txt Entry Point',
     description: 'Every package includes an llms.txt file, the emerging standard that helps AI agents discover and navigate your content.',
-    gradient: 'from-amber-500/10 to-orange-500/10',
-    iconColor: 'text-amber-500',
   },
 ]
 
@@ -585,7 +577,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-14 items-center">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-lg flex items-center justify-center">
+              <div className="w-7 h-7 bg-forest rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-semibold tracking-tight">GrounDocs</span>
@@ -605,7 +597,7 @@ export function LandingPage() {
                 FAQ
               </a>
               <div className="w-px h-5 bg-border mx-2" />
-              <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 text-white" onClick={scrollToAssessment}>
+              <Button size="sm" className="bg-forest hover:bg-forest-hover text-white" onClick={scrollToAssessment}>
                 Get Free Score
               </Button>
             </div>
@@ -633,7 +625,7 @@ export function LandingPage() {
                 <a href="#rules" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">20 Rules</a>
                 <a href="#pricing" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Pricing</a>
                 <a href="#faq" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">FAQ</a>
-                <Button size="sm" className="w-full mt-2 bg-emerald-600 hover:bg-emerald-700 text-white" onClick={scrollToAssessment}>
+                <Button size="sm" className="w-full mt-2 bg-forest hover:bg-forest-hover text-white" onClick={scrollToAssessment}>
                   Get Free Score
                 </Button>
               </div>
@@ -642,11 +634,10 @@ export function LandingPage() {
         </AnimatePresence>
       </nav>
 
-      {/* Hero Section - Mintlify-inspired gradient hero */}
-      <section className="relative overflow-hidden">
-        {/* Gradient background */}
-        <div className="absolute inset-0 bg-gradient-to-b from-emerald-50/50 via-background to-background dark:from-emerald-950/20 -z-10" />
-        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[600px] bg-gradient-to-br from-emerald-500/10 via-cyan-500/5 to-transparent rounded-full blur-3xl -z-10" />
+      {/* Hero Section */}
+      <section className="relative overflow-hidden border-b border-border/40">
+        {/* Subtle warm tint — no decorative blobs per design system */}
+        <div className="absolute inset-0 bg-gradient-to-b from-forest-light/20 via-background to-background -z-10" />
 
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-28 lg:pb-24">
           <div className="text-center max-w-3xl mx-auto">
@@ -759,7 +750,7 @@ export function LandingPage() {
                     size="lg"
                     onClick={handleAnalyze}
                     disabled={isAssessing || !url || !email || !email.includes('@') || !email.includes('.')}
-                    className="w-full rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white h-12"
+                    className="w-full rounded-xl bg-forest hover:bg-forest-hover text-white h-12"
                   >
                     {isAssessing ? (
                       <>
@@ -1104,13 +1095,10 @@ export function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className={cn(
-                  "bg-gradient-to-br rounded-2xl border p-8 hover:shadow-lg transition-all",
-                  feature.gradient
-                )}
+                className="bg-card rounded-2xl border p-8 hover:border-forest/30 hover:shadow-md transition-all"
               >
-                <div className="w-12 h-12 bg-background rounded-xl flex items-center justify-center mb-5 shadow-sm border">
-                  <feature.icon className={cn("w-6 h-6", feature.iconColor)} />
+                <div className="w-12 h-12 bg-forest-light rounded-xl flex items-center justify-center mb-5">
+                  <feature.icon className="w-6 h-6 text-forest" />
                 </div>
                 <h3 className="text-xl font-semibold mb-3">{feature.title}</h3>
                 <p className="text-muted-foreground leading-relaxed">{feature.description}</p>
@@ -1186,7 +1174,7 @@ export function LandingPage() {
             <p className="text-sm text-muted-foreground mb-5">
               Your documentation is scored against all 20 rules. Our optimizer fixes every failing rule automatically.
             </p>
-            <Button onClick={scrollToAssessment} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white">
+            <Button onClick={scrollToAssessment} className="rounded-xl bg-forest hover:bg-forest-hover text-white">
               Test Your Docs Against These Rules
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
@@ -1291,7 +1279,7 @@ export function LandingPage() {
               </ul>
 
               <Button
-                className="w-full mt-8 rounded-xl h-11 bg-emerald-600 hover:bg-emerald-700 text-white"
+                className="w-full mt-8 rounded-xl h-11 bg-forest hover:bg-forest-hover text-white"
                 onClick={scrollToAssessment}
               >
                 Get Free Score First
@@ -1305,16 +1293,13 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* CTA Banner - Mintlify-style gradient */}
-      <section className="py-20 lg:py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-cyan-600 -z-10" />
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_50%,rgba(255,255,255,0.1),transparent)] -z-10" />
-
+      {/* CTA Banner */}
+      <section className="py-20 lg:py-24 relative overflow-hidden bg-forest">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4 tracking-tight">
+          <h2 className="font-serif text-3xl md:text-4xl text-white mb-4 tracking-[-0.01em]">
             When someone asks AI about your industry, do they find you?
           </h2>
-          <p className="text-emerald-100 text-lg mb-8 max-w-2xl mx-auto">
+          <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
             If your content doesn't follow these 20 rules, AI agents struggle to answer accurately.
             Worse: they recommend a competitor whose content is better structured.
           </p>
@@ -1322,7 +1307,7 @@ export function LandingPage() {
             <Button
               size="lg"
               onClick={scrollToAssessment}
-              className="rounded-xl bg-white text-emerald-700 hover:bg-emerald-50 h-12 px-8 font-semibold"
+              className="rounded-xl bg-white text-forest hover:bg-forest-light h-12 px-8 font-semibold"
             >
               Run Free Assessment
               <ArrowRight className="ml-2 w-4 h-4" />
@@ -1388,7 +1373,7 @@ export function LandingPage() {
             The businesses that get this right early will own their category in the agent economy.
             The rest will wonder why AI stopped recommending them.
           </p>
-          <Button size="lg" onClick={scrollToAssessment} className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white h-12 px-8">
+          <Button size="lg" onClick={scrollToAssessment} className="rounded-xl bg-forest hover:bg-forest-hover text-white h-12 px-8">
             Run Free Assessment
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
