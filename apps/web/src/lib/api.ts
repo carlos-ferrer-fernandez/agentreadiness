@@ -121,6 +121,12 @@ export const paymentsApi = {
     apiClient.get('/api/payments/verify', { params: { session_id: sessionId } }),
 }
 
+// --- Contact ---
+export const contactApi = {
+  send: (data: { name: string; email: string; subject: string; message: string }) =>
+    apiClient.post('/api/contact', data),
+}
+
 // --- Health ---
 export const healthApi = {
   check: () => apiClient.get('/api/health'),

@@ -1,9 +1,10 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Zap, Send, ArrowLeft, Mail, MessageSquare } from 'lucide-react'
+import { Zap, Send, ArrowLeft, MessageSquare, CheckCircle2, AlertTriangle, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { useNavigate } from 'react-router-dom'
+import { contactApi } from '@/lib/api'
 
 export function Support() {
   const navigate = useNavigate()
@@ -11,17 +12,24 @@ export function Support() {
   const [email, setEmail] = useState('')
   const [subject, setSubject] = useState('')
   const [message, setMessage] = useState('')
+  const [sending, setSending] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [error, setError] = useState('')
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setSending(true)
+    setError('')
 
-    const mailtoSubject = encodeURIComponent(subject || 'Support request from groundocs.com')
-    const mailtoBody = encodeURIComponent(
-      `Name: ${name}\nEmail: ${email}\n\n${message}`
-    )
-    window.location.href = `mailto:carlos@groundocs.com?subject=${mailtoSubject}&body=${mailtoBody}`
-    setSubmitted(true)
+    try {
+      await contactApi.send({ name, email, subject, message })
+      setSubmitted(true)
+    } catch (err: any) {
+      const detail = err.response?.data?.detail || 'Failed to send message. Please try emailing us directly.'
+      setError(detail)
+    } finally {
+      setSending(false)
+    }
   }
 
   return (
@@ -77,17 +85,11 @@ export function Support() {
             className="text-center py-12"
           >
             <div className="w-16 h-16 bg-forest/10 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Mail className="w-8 h-8 text-forest" />
+              <CheckCircle2 className="w-8 h-8 text-forest" />
             </div>
-            <h2 className="text-2xl font-bold mb-3">Opening your email client...</h2>
-            <p className="text-muted-foreground mb-2">
-              Your email app should open with the message pre-filled.
-            </p>
-            <p className="text-muted-foreground text-sm mb-8">
-              If it didn't open, you can email us directly at{' '}
-              <a href="mailto:carlos@groundocs.com" className="text-forest hover:underline font-medium">
-                carlos@groundocs.com
-              </a>
+            <h2 className="text-2xl font-bold mb-3">Message sent!</h2>
+            <p className="text-muted-foreground mb-8">
+              Thanks for reaching out. We'll get back to you as soon as possible.
             </p>
             <Button
               variant="outline"
@@ -165,14 +167,30 @@ export function Support() {
               />
             </div>
 
+            {error && (
+              <div className="flex items-start gap-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2.5 text-sm text-red-700">
+                <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                <span>{error}</span>
+              </div>
+            )}
+
             <Button
               type="submit"
               size="lg"
               className="w-full rounded-xl bg-forest hover:bg-forest-hover text-white h-12"
-              disabled={!name || !email || !message}
+              disabled={!name || !email || !message || sending}
             >
-              <Send className="w-4 h-4 mr-2" />
-              Send message
+              {sending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Sending...
+                </>
+              ) : (
+                <>
+                  <Send className="w-4 h-4 mr-2" />
+                  Send message
+                </>
+              )}
             </Button>
 
             <p className="text-xs text-center text-muted-foreground">

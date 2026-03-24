@@ -64,6 +64,13 @@ class Settings(BaseSettings):
     max_crawl_pages: int = 10
     crawl_delay_seconds: float = 0.3
 
+    # SMTP (OVH)
+    smtp_host: str = "ssl0.ovh.net"
+    smtp_port: int = 465
+    smtp_user: str = ""       # e.g. carlos@groundocs.com
+    smtp_password: str = ""   # OVH email password
+    contact_email: str = "carlos@groundocs.com"
+
     # Rate limiting
     rate_limit_per_minute: int = 60
 

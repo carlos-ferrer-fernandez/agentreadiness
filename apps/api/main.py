@@ -13,7 +13,7 @@ import logging
 
 from config import get_settings
 from database import init_db, close_db
-from routers import sites, analyses, queries, recommendations, auth, payments, optimizer, assessments
+from routers import sites, analyses, queries, recommendations, auth, payments, optimizer, assessments, contact
 
 settings = get_settings()
 
@@ -55,6 +55,7 @@ app.add_middleware(
 # Public (no auth required)
 app.include_router(assessments.router, prefix="/api/assessments", tags=["Assessments"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
+app.include_router(contact.router)
 
 # Auth
 app.include_router(auth.router, prefix="/api/auth", tags=["Authentication"])
