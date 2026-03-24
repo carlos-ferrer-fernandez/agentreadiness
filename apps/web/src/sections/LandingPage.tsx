@@ -498,7 +498,7 @@ export function LandingPage() {
     }, 3000)
 
     const controller = new AbortController()
-    const timeoutId = setTimeout(() => controller.abort(), 45000)
+    const timeoutId = setTimeout(() => controller.abort(), 120000)
 
     try {
       const response = await assessmentsApi.analyze({
@@ -551,7 +551,9 @@ export function LandingPage() {
     } catch (err: any) {
       let message: string
       if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
-        message = 'Scan is taking longer than expected. Please try a smaller or more accessible URL.'
+        message = 'Scan is taking longer than expected. Try a more specific URL — for example, https://docs.stripe.com/payments instead of https://docs.stripe.com/.'
+      } else if (err.response?.status === 408) {
+        message = err.response?.data?.detail || 'Scan timed out. Try a more specific section URL rather than the top-level docs root.'
       } else if (err.response?.status === 400) {
         message = err.response?.data?.detail || 'We couldn\'t reach this URL. Please check it\'s publicly accessible and try again.'
       } else {

@@ -6,6 +6,8 @@ Evaluates documentation against the 20 agent-readiness rules derived
 from a multi-agent benchmark (Claude, GPT, Kimi, Grok, Deepseek, etc.).
 """
 
+import asyncio
+
 from fastapi import APIRouter, HTTPException, BackgroundTasks, Depends
 from fastapi.responses import FileResponse, StreamingResponse
 from pydantic import BaseModel, HttpUrl
@@ -84,13 +86,19 @@ async def run_assessment(
     site_name = parsed.netloc.replace("www.", "")
 
     try:
-        # Step 1: Crawl (limited to 30 pages for free assessment)
-        async with DocumentationCrawler(
-            start_url=url,
-            max_pages=30,
-            delay=0.5,
-        ) as crawler:
-            pages = await crawler.crawl()
+        # Step 1: Crawl (limited to 10 pages for free assessment, 60s hard timeout)
+        try:
+            async with DocumentationCrawler(
+                start_url=url,
+                max_pages=10,
+                delay=0.1,
+            ) as crawler:
+                pages = await asyncio.wait_for(crawler.crawl(), timeout=60)
+        except asyncio.TimeoutError:
+            raise HTTPException(
+                status_code=408,
+                detail="Crawl timed out. Try a more specific URL (e.g. https://docs.stripe.com/payments instead of https://docs.stripe.com/).",
+            )
 
         if not pages:
             raise HTTPException(
