@@ -1095,7 +1095,7 @@ export function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-card rounded-2xl border p-8 hover:border-forest/30 hover:shadow-md transition-all"
+                className="bg-card rounded-xl border p-8 hover:border-forest/30 hover:shadow-md transition-all"
               >
                 <div className="w-12 h-12 bg-forest-light rounded-xl flex items-center justify-center mb-5">
                   <feature.icon className="w-6 h-6 text-forest" />
@@ -1199,7 +1199,7 @@ export function LandingPage() {
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="bg-card rounded-2xl border p-8 flex flex-col"
+              className="bg-card rounded-xl border p-8 flex flex-col"
             >
               <div className="mb-6">
                 <h3 className="text-lg font-semibold mb-1">Assessment</h3>
@@ -1328,7 +1328,7 @@ export function LandingPage() {
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em]">Frequently asked questions</h2>
           </div>
 
-          <div className="border rounded-2xl bg-card divide-y">
+          <div className="border rounded-xl bg-card divide-y">
             <div className="px-6">
               <FaqItem
                 q="What is the Agent-Readiness Score?"
