@@ -515,9 +515,6 @@ export function LandingPage() {
         full_name: fullName || undefined,
         role: role || undefined,
       }, controller.signal)
-      clearTimeout(timeoutId)
-      clearInterval(stageInterval)
-      clearInterval(messageInterval)
 
       const data = response.data
       setAssessmentResult({
@@ -560,9 +557,6 @@ export function LandingPage() {
 
       navigate('/assessment')
     } catch (err: any) {
-      clearTimeout(timeoutId)
-      clearInterval(stageInterval)
-      clearInterval(messageInterval)
       let message: string
       if (err.name === 'AbortError' || err.code === 'ERR_CANCELED') {
         message = 'Scan is taking longer than expected. Please try a smaller or more accessible URL.'
@@ -573,6 +567,10 @@ export function LandingPage() {
       }
       setAssessmentError(message)
       setError(message)
+    } finally {
+      clearTimeout(timeoutId)
+      clearInterval(stageInterval)
+      clearInterval(messageInterval)
     }
   }, [url, email, fullName, role, isAssessing, startAssessment, setAssessmentResult, setAssessmentError, navigate, setLiveMessage])
 
