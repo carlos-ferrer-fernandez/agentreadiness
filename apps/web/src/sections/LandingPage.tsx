@@ -646,7 +646,7 @@ export function LandingPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-300 text-sm font-medium mb-8">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest-light border border-forest/20 text-forest text-sm font-medium mb-8">
                 <Sparkles className="w-3.5 h-3.5" />
                 Benchmarked against Claude, GPT, Gemini, and 5 more agents
               </span>
@@ -692,7 +692,7 @@ export function LandingPage() {
                       placeholder="Enter your URL (e.g., docs.example.com, help.example.com)"
                       value={url}
                       onChange={(e) => { setUrl(e.target.value); setError(null) }}
-                      className="pl-10 h-12 text-base rounded-xl border-border/60 focus:border-emerald-500 focus:ring-emerald-500/20"
+                      className="pl-10 h-12 text-base rounded-xl border-border/60 focus:border-forest focus:ring-forest/20"
                       onKeyDown={(e) => e.key === 'Enter' && handleAnalyze()}
                       disabled={isAssessing}
                     />
@@ -791,14 +791,14 @@ export function LandingPage() {
                             >
                               <div className={cn(
                                 "w-8 h-8 rounded-full flex items-center justify-center",
-                                isComplete ? "bg-emerald-100 dark:bg-emerald-900/30" : isActive ? "bg-emerald-500/10" : "bg-muted"
+                                isComplete ? "bg-forest-light" : isActive ? "bg-forest-light/50" : "bg-muted"
                               )}>
                                 {isComplete ? (
-                                  <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                                  <CheckCircle2 className="w-4 h-4 text-forest" />
                                 ) : (
                                   <StageIcon className={cn(
                                     "w-4 h-4",
-                                    isActive ? "text-emerald-600" : "text-muted-foreground"
+                                    isActive ? "text-forest" : "text-muted-foreground"
                                   )} />
                                 )}
                               </div>
@@ -810,7 +810,7 @@ export function LandingPage() {
                               </span>
                               {isActive && (
                                 <motion.div
-                                  className="ml-auto w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full"
+                                  className="ml-auto w-4 h-4 border-2 border-forest border-t-transparent rounded-full"
                                   animate={{ rotate: 360 }}
                                   transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                                 />
@@ -845,15 +845,15 @@ export function LandingPage() {
 
               <div className="flex items-center justify-center gap-6 mt-5 text-xs text-muted-foreground">
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
                   Free, no credit card
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
                   60-second scan
                 </span>
                 <span className="flex items-center gap-1.5">
-                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
                   20-rule evaluation
                 </span>
               </div>
@@ -952,14 +952,14 @@ export function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.08 }}
-                className="bg-card rounded-2xl border p-6 hover:border-emerald-500/30 transition-all"
+                className="bg-card rounded-xl border p-6 hover:border-forest/30 transition-all"
               >
-                <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center mb-4">
-                  <useCase.icon className="w-5 h-5 text-emerald-600" />
+                <div className="w-10 h-10 rounded-lg bg-forest-light flex items-center justify-center mb-4">
+                  <useCase.icon className="w-5 h-5 text-forest" />
                 </div>
                 <h3 className="font-semibold mb-1">{useCase.title}</h3>
                 <p className="text-sm text-muted-foreground mb-3">{useCase.example}</p>
-                <p className="text-xs text-emerald-600 dark:text-emerald-400 font-medium italic">
+                <p className="text-xs text-forest font-medium italic">
                   {useCase.ask}
                 </p>
               </motion.div>
@@ -998,13 +998,13 @@ export function LandingPage() {
               </Badge>
 
               <blockquote className="text-xl lg:text-2xl font-medium leading-relaxed">
-                <span className="text-emerald-500">&ldquo;</span>
+                <span className="text-forest">&ldquo;</span>
                 Documentation will be the front door for all of these agents recommending tools and services.
-                <span className="text-emerald-500">&rdquo;</span>
+                <span className="text-forest">&rdquo;</span>
               </blockquote>
 
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-full bg-emerald-500/10 flex items-center justify-center text-sm font-bold text-emerald-600">
+                <div className="w-10 h-10 rounded-full bg-forest-light flex items-center justify-center text-sm font-bold text-forest">
                   DH
                 </div>
                 <div>
@@ -1072,11 +1072,11 @@ export function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1 }}
-                className="relative bg-card rounded-2xl border p-6 hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 transition-all"
+                className="relative bg-card rounded-xl border p-6 hover:border-forest/30 hover:shadow-md transition-all"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center">
-                    <item.icon className="w-5 h-5 text-emerald-600" />
+                  <div className="w-10 h-10 rounded-lg bg-forest-light flex items-center justify-center">
+                    <item.icon className="w-5 h-5 text-forest" />
                   </div>
                   <Badge variant="secondary" className="text-xs">{item.highlight}</Badge>
                 </div>
@@ -1218,7 +1218,7 @@ export function LandingPage() {
                   'Component breakdown (5 dimensions)',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -1239,9 +1239,9 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="bg-card rounded-2xl border-2 border-emerald-500 shadow-xl shadow-emerald-500/10 p-8 flex flex-col relative"
+              className="bg-card rounded-xl border-2 border-forest shadow-xl shadow-forest/10 p-8 flex flex-col relative"
             >
-              <span className="absolute -top-3.5 left-6 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-emerald-600 text-white">
+              <span className="absolute -top-3.5 left-6 inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-forest text-white">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Most popular
               </span>
@@ -1252,7 +1252,7 @@ export function LandingPage() {
                   <span className="text-4xl font-bold">$99</span>
                   <span className="text-sm text-muted-foreground">(€84)</span>
                 </div>
-                <p className="text-sm font-medium text-emerald-600 mt-2">
+                <p className="text-sm font-medium text-forest mt-2">
                   One-time payment · No subscription · No monthly fees
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
@@ -1272,7 +1272,7 @@ export function LandingPage() {
                   'Download as ZIP, deploy in minutes',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5 text-sm">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-500 flex-shrink-0 mt-0.5" />
+                    <CheckCircle2 className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" />
                     <span>{feature}</span>
                   </li>
                 ))}
@@ -1385,7 +1385,7 @@ export function LandingPage() {
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-emerald-600 rounded-lg flex items-center justify-center">
+              <div className="w-7 h-7 bg-forest rounded-lg flex items-center justify-center">
                 <Zap className="w-4 h-4 text-white" />
               </div>
               <span className="text-lg font-semibold">GrounDocs</span>
