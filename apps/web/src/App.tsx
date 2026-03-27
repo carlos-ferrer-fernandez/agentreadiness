@@ -6,6 +6,8 @@ import { SiteDetail } from '@/sections/SiteDetail'
 import { AnalysisResults } from '@/sections/AnalysisResults'
 import { AssessmentResults } from '@/sections/AssessmentResults'
 import { Support } from '@/sections/Support'
+import { Showcase } from '@/sections/Showcase'
+import { Viewer } from '@/sections/Viewer'
 import { ToastContainer } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useUIStore } from '@/store'
@@ -53,6 +55,9 @@ function App() {
           <Route path="/sites/:siteId" element={<SiteDetail />} />
           <Route path="/analyses/:analysisId" element={<AnalysisResults />} />
           <Route path="/support" element={<Support />} />
+          <Route path="/showcase" element={<Showcase />} />
+          <Route path="/view/:assessmentId" element={<Viewer />} />
+          <Route path="/view/:assessmentId/:fileName" element={<Viewer />} />
         </Routes>
         <ToastContainer toasts={notifications} onRemove={removeNotification} />
       </BrowserRouter>

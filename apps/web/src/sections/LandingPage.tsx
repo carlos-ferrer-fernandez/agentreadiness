@@ -49,7 +49,7 @@ import { Progress } from '@/components/ui/progress'
 import { cn } from '@/lib/utils'
 import { useAssessmentStore } from '@/store/assessment'
 import { assessmentsApi } from '@/lib/api'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 
 const features = [
   {
@@ -445,6 +445,166 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
+function HeroProductDemo() {
+  const [tab, setTab] = useState<'before' | 'after'>('before')
+
+  const beforeContent = [
+    { type: 'h1', text: 'API Reference' },
+    { type: 'p', text: 'This page documents the available API endpoints. You can use the API to create and manage your resources. Authentication is required for all requests.' },
+    { type: 'p', text: 'To create a payment, POST to /v1/payments with your API key. Include amount and currency in the body. The response will include a payment ID.' },
+    { type: 'p', text: 'You can also retrieve payments using GET /v1/payments/{id} or list all payments with GET /v1/payments. Use the limit parameter to control how many results come back.' },
+  ]
+
+  const afterContent = [
+    { type: 'h1', text: 'Create a Payment' },
+    { type: 'badge', text: 'POST /v1/payments' },
+    { type: 'p', text: 'Creates a new payment intent. Returns immediately — poll the status endpoint or use webhooks to track completion.' },
+    { type: 'table-header', cols: ['Parameter', 'Type', 'Required', 'Description'] },
+    { type: 'table-row', cols: ['amount', 'integer', '✓', 'Amount in smallest currency unit (cents)'] },
+    { type: 'table-row', cols: ['currency', 'string', '✓', 'ISO 4217 code, e.g. "usd"'] },
+    { type: 'table-row', cols: ['metadata', 'object', '–', 'Arbitrary key-value pairs'] },
+    { type: 'code', text: `curl -X POST https://api.example.com/v1/payments \\
+  -H "Authorization: Bearer sk_live_..." \\
+  -d amount=2000 -d currency=usd` },
+  ]
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: 20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ duration: 0.6, delay: 0.4 }}
+      className="hidden lg:flex flex-col gap-3 pt-2"
+    >
+      {/* Browser chrome */}
+      <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl shadow-black/40">
+        {/* Tab bar */}
+        <div className="bg-slate-900 border-b border-white/10 px-4 py-2.5 flex items-center gap-3">
+          <div className="flex gap-1.5">
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+            <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
+          </div>
+          <div className="flex-1 bg-slate-800 rounded-md px-3 py-1 text-xs text-slate-500 font-mono">
+            docs.example.com/api-reference
+          </div>
+        </div>
+
+        {/* Before/After toggle */}
+        <div className="bg-slate-900 border-b border-white/10 px-4 py-2 flex gap-1">
+          <button
+            onClick={() => setTab('before')}
+            className={cn(
+              "px-3 py-1 rounded text-xs font-medium transition-colors",
+              tab === 'before' ? "bg-red-900/40 text-red-300 border border-red-800/40" : "text-slate-500 hover:text-slate-400"
+            )}
+          >
+            Before
+          </button>
+          <button
+            onClick={() => setTab('after')}
+            className={cn(
+              "px-3 py-1 rounded text-xs font-medium transition-colors",
+              tab === 'after' ? "bg-forest/20 text-forest border border-forest/30" : "text-slate-500 hover:text-slate-400"
+            )}
+          >
+            After GrounDocs
+          </button>
+        </div>
+
+        {/* Content area */}
+        <div className="bg-slate-950 p-5 min-h-[260px] overflow-hidden">
+          <AnimatePresence mode="wait">
+            {tab === 'before' ? (
+              <motion.div
+                key="before"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
+              >
+                {beforeContent.map((block, i) => (
+                  <div key={i}>
+                    {block.type === 'h1' && (
+                      <h2 className="text-slate-200 text-lg font-semibold font-serif mb-2">{block.text}</h2>
+                    )}
+                    {block.type === 'p' && (
+                      <p className="text-slate-400 text-xs leading-relaxed">{block.text}</p>
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+            ) : (
+              <motion.div
+                key="after"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                className="space-y-3"
+              >
+                {afterContent.map((block, i) => (
+                  <div key={i}>
+                    {block.type === 'h1' && (
+                      <h2 className="text-slate-200 text-lg font-semibold font-serif">{block.text}</h2>
+                    )}
+                    {block.type === 'badge' && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest text-xs font-mono">
+                        {block.text}
+                      </span>
+                    )}
+                    {block.type === 'p' && (
+                      <p className="text-slate-400 text-xs leading-relaxed">{block.text}</p>
+                    )}
+                    {block.type === 'table-header' && (
+                      <div className="border border-white/10 rounded overflow-hidden mt-1">
+                        <div className="grid grid-cols-4 bg-slate-900 px-3 py-1.5 gap-2">
+                          {block.cols!.map((col, j) => (
+                            <span key={j} className="text-slate-400 text-xs font-medium">{col}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {block.type === 'table-row' && (
+                      <div className="border-x border-b border-white/10 rounded-b overflow-hidden -mt-px">
+                        <div className="grid grid-cols-4 px-3 py-1.5 gap-2 border-t border-white/10 first:border-t-0">
+                          {block.cols!.map((col, j) => (
+                            <span key={j} className={cn("text-xs", j === 0 ? "text-blue-400 font-mono" : j === 2 ? "text-green-400" : "text-slate-400")}>
+                              {col}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {block.type === 'code' && (
+                      <div className="bg-slate-900 border border-white/10 rounded p-3 mt-1">
+                        <pre className="text-xs text-slate-300 font-mono whitespace-pre overflow-x-auto">{block.text}</pre>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* Score improvement label */}
+      <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full bg-red-500/60" />
+          Before: D (38/100)
+        </span>
+        <ArrowRight className="w-3 h-3 text-slate-600" />
+        <span className="flex items-center gap-1.5 text-forest">
+          <span className="inline-block w-2 h-2 rounded-full bg-forest" />
+          After: A (91/100)
+        </span>
+      </div>
+    </motion.div>
+  )
+}
+
 export function LandingPage() {
   const navigate = useNavigate()
   const [url, setUrl] = useState('')
@@ -641,54 +801,74 @@ export function LandingPage() {
       </nav>
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden border-b border-border/40">
-        {/* Subtle warm tint — no decorative blobs per design system */}
-        <div className="absolute inset-0 bg-gradient-to-b from-forest-light/20 via-background to-background -z-10" />
+      <section className="relative overflow-hidden border-b border-border/40 bg-slate-950">
+        {/* Subtle depth gradient */}
+        <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-950 to-black -z-10" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(47,79,47,0.15),_transparent_60%)] -z-10" />
 
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-28 lg:pb-24">
-          <div className="text-center max-w-3xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-            >
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest-light border border-forest/20 text-forest text-sm font-medium mb-8">
-                <Sparkles className="w-3.5 h-3.5" />
-                Benchmarked against Claude, GPT, Gemini, and 5 more agents
-              </span>
-            </motion.div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-16 lg:pt-24 lg:pb-20">
+          <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-start">
 
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.1 }}
-              className="font-serif text-4xl md:text-5xl lg:text-[3.5rem] tracking-[-0.01em] leading-[1.1] mb-6"
-            >
-              Make AI agents{' '}
-              <span className="text-forest">
-                find you and recommend you
-              </span>
-            </motion.h1>
+            {/* Left column — headline + form */}
+            <div>
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest/10 border border-forest/20 text-forest text-sm font-medium mb-8">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Benchmarked against Claude, GPT, Gemini, and 5 more agents
+                </span>
+              </motion.div>
 
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="text-lg text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed"
-            >
-              When people ask AI about your industry, the answer comes from your content.
-              We evaluate your docs and help pages against 20 rules, then rewrite every page so agents
-              can parse, cite, and recommend your business.
-            </motion.p>
+              <motion.h1
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                className="font-serif text-4xl md:text-5xl lg:text-[3.25rem] tracking-[-0.01em] leading-[1.1] mb-6 text-white"
+              >
+                Make AI agents{' '}
+                <span className="text-forest">
+                  find you and recommend you
+                </span>
+              </motion.h1>
 
-            {/* Assessment Form - Cleaner Mintlify-style */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.3 }}
-              id="assessment"
-              className="max-w-xl mx-auto"
-            >
+              <motion.p
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                className="text-lg text-slate-400 mb-8 leading-relaxed"
+              >
+                When people ask AI about your industry, the answer comes from your content.
+                We evaluate your docs against 20 rules, then rewrite every page so agents
+                can parse, cite, and recommend your business.
+              </motion.p>
+
+              {/* Browse examples link */}
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.25 }}
+                className="mb-6"
+              >
+                <Link
+                  to="/showcase"
+                  className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-forest transition-colors"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  See real optimization examples →
+                </Link>
+              </motion.div>
+
+              {/* Assessment Form */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.3 }}
+                id="assessment"
+                className="max-w-xl"
+              >
               <div className="bg-card border rounded-2xl p-6 shadow-xl shadow-black/5">
                 <div className="space-y-4">
                   <div className="relative">
@@ -849,7 +1029,7 @@ export function LandingPage() {
                 </AnimatePresence>
               </div>
 
-              <div className="flex items-center justify-center gap-6 mt-5 text-xs text-muted-foreground">
+              <div className="flex items-center gap-6 mt-5 text-xs text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
                   Free, no credit card
@@ -864,6 +1044,11 @@ export function LandingPage() {
                 </span>
               </div>
             </motion.div>
+            </div>
+
+            {/* Right column — before/after product demo */}
+            <HeroProductDemo />
+
           </div>
         </div>
       </section>
