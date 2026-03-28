@@ -445,28 +445,180 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
+type CompanyKey = 'algolia' | 'loops' | 'webflow'
+
+const DEMO_COMPANIES: Record<CompanyKey, {
+  name: string
+  batch: string
+  url: string
+  page: string
+  scoreBefore: number
+  scoreAfter: number
+  before: React.ReactNode
+  after: React.ReactNode
+}> = {
+  algolia: {
+    name: 'Algolia',
+    batch: 'YC S14',
+    url: 'algolia.com/doc/api-reference/api-methods/save-objects',
+    page: 'Add Records to Index',
+    scoreBefore: 41,
+    scoreAfter: 93,
+    before: (
+      <div className="space-y-3">
+        <h2 className="text-slate-200 text-base font-semibold font-serif">Add or Update Records</h2>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          To add records to your Algolia index you can use the <code className="text-slate-300">saveObjects</code> method which takes an array of objects. Each object in the array can optionally have an objectID field. If an objectID is provided, Algolia will use it as the unique identifier for that record. If no objectID is provided, Algolia will automatically generate one for you. Note that if a record with the same objectID already exists, it will be completely replaced with the new data. The method returns a task object that contains a taskID which you can use to check if the operation has been completed using the waitTask method before querying the newly indexed data.
+        </p>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          You can also use <code className="text-slate-300">partialUpdateObjects</code> if you only want to update specific fields without replacing the whole record. This is useful when your records are large and you only need to change one or two attributes. There are also batch methods available.
+        </p>
+      </div>
+    ),
+    after: (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-slate-200 text-base font-semibold font-serif">Add Records to Index</h2>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest">POST</span>
+        </div>
+        <p className="text-slate-400 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-medium">Agent context:</span> Indexes new records or replaces existing ones by <code className="text-slate-300">objectID</code>. Use <code className="text-slate-300">partialUpdateObjects</code> to update specific fields only. Indexed records appear in search within ~1 second.
+        </p>
+        <div className="border border-white/10 rounded overflow-hidden text-[11px]">
+          <div className="grid grid-cols-3 bg-slate-900 px-3 py-1.5 gap-2">
+            <span className="text-slate-400 font-medium">Parameter</span>
+            <span className="text-slate-400 font-medium">Type</span>
+            <span className="text-slate-400 font-medium">Description</span>
+          </div>
+          {[
+            ['objectID', 'string', 'Optional. Auto-generated if omitted. Existing record with same ID is replaced.'],
+            ['[your fields]', 'any', 'Attributes to index. All fields are searchable by default.'],
+          ].map(([p, t, d], i) => (
+            <div key={i} className="grid grid-cols-3 px-3 py-1.5 gap-2 border-t border-white/10">
+              <span className="text-blue-400 font-mono">{p}</span>
+              <span className="text-slate-400">{t}</span>
+              <span className="text-slate-500">{d}</span>
+            </div>
+          ))}
+        </div>
+        <div className="bg-slate-900 border border-white/10 rounded p-2">
+          <pre className="text-[11px] text-slate-300 font-mono">{`client.save_objects("products", [
+  {"objectID": "p1", "name": "Widget", "price": 9.99}
+])`}</pre>
+        </div>
+      </div>
+    ),
+  },
+  loops: {
+    name: 'Loops',
+    batch: 'YC W22',
+    url: 'loops.so/docs/api-reference/send-event',
+    page: 'Send a Transactional Email',
+    scoreBefore: 48,
+    scoreAfter: 94,
+    before: (
+      <div className="space-y-3">
+        <h2 className="text-slate-200 text-base font-semibold font-serif">Sending Transactional Emails</h2>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          Loops lets you send transactional emails to your users. You can use the transactional endpoint to do this. You need to create a transactional email in the Loops dashboard first, then you can send it via the API. You'll need the transactional email ID from the dashboard. You also need to provide the email address you want to send to. You can optionally provide data variables that will be used to fill in any dynamic content in the email template.
+        </p>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          Make sure you've set up your sending domain before using this. If the email address you're sending to has unsubscribed, the email won't be delivered. The API will return a success response either way.
+        </p>
+      </div>
+    ),
+    after: (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-slate-200 text-base font-semibold font-serif">Send a Transactional Email</h2>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest">POST</span>
+        </div>
+        <p className="text-slate-400 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-medium">Agent context:</span> Sends a single email to one recipient using a pre-built template. Bypasses unsubscribes only if <code className="text-slate-300">addToAudience: false</code>. Requires a verified sending domain.
+        </p>
+        <div className="border border-white/10 rounded overflow-hidden text-[11px]">
+          <div className="grid grid-cols-3 bg-slate-900 px-3 py-1.5 gap-2">
+            <span className="text-slate-400 font-medium">Parameter</span>
+            <span className="text-slate-400 font-medium">Req.</span>
+            <span className="text-slate-400 font-medium">Description</span>
+          </div>
+          {[
+            ['transactionalId', '✓', 'ID of the email template from Loops dashboard'],
+            ['email', '✓', "Recipient's email address"],
+            ['dataVariables', '–', 'Object of template variables, e.g. { name: "Sarah" }'],
+            ['addToAudience', '–', 'Default true. Set false to skip unsubscribe check'],
+          ].map(([p, r, d], i) => (
+            <div key={i} className="grid grid-cols-3 px-3 py-1.5 gap-2 border-t border-white/10">
+              <span className="text-blue-400 font-mono">{p}</span>
+              <span className={r === '✓' ? 'text-green-400' : 'text-slate-500'}>{r}</span>
+              <span className="text-slate-500">{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  webflow: {
+    name: 'Webflow',
+    batch: 'YC W13',
+    url: 'developers.webflow.com/reference/create-item',
+    page: 'Create a CMS Collection Item',
+    scoreBefore: 44,
+    scoreAfter: 91,
+    before: (
+      <div className="space-y-3">
+        <h2 className="text-slate-200 text-base font-semibold font-serif">Create Item</h2>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          You can create new items in a CMS Collection using the API. To do this, you'll need to make a POST request to the collections endpoint with the collection ID. In the request body, you need to provide the fields for the item. The fields you need to provide depend on the Collection's schema which you can get from the collection endpoint. Items are created as drafts by default, so you'll need to publish them separately if you want them to appear on the site. Some fields are required depending on how the collection was set up. The response will include the newly created item's ID.
+        </p>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          There's also a bulk create endpoint if you need to create multiple items at once. Rate limits apply — check the headers in the response.
+        </p>
+      </div>
+    ),
+    after: (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-slate-200 text-base font-semibold font-serif">Create a CMS Item</h2>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest">POST</span>
+        </div>
+        <p className="text-slate-400 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-medium">Agent context:</span> Creates a draft CMS item in the given collection. <strong className="text-slate-300">Items do not appear on the live site until published.</strong> Get the field schema first: <code className="text-slate-300">GET /collections/{"{collectionId}"}</code>.
+        </p>
+        <div className="border border-white/10 rounded overflow-hidden text-[11px]">
+          <div className="grid grid-cols-3 bg-slate-900 px-3 py-1.5 gap-2">
+            <span className="text-slate-400 font-medium">Parameter</span>
+            <span className="text-slate-400 font-medium">Req.</span>
+            <span className="text-slate-400 font-medium">Description</span>
+          </div>
+          {[
+            ['collectionId', '✓', 'CMS Collection ID from the Webflow dashboard'],
+            ['fieldData.name', '✓', 'Item name (slug auto-generated from this)'],
+            ['fieldData.slug', '–', 'URL slug. Auto-generated if omitted. Must be unique.'],
+            ['isDraft', '–', 'Default true. Set false to publish immediately.'],
+          ].map(([p, r, d], i) => (
+            <div key={i} className="grid grid-cols-3 px-3 py-1.5 gap-2 border-t border-white/10">
+              <span className="text-blue-400 font-mono">{p}</span>
+              <span className={r === '✓' ? 'text-green-400' : 'text-slate-500'}>{r}</span>
+              <span className="text-slate-500">{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+}
+
 function HeroProductDemo() {
+  const [company, setCompany] = useState<CompanyKey>('algolia')
   const [tab, setTab] = useState<'before' | 'after'>('before')
 
-  const beforeContent = [
-    { type: 'h1', text: 'API Reference' },
-    { type: 'p', text: 'This page documents the available API endpoints. You can use the API to create and manage your resources. Authentication is required for all requests.' },
-    { type: 'p', text: 'To create a payment, POST to /v1/payments with your API key. Include amount and currency in the body. The response will include a payment ID.' },
-    { type: 'p', text: 'You can also retrieve payments using GET /v1/payments/{id} or list all payments with GET /v1/payments. Use the limit parameter to control how many results come back.' },
-  ]
+  const data = DEMO_COMPANIES[company]
 
-  const afterContent = [
-    { type: 'h1', text: 'Create a Payment' },
-    { type: 'badge', text: 'POST /v1/payments' },
-    { type: 'p', text: 'Creates a new payment intent. Returns immediately — poll the status endpoint or use webhooks to track completion.' },
-    { type: 'table-header', cols: ['Parameter', 'Type', 'Required', 'Description'] },
-    { type: 'table-row', cols: ['amount', 'integer', '✓', 'Amount in smallest currency unit (cents)'] },
-    { type: 'table-row', cols: ['currency', 'string', '✓', 'ISO 4217 code, e.g. "usd"'] },
-    { type: 'table-row', cols: ['metadata', 'object', '–', 'Arbitrary key-value pairs'] },
-    { type: 'code', text: `curl -X POST https://api.example.com/v1/payments \\
-  -H "Authorization: Bearer sk_live_..." \\
-  -d amount=2000 -d currency=usd` },
-  ]
+  const handleCompany = (c: CompanyKey) => {
+    setCompany(c)
+    setTab('before')
+  }
 
   return (
     <motion.div
@@ -475,131 +627,119 @@ function HeroProductDemo() {
       transition={{ duration: 0.6, delay: 0.4 }}
       className="hidden lg:flex flex-col gap-3 pt-2"
     >
+      {/* Company selector */}
+      <div className="flex items-center gap-2">
+        <span className="text-xs text-slate-500 mr-1">Examples:</span>
+        {(Object.keys(DEMO_COMPANIES) as CompanyKey[]).map(key => (
+          <button
+            key={key}
+            onClick={() => handleCompany(key)}
+            className={cn(
+              "px-3 py-1 rounded-full text-xs font-medium transition-colors border",
+              company === key
+                ? "bg-white/10 text-white border-white/20"
+                : "text-slate-500 border-transparent hover:text-slate-300 hover:border-white/10"
+            )}
+          >
+            {DEMO_COMPANIES[key].name}
+            <span className="ml-1.5 text-[10px] text-slate-600">{DEMO_COMPANIES[key].batch}</span>
+          </button>
+        ))}
+      </div>
+
       {/* Browser chrome */}
       <div className="rounded-xl border border-white/10 overflow-hidden shadow-2xl shadow-black/40">
-        {/* Tab bar */}
+        {/* URL bar */}
         <div className="bg-slate-900 border-b border-white/10 px-4 py-2.5 flex items-center gap-3">
           <div className="flex gap-1.5">
             <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
             <div className="w-2.5 h-2.5 rounded-full bg-slate-700" />
           </div>
-          <div className="flex-1 bg-slate-800 rounded-md px-3 py-1 text-xs text-slate-500 font-mono">
-            docs.example.com/api-reference
-          </div>
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={company}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              className="flex-1 bg-slate-800 rounded-md px-3 py-1 text-xs text-slate-500 font-mono truncate"
+            >
+              {data.url}
+            </motion.div>
+          </AnimatePresence>
         </div>
 
         {/* Before/After toggle */}
-        <div className="bg-slate-900 border-b border-white/10 px-4 py-2 flex gap-1">
-          <button
-            onClick={() => setTab('before')}
-            className={cn(
-              "px-3 py-1 rounded text-xs font-medium transition-colors",
-              tab === 'before' ? "bg-red-900/40 text-red-300 border border-red-800/40" : "text-slate-500 hover:text-slate-400"
+        <div className="bg-slate-900 border-b border-white/10 px-4 py-2 flex items-center justify-between">
+          <div className="flex gap-1">
+            <button
+              onClick={() => setTab('before')}
+              className={cn(
+                "px-3 py-1 rounded text-xs font-medium transition-colors",
+                tab === 'before'
+                  ? "bg-red-900/40 text-red-300 border border-red-800/40"
+                  : "text-slate-500 hover:text-slate-400"
+              )}
+            >
+              Before
+            </button>
+            <button
+              onClick={() => setTab('after')}
+              className={cn(
+                "px-3 py-1 rounded text-xs font-medium transition-colors",
+                tab === 'after'
+                  ? "bg-forest/20 text-forest border border-forest/30"
+                  : "text-slate-500 hover:text-slate-400"
+              )}
+            >
+              After GrounDocs
+            </button>
+          </div>
+          <div className="flex items-center gap-2 text-[11px]">
+            {tab === 'before' ? (
+              <span className="text-red-400 font-medium">{data.scoreBefore}/100</span>
+            ) : (
+              <span className="text-forest font-medium">{data.scoreAfter}/100</span>
             )}
-          >
-            Before
-          </button>
-          <button
-            onClick={() => setTab('after')}
-            className={cn(
-              "px-3 py-1 rounded text-xs font-medium transition-colors",
-              tab === 'after' ? "bg-forest/20 text-forest border border-forest/30" : "text-slate-500 hover:text-slate-400"
-            )}
-          >
-            After GrounDocs
-          </button>
+          </div>
         </div>
 
-        {/* Content area */}
-        <div className="bg-slate-950 p-5 min-h-[260px] overflow-hidden">
+        {/* Content area — fixed height */}
+        <div className="bg-slate-950 p-4 h-[280px] overflow-hidden">
           <AnimatePresence mode="wait">
-            {tab === 'before' ? (
-              <motion.div
-                key="before"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-3"
-              >
-                {beforeContent.map((block, i) => (
-                  <div key={i}>
-                    {block.type === 'h1' && (
-                      <h2 className="text-slate-200 text-lg font-semibold font-serif mb-2">{block.text}</h2>
-                    )}
-                    {block.type === 'p' && (
-                      <p className="text-slate-400 text-xs leading-relaxed">{block.text}</p>
-                    )}
-                  </div>
-                ))}
-              </motion.div>
-            ) : (
-              <motion.div
-                key="after"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2 }}
-                className="space-y-3"
-              >
-                {afterContent.map((block, i) => (
-                  <div key={i}>
-                    {block.type === 'h1' && (
-                      <h2 className="text-slate-200 text-lg font-semibold font-serif">{block.text}</h2>
-                    )}
-                    {block.type === 'badge' && (
-                      <span className="inline-flex items-center px-2 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest text-xs font-mono">
-                        {block.text}
-                      </span>
-                    )}
-                    {block.type === 'p' && (
-                      <p className="text-slate-400 text-xs leading-relaxed">{block.text}</p>
-                    )}
-                    {block.type === 'table-header' && (
-                      <div className="border border-white/10 rounded overflow-hidden mt-1">
-                        <div className="grid grid-cols-4 bg-slate-900 px-3 py-1.5 gap-2">
-                          {block.cols!.map((col, j) => (
-                            <span key={j} className="text-slate-400 text-xs font-medium">{col}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {block.type === 'table-row' && (
-                      <div className="border-x border-b border-white/10 rounded-b overflow-hidden -mt-px">
-                        <div className="grid grid-cols-4 px-3 py-1.5 gap-2 border-t border-white/10 first:border-t-0">
-                          {block.cols!.map((col, j) => (
-                            <span key={j} className={cn("text-xs", j === 0 ? "text-blue-400 font-mono" : j === 2 ? "text-green-400" : "text-slate-400")}>
-                              {col}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {block.type === 'code' && (
-                      <div className="bg-slate-900 border border-white/10 rounded p-3 mt-1">
-                        <pre className="text-xs text-slate-300 font-mono whitespace-pre overflow-x-auto">{block.text}</pre>
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </motion.div>
-            )}
+            <motion.div
+              key={`${company}-${tab}`}
+              initial={{ opacity: 0, y: 5 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -5 }}
+              transition={{ duration: 0.18 }}
+            >
+              {tab === 'before' ? data.before : data.after}
+            </motion.div>
           </AnimatePresence>
         </div>
       </div>
 
-      {/* Score improvement label */}
-      <div className="flex items-center justify-center gap-3 text-xs text-slate-500">
-        <span className="flex items-center gap-1.5">
-          <span className="inline-block w-2 h-2 rounded-full bg-red-500/60" />
-          Before: D (38/100)
-        </span>
-        <ArrowRight className="w-3 h-3 text-slate-600" />
-        <span className="flex items-center gap-1.5 text-forest">
-          <span className="inline-block w-2 h-2 rounded-full bg-forest" />
-          After: A (91/100)
-        </span>
+      {/* Score delta + CTA */}
+      <div className="flex items-center justify-between text-xs text-slate-500">
+        <div className="flex items-center gap-2">
+          <span className="flex items-center gap-1.5">
+            <span className="inline-block w-2 h-2 rounded-full bg-red-500/60" />
+            Before: {data.scoreBefore}/100
+          </span>
+          <ArrowRight className="w-3 h-3 text-slate-600" />
+          <span className="flex items-center gap-1.5 text-forest">
+            <span className="inline-block w-2 h-2 rounded-full bg-forest" />
+            After: {data.scoreAfter}/100
+          </span>
+        </div>
+        <button
+          onClick={() => setTab(tab === 'before' ? 'after' : 'before')}
+          className="text-slate-500 hover:text-slate-300 transition-colors"
+        >
+          {tab === 'before' ? 'See optimized →' : '← See original'}
+        </button>
       </div>
     </motion.div>
   )
