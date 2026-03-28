@@ -37,6 +37,7 @@ interface ViewerIndex {
   grade: string
   pages: PageMeta[]
   created_at: string
+  is_seed?: boolean
 }
 
 interface PageContent {
@@ -133,11 +134,19 @@ export function Viewer() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="font-serif text-2xl md:text-3xl tracking-[-0.01em]">
-                {index.site_name}
-              </h1>
+              <div className="flex items-center gap-2.5">
+                <h1 className="font-serif text-2xl md:text-3xl tracking-[-0.01em]">
+                  {index.site_name}
+                </h1>
+                {index.is_seed && (
+                  <span className="text-xs font-medium px-2 py-0.5 rounded bg-muted text-muted-foreground border">
+                    Sample
+                  </span>
+                )}
+              </div>
               <p className="text-sm text-muted-foreground mt-1">
                 {index.pages.length} pages optimized for AI agents
+                {index.is_seed && ' · demonstration optimization'}
               </p>
             </div>
             <div className="flex items-center gap-3">

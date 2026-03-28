@@ -28,6 +28,7 @@ interface PublicOptimization {
   grade: string
   page_count: number
   created_at: string
+  is_seed?: boolean
 }
 
 export function Showcase() {
@@ -72,6 +73,9 @@ export function Showcase() {
             Browse real documentation rewrites. See how GrounDocs transforms docs
             so AI agents can parse, cite, and recommend them.
           </p>
+          <p className="text-sm text-muted-foreground mt-3">
+            Companies marked <span className="font-medium text-foreground">Sample</span> are demonstration optimizations we ran to show output quality.
+          </p>
         </motion.div>
 
         {loading && (
@@ -108,9 +112,16 @@ export function Showcase() {
                 >
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground truncate group-hover:text-forest transition-colors">
-                        {opt.site_name}
-                      </h3>
+                      <div className="flex items-center gap-2">
+                        <h3 className="font-semibold text-foreground truncate group-hover:text-forest transition-colors">
+                          {opt.site_name}
+                        </h3>
+                        {opt.is_seed && (
+                          <span className="flex-shrink-0 text-[10px] font-medium px-1.5 py-0.5 rounded bg-muted text-muted-foreground border">
+                            Sample
+                          </span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1 truncate">
                         {opt.url}
                       </p>
