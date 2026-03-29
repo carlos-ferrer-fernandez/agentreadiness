@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -35,8 +35,6 @@ import {
   MessageSquare,
   RefreshCcw,
   Megaphone,
-  ChevronLeft,
-  ChevronRight,
   ChevronDown,
   Download,
   Globe,
@@ -126,295 +124,6 @@ const liveStatusMessages = [
   'Almost there, finalizing your score...',
 ]
 
-// Before/After examples showing common patterns across well-known companies
-const beforeAfterSlides = [
-  {
-    rule: '#2 Action-Oriented Headings',
-    ruleShort: 'Rule #2',
-    tagline: 'AI agents search by intent, not by topic name',
-    before: {
-      label: 'Typical docs (Salesforce-style)',
-      lines: [
-        { text: '## Contacts', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Opportunities', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Reports', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Administration', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// Topic-based headings. An agent searching', type: 'comment-bad' as const },
-        { text: '// "how to import contacts" won\'t match.', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After GrounDocs',
-      lines: [
-        { text: '## Import Contacts from a CSV File', type: 'heading-good' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Create and Track a Sales Opportunity', type: 'heading-good' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Build a Custom Sales Report', type: 'heading-good' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Configure User Roles and Permissions', type: 'heading-good' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// Intent-based headings match how users', type: 'comment-good' as const },
-        { text: '// actually ask AI for help.', type: 'comment-good' as const },
-      ],
-    },
-  },
-  {
-    rule: '#3 Structured Data Tables',
-    ruleShort: 'Rule #3',
-    tagline: 'Tables are machine-parseable. Prose is not.',
-    before: {
-      label: 'Typical docs (Zendesk-style)',
-      lines: [
-        { text: 'You can configure the following options:', type: 'normal' as const },
-        { text: 'ticket priority (low, normal, high,', type: 'prose-bad' as const },
-        { text: 'urgent), assignee, tags, custom fields,', type: 'prose-bad' as const },
-        { text: 'and SLA policy. Some fields are required', type: 'prose-bad' as const },
-        { text: 'depending on your plan.', type: 'prose-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// Options buried in prose. No structure.', type: 'comment-bad' as const },
-        { text: '// AI can\'t extract valid values reliably.', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After GrounDocs',
-      lines: [
-        { text: '| Field      | Type     | Required | Values               |', type: 'table-header' as const },
-        { text: '|------------|----------|----------|----------------------|', type: 'table-sep' as const },
-        { text: '| priority   | enum     | yes      | low, normal, high,   |', type: 'table-row' as const },
-        { text: '|            |          |          | urgent               |', type: 'table-row' as const },
-        { text: '| assignee   | user_id  | no       | Any active agent     |', type: 'table-row' as const },
-        { text: '| tags       | string[] | no       | Max 20 tags          |', type: 'table-row' as const },
-        { text: '| sla_policy | string   | Pro plan | Default: "standard"  |', type: 'table-row' as const },
-      ],
-    },
-  },
-  {
-    rule: '#6 First-Class Error Docs',
-    ruleShort: 'Rule #6',
-    tagline: 'AI agents need exact error strings to help users troubleshoot',
-    before: {
-      label: 'Typical docs (Shopify-style)',
-      lines: [
-        { text: 'If something goes wrong, check your', type: 'normal' as const },
-        { text: 'settings and try again. Contact support', type: 'normal' as const },
-        { text: 'if the issue persists.', type: 'normal' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// No error codes listed. No common issues.', type: 'comment-bad' as const },
-        { text: '// "Contact support" is a dead-end for AI.', type: 'comment-bad' as const },
-        { text: '// Agent can\'t help the user at all.', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After GrounDocs',
-      lines: [
-        { text: '| Error              | Cause                | Fix                  |', type: 'table-header' as const },
-        { text: '|--------------------|----------------------|----------------------|', type: 'table-sep' as const },
-        { text: '| "Invalid API key"  | Key expired/revoked  | Generate new key in  |', type: 'table-row' as const },
-        { text: '|                    |                      | Settings > API Keys  |', type: 'table-row' as const },
-        { text: '| "Rate limited"     | Over 40 req/sec      | Add 1s delay between |', type: 'table-row' as const },
-        { text: '|                    |                      | requests             |', type: 'table-row' as const },
-        { text: '| "Product not found"| Wrong product ID     | Use GET /products to |', type: 'table-row' as const },
-        { text: '|                    | or deleted product   | list valid IDs       |', type: 'table-row' as const },
-      ],
-    },
-  },
-  {
-    rule: '#1 Self-Contained Sections',
-    ruleShort: 'Rule #1',
-    tagline: 'AI retrieves one section at a time. It needs full context.',
-    before: {
-      label: 'Typical docs (HubSpot-style)',
-      lines: [
-        { text: '## Email Templates', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: 'As mentioned in the previous section,', type: 'prose-bad' as const },
-        { text: 'you\'ll need to set up your sending', type: 'prose-bad' as const },
-        { text: 'domain first (see above).', type: 'prose-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: 'Use the same method described earlier', type: 'prose-bad' as const },
-        { text: 'to authenticate your requests.', type: 'prose-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// AI only sees this section. "See above"', type: 'comment-bad' as const },
-        { text: '// and "described earlier" are dead-ends.', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After GrounDocs',
-      lines: [
-        { text: '## Create and Send an Email Template', type: 'heading-good' as const },
-        { text: '', type: 'gap' as const },
-        { text: 'To send a template-based email, you need', type: 'normal' as const },
-        { text: 'a verified sending domain and an API key', type: 'normal' as const },
-        { text: 'with "Email" scope. Authenticate using a', type: 'normal' as const },
-        { text: 'Bearer token in the Authorization header.', type: 'normal' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// Every section stands alone. AI can', type: 'comment-good' as const },
-        { text: '// answer without reading other pages.', type: 'comment-good' as const },
-      ],
-    },
-  },
-  {
-    rule: '#9 Prerequisites + #10 Expected Outcomes',
-    ruleShort: 'Rules #9 & #10',
-    tagline: 'Tell AI what\'s needed upfront and what success looks like',
-    before: {
-      label: 'Typical docs (Twilio-style)',
-      lines: [
-        { text: '# Getting Started', type: 'heading-bad' as const },
-        { text: '', type: 'gap' as const },
-        { text: 'Welcome to our platform! Let\'s get you', type: 'normal' as const },
-        { text: 'set up in no time. It\'s easy to start.', type: 'normal' as const },
-        { text: '', type: 'gap' as const },
-        { text: 'client.messages.create({ body: "Hi" })', type: 'code' as const },
-        { text: '', type: 'gap' as const },
-        { text: '// No prerequisites. No expected result.', type: 'comment-bad' as const },
-        { text: '// What account? What permissions? What', type: 'comment-bad' as const },
-        { text: '// does success look like?', type: 'comment-bad' as const },
-      ],
-    },
-    after: {
-      label: 'After GrounDocs',
-      lines: [
-        { text: '## Prerequisites', type: 'heading-good' as const },
-        { text: '- Active account (free trial: 100 messages)', type: 'normal' as const },
-        { text: '- Verified phone number', type: 'normal' as const },
-        { text: '- API credentials from Dashboard > Keys', type: 'normal' as const },
-        { text: '', type: 'gap' as const },
-        { text: '## Expected Result', type: 'heading-good' as const },
-        { text: '// { sid: "SM...", status: "queued",', type: 'comment-good' as const },
-        { text: '//   date_sent: "2025-03-21T..." }', type: 'comment-good' as const },
-      ],
-    },
-  },
-]
-
-function CodeLine({ line }: { line: { text: string; type: string } }) {
-  const styles: Record<string, string> = {
-    'heading-bad': 'text-red-400 font-bold',
-    'heading-good': 'text-emerald-400 font-bold',
-    'normal': 'text-slate-300',
-    'gap': '',
-    'prose-bad': 'text-red-300/80 bg-red-500/10',
-    'code': 'text-sky-300',
-    'comment-bad': 'text-red-400/60 italic',
-    'comment-good': 'text-emerald-400/60 italic',
-    'table-header': 'text-amber-300 font-mono text-xs',
-    'table-sep': 'text-slate-600 font-mono text-xs',
-    'table-row': 'text-slate-300 font-mono text-xs',
-    'frontmatter': 'text-violet-400',
-  }
-  if (line.type === 'gap') return <div className="h-2" />
-  return (
-    <div className={cn('px-3 py-0.5 font-mono text-[13px] leading-relaxed whitespace-pre', styles[line.type] || 'text-slate-300')}>
-      {line.text}
-    </div>
-  )
-}
-
-function BeforeAfterSlideshow() {
-  const [current, setCurrent] = useState(0)
-  const slide = beforeAfterSlides[current]
-
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrent(prev => (prev + 1) % beforeAfterSlides.length)
-    }, 6000)
-    return () => clearInterval(timer)
-  }, [])
-
-  return (
-    <div>
-      <div className="flex items-center justify-center gap-3 mb-6">
-        <button
-          onClick={() => setCurrent(prev => (prev - 1 + beforeAfterSlides.length) % beforeAfterSlides.length)}
-          className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-slate-400"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <div className="flex items-center gap-2">
-          {beforeAfterSlides.map((_, i) => (
-            <button
-              key={i}
-              onClick={() => setCurrent(i)}
-              className={cn(
-                'w-2 h-2 rounded-full transition-all',
-                i === current ? 'bg-emerald-400 w-6' : 'bg-slate-600 hover:bg-slate-500'
-              )}
-            />
-          ))}
-        </div>
-        <button
-          onClick={() => setCurrent(prev => (prev + 1) % beforeAfterSlides.length)}
-          className="p-1.5 rounded-full hover:bg-white/10 transition-colors text-slate-400"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={current}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.25 }}
-        >
-          <div className="text-center mb-6">
-            <Badge className="mb-2 bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:bg-emerald-500/30">{slide.rule}</Badge>
-            <p className="text-sm text-slate-400">{slide.tagline}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            {/* Before */}
-            <div className="rounded-xl border border-red-500/20 bg-slate-950 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-red-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                </div>
-                <span className="text-xs text-red-400 font-medium ml-2">BEFORE</span>
-                <span className="text-xs text-slate-500 ml-auto">{slide.before.label}</span>
-              </div>
-              <div className="py-3 min-h-[220px]">
-                {slide.before.lines.map((line, i) => (
-                  <CodeLine key={i} line={line} />
-                ))}
-              </div>
-            </div>
-
-            {/* After */}
-            <div className="rounded-xl border border-emerald-500/20 bg-slate-950 overflow-hidden">
-              <div className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
-                <div className="flex gap-1.5">
-                  <div className="w-3 h-3 rounded-full bg-emerald-500/60" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                  <div className="w-3 h-3 rounded-full bg-slate-700" />
-                </div>
-                <span className="text-xs text-emerald-400 font-medium ml-2">AFTER</span>
-                <span className="text-xs text-slate-500 ml-auto">{slide.after.label}</span>
-              </div>
-              <div className="py-3 min-h-[220px]">
-                {slide.after.lines.map((line, i) => (
-                  <CodeLine key={i} line={line} />
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <p className="text-center text-xs text-slate-500 mt-4">
-            {current + 1} of {beforeAfterSlides.length} examples
-          </p>
-        </motion.div>
-      </AnimatePresence>
-    </div>
-  )
-}
 
 // FAQ Accordion Item
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -445,11 +154,11 @@ function FaqItem({ q, a }: { q: string; a: string }) {
   )
 }
 
-type CompanyKey = 'algolia' | 'loops' | 'webflow'
+type CompanyKey = 'algolia' | 'loops' | 'webflow' | 'linear' | 'segment'
 
 const DEMO_COMPANIES: Record<CompanyKey, {
   name: string
-  batch: string
+  domain: string
   url: string
   page: string
   scoreBefore: number
@@ -459,7 +168,7 @@ const DEMO_COMPANIES: Record<CompanyKey, {
 }> = {
   algolia: {
     name: 'Algolia',
-    batch: 'YC S14',
+    domain: 'algolia.com',
     url: 'algolia.com/doc/api-reference/api-methods/save-objects',
     page: 'Add Records to Index',
     scoreBefore: 41,
@@ -511,7 +220,7 @@ const DEMO_COMPANIES: Record<CompanyKey, {
   },
   loops: {
     name: 'Loops',
-    batch: 'YC W22',
+    domain: 'loops.so',
     url: 'loops.so/docs/api-reference/send-event',
     page: 'Send a Transactional Email',
     scoreBefore: 48,
@@ -560,7 +269,7 @@ const DEMO_COMPANIES: Record<CompanyKey, {
   },
   webflow: {
     name: 'Webflow',
-    batch: 'YC W13',
+    domain: 'webflow.com',
     url: 'developers.webflow.com/reference/create-item',
     page: 'Create a CMS Collection Item',
     scoreBefore: 44,
@@ -607,6 +316,99 @@ const DEMO_COMPANIES: Record<CompanyKey, {
       </div>
     ),
   },
+  linear: {
+    name: 'Linear',
+    domain: 'linear.app',
+    url: 'developers.linear.app/reference/create-issue',
+    page: 'Create an Issue',
+    scoreBefore: 45,
+    scoreAfter: 92,
+    before: (
+      <div className="space-y-3">
+        <h2 className="text-slate-200 text-base font-semibold font-serif">Creating Issues</h2>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          To create an issue in Linear, you use the GraphQL API. You need to provide the team ID which you can get by querying the teams endpoint. Issues need a title. You can optionally provide a description in markdown format. Priority is represented as a number from 0 to 4 where 0 means no priority, 1 is urgent, 2 is high, 3 is medium, and 4 is low. You can assign the issue to a user by providing their user ID. If you want to set the status, you need to provide the state ID, which you can get by querying available workflow states for that team.
+        </p>
+      </div>
+    ),
+    after: (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-slate-200 text-base font-semibold font-serif">Create an Issue</h2>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-violet-500/20 border border-violet-500/30 text-violet-400">MUTATION</span>
+        </div>
+        <p className="text-slate-400 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-medium">Agent context:</span> Creates an issue in the specified team. Priority: 0=none, 1=urgent, 2=high, 3=medium, 4=low. Get <code className="text-slate-300">teamId</code> via <code className="text-slate-300">teams {"{ id name }"}</code> query first.
+        </p>
+        <div className="border border-white/10 rounded overflow-hidden text-[11px]">
+          <div className="grid grid-cols-3 bg-slate-900 px-3 py-1.5 gap-2">
+            <span className="text-slate-400 font-medium">Parameter</span>
+            <span className="text-slate-400 font-medium">Req.</span>
+            <span className="text-slate-400 font-medium">Description</span>
+          </div>
+          {[
+            ['teamId', '✓', 'Team to create the issue in'],
+            ['title', '✓', 'Issue title (markdown supported)'],
+            ['description', '–', 'Issue body in markdown'],
+            ['priority', '–', '0–4. Default: 0 (none)'],
+            ['stateId', '–', 'Workflow state. Defaults to first "Todo" state'],
+          ].map(([p, r, d], i) => (
+            <div key={i} className="grid grid-cols-3 px-3 py-1.5 gap-2 border-t border-white/10">
+              <span className="text-blue-400 font-mono">{p}</span>
+              <span className={r === '✓' ? 'text-green-400' : 'text-slate-500'}>{r}</span>
+              <span className="text-slate-500">{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
+  segment: {
+    name: 'Segment',
+    domain: 'segment.com',
+    url: 'segment.com/docs/connections/spec/track',
+    page: 'Track a User Event',
+    scoreBefore: 39,
+    scoreAfter: 91,
+    before: (
+      <div className="space-y-3">
+        <h2 className="text-slate-200 text-base font-semibold font-serif">Track</h2>
+        <p className="text-slate-400 text-xs leading-relaxed">
+          The track call lets you record any actions your users perform, along with any properties that describe the action. Each action is known as an event, and each event has a name. You need to either pass a userId or an anonymousId. The anonymousId is useful for tracking before a user logs in. You can pass a properties object with any data you want to capture about the event. You can also pass a context object and a timestamp if you want to record when the event happened.
+        </p>
+      </div>
+    ),
+    after: (
+      <div className="space-y-2.5">
+        <div className="flex items-center gap-2">
+          <h2 className="text-slate-200 text-base font-semibold font-serif">Track a User Event</h2>
+          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-forest/20 border border-forest/30 text-forest">POST</span>
+        </div>
+        <p className="text-slate-400 text-[11px] leading-relaxed">
+          <span className="text-amber-400 font-medium">Agent context:</span> Records a user action. Requires <code className="text-slate-300">userId</code> (identified) or <code className="text-slate-300">anonymousId</code> (pre-login). Event names should be past-tense: "Order Completed", "Item Added".
+        </p>
+        <div className="border border-white/10 rounded overflow-hidden text-[11px]">
+          <div className="grid grid-cols-3 bg-slate-900 px-3 py-1.5 gap-2">
+            <span className="text-slate-400 font-medium">Parameter</span>
+            <span className="text-slate-400 font-medium">Req.</span>
+            <span className="text-slate-400 font-medium">Description</span>
+          </div>
+          {[
+            ['event', '✓', 'Event name. Past-tense verb: "Order Completed"'],
+            ['userId', '✓*', 'Identified user. Required unless anonymousId set'],
+            ['anonymousId', '✓*', 'Pre-login visitor. Required unless userId set'],
+            ['properties', '–', 'Event data: { revenue: 9.99, sku: "abc" }'],
+          ].map(([p, r, d], i) => (
+            <div key={i} className="grid grid-cols-3 px-3 py-1.5 gap-2 border-t border-white/10">
+              <span className="text-blue-400 font-mono">{p}</span>
+              <span className={r.startsWith('✓') ? 'text-green-400' : 'text-slate-500'}>{r}</span>
+              <span className="text-slate-500">{d}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    ),
+  },
 }
 
 function HeroProductDemo() {
@@ -628,21 +430,26 @@ function HeroProductDemo() {
       className="hidden lg:flex flex-col gap-3 pt-2"
     >
       {/* Company selector */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 flex-wrap">
         <span className="text-xs text-slate-500 mr-1">Examples:</span>
         {(Object.keys(DEMO_COMPANIES) as CompanyKey[]).map(key => (
           <button
             key={key}
             onClick={() => handleCompany(key)}
             className={cn(
-              "px-3 py-1 rounded-full text-xs font-medium transition-colors border",
+              "flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium transition-colors border",
               company === key
                 ? "bg-white/10 text-white border-white/20"
                 : "text-slate-500 border-transparent hover:text-slate-300 hover:border-white/10"
             )}
           >
+            <img
+              src={`https://logo.clearbit.com/${DEMO_COMPANIES[key].domain}`}
+              alt={DEMO_COMPANIES[key].name}
+              className="w-3.5 h-3.5 rounded-sm"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
             {DEMO_COMPANIES[key].name}
-            <span className="ml-1.5 text-[10px] text-slate-600">{DEMO_COMPANIES[key].batch}</span>
           </button>
         ))}
       </div>
@@ -742,6 +549,85 @@ function HeroProductDemo() {
         </button>
       </div>
     </motion.div>
+  )
+}
+
+function BeforeAfterSlideshow() {
+  const [company, setCompany] = useState<CompanyKey>('algolia')
+  const data = DEMO_COMPANIES[company]
+
+  return (
+    <div>
+      {/* Company logo selector */}
+      <div className="flex flex-wrap items-center justify-center gap-2 mb-8">
+        {(Object.keys(DEMO_COMPANIES) as CompanyKey[]).map(key => (
+          <button
+            key={key}
+            onClick={() => setCompany(key)}
+            className={cn(
+              'flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-colors border',
+              company === key
+                ? 'bg-white/10 text-white border-white/20'
+                : 'text-slate-400 border-white/10 hover:text-slate-300 hover:border-white/20'
+            )}
+          >
+            <img
+              src={`https://logo.clearbit.com/${DEMO_COMPANIES[key].domain}`}
+              alt={DEMO_COMPANIES[key].name}
+              className="w-4 h-4 rounded-sm"
+              onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+            />
+            {DEMO_COMPANIES[key].name}
+          </button>
+        ))}
+      </div>
+
+      {/* Side-by-side before / after */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={company}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.25 }}
+        >
+          <div className="grid md:grid-cols-2 gap-4">
+            {/* Before */}
+            <div className="rounded-xl border border-red-500/20 bg-slate-900/60 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-red-500/10 border-b border-red-500/20">
+                <span className="text-xs text-red-400 font-medium tracking-wide">BEFORE</span>
+                <span className="text-xs text-slate-500">Score: {data.scoreBefore}/100</span>
+              </div>
+              <div className="p-4 min-h-[220px]">{data.before}</div>
+            </div>
+
+            {/* After */}
+            <div className="rounded-xl border border-emerald-500/20 bg-slate-900/60 overflow-hidden">
+              <div className="flex items-center justify-between px-4 py-2.5 bg-emerald-500/10 border-b border-emerald-500/20">
+                <span className="text-xs text-emerald-400 font-medium tracking-wide">AFTER GROUNDOCS</span>
+                <span className="text-xs text-forest font-medium">Score: {data.scoreAfter}/100</span>
+              </div>
+              <div className="p-4 min-h-[220px]">{data.after}</div>
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between mt-4 text-xs text-slate-500">
+            <span>
+              <span className="text-slate-300 font-medium">{data.name}</span>
+              {' — '}{data.page}
+            </span>
+            <a
+              href={`https://${data.url}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-slate-300 transition-colors"
+            >
+              View original ↗
+            </a>
+          </div>
+        </motion.div>
+      </AnimatePresence>
+    </div>
   )
 }
 
