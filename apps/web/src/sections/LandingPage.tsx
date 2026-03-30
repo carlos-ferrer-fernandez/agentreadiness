@@ -48,6 +48,7 @@ import { cn } from '@/lib/utils'
 import { useAssessmentStore } from '@/store/assessment'
 import { assessmentsApi } from '@/lib/api'
 import { useNavigate, Link } from 'react-router-dom'
+import { BLOG_POSTS } from '@/data/blogPosts'
 
 const features = [
   {
@@ -1580,6 +1581,66 @@ export function LandingPage() {
                 a="You get a ZIP containing structured Markdown (.md) files, one per page, rendered HTML previews, an llms.txt agent entry point, and deployment instructions. Works with any content platform: Mintlify, GitBook, ReadMe, Docusaurus, WordPress, Notion, and more."
               />
             </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Blog Section */}
+      <section className="py-20 lg:py-24 border-t">
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-end justify-between mb-10 gap-4">
+            <div>
+              <Badge variant="outline" className="mb-4 text-xs">From the blog</Badge>
+              <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em]">
+                Master agent-first documentation
+              </h2>
+              <p className="text-muted-foreground mt-3 max-w-xl">
+                Deep guides on the 20 rules — from discoverability to trustability. Learn what
+                AI agents need to recommend your product.
+              </p>
+            </div>
+            <Link
+              to="/blog"
+              className="hidden md:flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap"
+            >
+              View all articles
+              <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
+          </div>
+
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {BLOG_POSTS.slice(0, 3).map((post) => (
+              <Link
+                key={post.slug}
+                to={`/blog/${post.slug}`}
+                className="group block rounded-xl border bg-card p-6 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/5 transition-all duration-200"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                    {post.category}
+                  </span>
+                  <span className="text-xs text-muted-foreground">{post.readingTime} min read</span>
+                </div>
+                <h3 className="text-sm font-semibold leading-snug mb-2 group-hover:text-emerald-400 transition-colors line-clamp-2">
+                  {post.title}
+                </h3>
+                <p className="text-xs text-muted-foreground line-clamp-2 mb-4">
+                  {post.description}
+                </p>
+                <span className="text-xs text-emerald-400 group-hover:translate-x-0.5 transition-transform inline-block">
+                  Read article →
+                </span>
+              </Link>
+            ))}
+          </div>
+
+          <div className="mt-6 text-center md:hidden">
+            <Link
+              to="/blog"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors inline-flex items-center gap-1.5"
+            >
+              View all 6 articles <ArrowRight className="w-3.5 h-3.5" />
+            </Link>
           </div>
         </div>
       </section>
