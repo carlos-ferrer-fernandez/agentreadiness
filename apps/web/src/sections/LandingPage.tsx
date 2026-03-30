@@ -784,6 +784,9 @@ export function LandingPage() {
               <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md hover:bg-muted">
                 FAQ
               </a>
+              <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md hover:bg-muted">
+                Blog
+              </Link>
               <a href="/support" className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-2 rounded-md hover:bg-muted">
                 Support
               </a>
@@ -816,6 +819,7 @@ export function LandingPage() {
                 <a href="#rules" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">20 Rules</a>
                 <a href="#pricing" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Pricing</a>
                 <a href="#faq" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">FAQ</a>
+                <Link to="/blog" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Blog</Link>
                 <a href="/support" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Support</a>
                 <Button size="sm" className="w-full mt-2 bg-forest hover:bg-forest-hover text-white" onClick={scrollToAssessment}>
                   Get Free Score
@@ -1621,6 +1625,9 @@ export function LandingPage() {
               <a href="#faq" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 FAQ
               </a>
+              <Link to="/blog" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
+                Blog
+              </Link>
               <a href="/support" className="text-sm text-muted-foreground hover:text-foreground transition-colors">
                 Support
               </a>
