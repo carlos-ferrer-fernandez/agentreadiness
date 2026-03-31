@@ -53,23 +53,23 @@ import { BLOG_POSTS } from '@/data/blogPosts'
 const features = [
   {
     icon: Bot,
-    title: 'Multi-Agent Simulation',
-    description: 'We test your content the way Claude, GPT, Gemini, and 5 other AI agents actually read it. Not how humans browse it.',
-  },
-  {
-    icon: BarChart3,
-    title: 'Agent-Readiness Score',
-    description: 'Get a 0-100 score with a letter grade and rule-by-rule breakdown. Know exactly what AI agents struggle with on your site.',
+    title: 'Agent-First Voice',
+    description: 'Written to speak directly to AI agents, not human browsers. Every section answers what agents actually need: what it is, how to access it, what it can do, how to recommend it.',
   },
   {
     icon: FileCode,
-    title: 'Rewritten Content',
-    description: 'Not a report. Not tips. We rewrite your actual pages applying all 20 rules. Download and deploy in minutes.',
+    title: 'Complete Technical Spec',
+    description: 'API endpoints, auth methods, capabilities, and working examples — everything an agent needs to take action without guessing or hallucinating.',
+  },
+  {
+    icon: Zap,
+    title: 'Zero-Friction Access Path',
+    description: 'A clear, step-by-step onboarding flow an agent can execute autonomously. No dead-ends, no "contact us", no flows that require a human to unblock.',
   },
   {
     icon: Globe,
-    title: 'llms.txt Entry Point',
-    description: 'Every package includes an llms.txt file, the emerging standard that helps AI agents discover and navigate your content.',
+    title: 'Convince-Your-Human Section',
+    description: 'A structured pitch an agent can adapt when advocating for your product to the people it works with. Plus llms.txt so agents discover you first.',
   },
 ]
 
@@ -793,7 +793,7 @@ export function LandingPage() {
               </a>
               <div className="w-px h-5 bg-border mx-2" />
               <Button size="sm" className="bg-forest hover:bg-forest-hover text-white" onClick={scrollToAssessment}>
-                Get Free Score
+                Get Free Scan
               </Button>
             </div>
 
@@ -823,7 +823,7 @@ export function LandingPage() {
                 <Link to="/blog" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Blog</Link>
                 <a href="/support" className="block text-sm text-muted-foreground px-3 py-2 rounded-md hover:bg-muted">Support</a>
                 <Button size="sm" className="w-full mt-2 bg-forest hover:bg-forest-hover text-white" onClick={scrollToAssessment}>
-                  Get Free Score
+                  Get Free Scan
                 </Button>
               </div>
             </motion.div>
@@ -849,7 +849,7 @@ export function LandingPage() {
               >
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-forest/10 border border-forest/20 text-forest text-sm font-medium mb-8">
                   <Sparkles className="w-3.5 h-3.5" />
-                  Benchmarked against Claude, GPT, Gemini, and 5 more agents
+                  One page. Agent-optimized by default.
                 </span>
               </motion.div>
 
@@ -859,9 +859,9 @@ export function LandingPage() {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="font-serif text-4xl md:text-5xl lg:text-[3.25rem] tracking-[-0.01em] leading-[1.1] mb-6 text-white"
               >
-                Make AI agents{' '}
+                Give AI agents a{' '}
                 <span className="text-forest">
-                  find you and recommend you
+                  dedicated front door to your product
                 </span>
               </motion.h1>
 
@@ -871,9 +871,9 @@ export function LandingPage() {
                 transition={{ duration: 0.5, delay: 0.2 }}
                 className="text-lg text-slate-400 mb-8 leading-relaxed"
               >
-                When people ask AI about your industry, the answer comes from your content.
-                We evaluate your docs against 20 rules, then rewrite every page so agents
-                can parse, cite, and recommend your business.
+                Most products send AI agents to a marketing site built for humans.
+                We build your <code className="text-forest font-mono text-base">/agents</code> page — one dedicated, machine-readable page that tells agents
+                exactly what your product is, how to access it, and how to recommend it.
               </motion.p>
 
               {/* Browse examples link */}
@@ -888,7 +888,7 @@ export function LandingPage() {
                   className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-forest transition-colors"
                 >
                   <Eye className="w-3.5 h-3.5" />
-                  See real optimization examples →
+                  See example /agents pages →
                 </Link>
               </motion.div>
 
@@ -906,7 +906,7 @@ export function LandingPage() {
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
                     <Input
                       type="text"
-                      placeholder="Enter your URL (e.g., docs.example.com, help.example.com)"
+                      placeholder="Enter your product URL (e.g., example.com, docs.example.com)"
                       value={url}
                       onChange={(e) => { setUrl(e.target.value); setError(null) }}
                       className="pl-10 h-12 text-base rounded-xl border-border/60 focus:border-forest focus:ring-forest/20"
@@ -925,7 +925,7 @@ export function LandingPage() {
                       >
                         <div className="pt-2 border-t">
                           <p className="text-xs text-muted-foreground mb-3">
-                            We'll send your free report to this email
+                            We'll send your free agent readiness report to this email
                           </p>
                           <Input
                             type="email"
@@ -976,7 +976,7 @@ export function LandingPage() {
                       </>
                     ) : (
                       <>
-                        Run Free Assessment
+                        Check Agent Readiness — Free
                         <ArrowRight className="ml-2 w-4 h-4" />
                       </>
                     )}
@@ -1063,7 +1063,7 @@ export function LandingPage() {
               <div className="flex items-center gap-6 mt-5 text-xs text-slate-500">
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
-                  Free, no credit card
+                  Free analysis
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
@@ -1071,7 +1071,7 @@ export function LandingPage() {
                 </span>
                 <span className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-forest" />
-                  20-rule evaluation
+                  One deployable page
                 </span>
               </div>
             </motion.div>
@@ -1109,19 +1109,19 @@ export function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
             >
-              <Badge variant="outline" className="mb-6 text-xs">The new distribution channel</Badge>
+              <Badge variant="outline" className="mb-6 text-xs">The missing piece</Badge>
               <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-6">
-                Your content is your storefront in the agent economy
+                Most products don't have a front door for AI agents
               </h2>
               <p className="text-lg text-muted-foreground leading-relaxed mb-4">
-                AI agents don't browse your marketing site. They read your documentation, help center, and product pages.
-                When someone asks Claude "what's the best race registration platform?" or GPT "how do I send transactional emails?",
-                the agent pulls from your content to answer.
+                When an AI agent needs to understand your product — to recommend it, help a user set it up, or integrate it —
+                it has nowhere to go. There's no dedicated page that speaks its language, explains your access model,
+                or tells it what your product can actually do.
               </p>
               <p className="text-lg text-muted-foreground leading-relaxed">
-                If your content isn't structured for machine consumption, agents can't parse it, can't cite it,
-                and they recommend a competitor instead. Whether you're a SaaS tool, a marketplace, or a B2B platform,
-                your documentation is no longer just for humans.
+                So agents improvise from your marketing copy, your FAQs, and your docs. They hallucinate API details.
+                They hit human-only flows and give up. Or they recommend a competitor whose product they can actually understand.
+                The companies that fix this first win. The rest become invisible to the fastest-growing discovery channel.
               </p>
             </motion.div>
           </div>
@@ -1132,12 +1132,12 @@ export function LandingPage() {
       <section className="py-16 lg:py-20 border-y bg-muted/20">
         <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="max-w-2xl mb-12">
-            <Badge variant="outline" className="mb-4 text-xs">Who it's for</Badge>
+            <Badge variant="outline" className="mb-4 text-xs">Who needs an /agents page</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
-              Not just for developers
+              Any product AI agents encounter
             </h2>
             <p className="text-muted-foreground text-lg">
-              Any business with online content that AI agents read can benefit from GrounDocs.
+              If an AI agent might recommend, integrate, or help a user set up your product — you need an /agents page.
             </p>
           </div>
 
@@ -1145,26 +1145,26 @@ export function LandingPage() {
             {[
               {
                 icon: Code2,
-                title: 'Developer Tools',
-                example: 'API docs, SDK references, integration guides',
+                title: 'Developer Tools & APIs',
+                example: 'Your API, SDK, or integration is how agents do the work',
                 ask: '"What\'s the best email API for Node.js?"',
-              },
-              {
-                icon: ShoppingBag,
-                title: 'Marketplaces & Platforms',
-                example: 'Help centers, organizer guides, vendor docs',
-                ask: '"What platform handles race registrations?"',
               },
               {
                 icon: Building2,
                 title: 'B2B SaaS',
-                example: 'Knowledge bases, onboarding docs, feature guides',
+                example: 'Agents recommend tools to users. Yours needs to be discoverable.',
                 ask: '"What CRM integrates with Slack?"',
               },
               {
+                icon: ShoppingBag,
+                title: 'Marketplaces & Platforms',
+                example: 'Agents book, search, and transact on behalf of users',
+                ask: '"What platform handles event registrations?"',
+              },
+              {
                 icon: Briefcase,
-                title: 'Professional Services',
-                example: 'Product pages, FAQ, support articles',
+                title: 'Any Product with a Signup',
+                example: 'If agents can reach it, they need to understand it',
                 ask: '"Which accounting software handles VAT?"',
               },
             ].map((useCase, index) => (
@@ -1242,7 +1242,7 @@ export function LandingPage() {
               </p>
 
               <Button variant="outline" size="sm" onClick={scrollToAssessment} className="rounded-lg">
-                Check if agents can find you
+                Does your product have an /agents page?
                 <ArrowRight className="ml-2 w-3 h-3" />
               </Button>
             </motion.div>
@@ -1256,10 +1256,10 @@ export function LandingPage() {
           <div className="max-w-2xl mb-16">
             <Badge variant="outline" className="mb-4 text-xs">How it works</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
-              From assessment to deployment in minutes
+              From scan to deployed /agents page in minutes
             </h2>
             <p className="text-muted-foreground text-lg">
-              Enter your URL. Get a score. See what AI agents struggle with. Get the fixed content.
+              Enter your URL. We analyze your product. You get one page agents can actually use.
             </p>
           </div>
 
@@ -1269,22 +1269,22 @@ export function LandingPage() {
               {
                 step: '1',
                 icon: Search,
-                title: 'Get Your Free Score',
-                description: 'Enter your URL. We evaluate your content against 20 agent-readiness rules derived from benchmarking 8 major AI agents.',
+                title: 'Scan Your Product',
+                description: 'Enter your URL. We crawl your site to understand what your product does, who it\'s for, and how agents can access it.',
                 highlight: 'Free',
               },
               {
                 step: '2',
                 icon: BarChart3,
-                title: 'See What\'s Failing',
-                description: 'Rule-by-rule breakdown: which rules pass, which fail, and exactly what agents struggle with. Per-page findings.',
+                title: 'See What Agents Can\'t Find',
+                description: 'We identify the gaps: missing API context, unclear access paths, human-only onboarding, content agents can\'t parse.',
                 highlight: 'Instant',
               },
               {
                 step: '3',
                 icon: Download,
-                title: 'Download Fixed Content',
-                description: 'Every page rewritten applying all 20 rules. Download a ZIP with optimized content + llms.txt. Deploy in minutes.',
+                title: 'Get Your /agents Page',
+                description: 'One complete, deployable page built from your product content, structured against all 20 agent-readiness rules. Download and host at /agents.',
                 highlight: '$99 one-time',
               },
             ].map((item, index) => (
@@ -1338,11 +1338,11 @@ export function LandingPage() {
               Before and after
             </Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4 text-white">
-              See what we fix, rule by rule
+              The quality standard behind every /agents page
             </h2>
             <p className="text-slate-400 text-lg">
-              Common patterns from Salesforce, Zendesk, Shopify, HubSpot, and Twilio docs
-              that make AI agents struggle. Here's how we fix them.
+              Each /agents page we build applies all 20 rules. Here's the difference it makes —
+              the same content, before and after agent-first structuring.
             </p>
           </div>
 
@@ -1359,8 +1359,8 @@ export function LandingPage() {
               The 20 Agent-Readiness Rules
             </h2>
             <p className="text-muted-foreground text-lg">
-              Derived from benchmarking 8 agents on what makes documentation easy or hard for them to consume.
-              Every rule is concrete, testable, and fixable.
+              Derived from benchmarking 8 agents on what makes content easy or hard for them to consume.
+              Every /agents page we build passes all 20. Every rule is concrete and verifiable.
             </p>
           </div>
 
@@ -1394,10 +1394,10 @@ export function LandingPage() {
 
           <div className="text-center mt-12">
             <p className="text-sm text-muted-foreground mb-5">
-              Your documentation is scored against all 20 rules. Our optimizer fixes every failing rule automatically.
+              We scan your product against all 20 rules and build your /agents page so it passes every one.
             </p>
             <Button onClick={scrollToAssessment} className="rounded-xl bg-forest hover:bg-forest-hover text-white">
-              Test Your Docs Against These Rules
+              Check If Your Product Is Agent-Ready
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
           </div>
@@ -1411,7 +1411,7 @@ export function LandingPage() {
             <Badge variant="outline" className="mb-4 text-xs">Pricing</Badge>
             <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">Simple, transparent pricing</h2>
             <p className="text-muted-foreground text-lg">
-              Free score first. Pay only if you want the optimized docs. $99 one-time — no subscription, no monthly fees, no engagement.
+              Free scan first. Pay only if you want your /agents page built. $99 one-time — no subscription, no monthly fees, no engagement.
             </p>
           </div>
 
@@ -1424,11 +1424,11 @@ export function LandingPage() {
               className="bg-card rounded-xl border p-8 flex flex-col"
             >
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-1">Assessment</h3>
+                <h3 className="text-lg font-semibold mb-1">Agent Readiness Scan</h3>
                 <div className="flex items-baseline gap-1">
                   <span className="text-4xl font-bold">$0</span>
                 </div>
-                <p className="text-sm text-muted-foreground mt-2">See where you stand</p>
+                <p className="text-sm text-muted-foreground mt-2">See what agents can and can't find</p>
               </div>
 
               <ul className="space-y-3 flex-1">
@@ -1436,8 +1436,8 @@ export function LandingPage() {
                   'Agent-Readiness Score (0-100)',
                   'Letter grade (A+ to F)',
                   '20-rule pass/warning/fail checklist',
-                  'Per-rule findings with page counts',
-                  'Component breakdown (5 dimensions)',
+                  'Exactly what agents struggle to find',
+                  'What\'s blocking autonomous access',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" />
@@ -1451,7 +1451,7 @@ export function LandingPage() {
                 className="w-full mt-8 rounded-xl h-11"
                 onClick={scrollToAssessment}
               >
-                Get Free Score
+                Scan My Product — Free
               </Button>
             </motion.div>
 
@@ -1469,7 +1469,7 @@ export function LandingPage() {
               </span>
 
               <div className="mb-6">
-                <h3 className="text-lg font-semibold mb-1">Optimized Documentation</h3>
+                <h3 className="text-lg font-semibold mb-1">Your /agents Page</h3>
                 <div className="flex items-baseline gap-2">
                   <span className="text-4xl font-bold">$99</span>
                   <span className="text-sm text-muted-foreground">(€84)</span>
@@ -1478,20 +1478,20 @@ export function LandingPage() {
                   One-time payment · No subscription · No monthly fees
                 </p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  Pay once, download, deploy. No engagement. No recurring charges.
+                  Pay once, download, deploy at /agents. No engagement. No recurring charges.
                 </p>
               </div>
 
               <ul className="space-y-3 flex-1">
                 {[
-                  'Everything in the free assessment',
-                  'All 20 rules applied to every page',
-                  'Every page individually rewritten by AI',
-                  'Self-contained sections for AI retrieval',
-                  'Complete examples with expected outcomes',
-                  'Structured tables, error docs, and metadata',
-                  'llms.txt agent entry point included',
-                  'Download as ZIP, deploy in minutes',
+                  'Everything in the free scan',
+                  'One complete /agents page, ready to deploy',
+                  'Agent-first voice — written for machine readers',
+                  'Full product description an agent can act on',
+                  'Access path: API, auth, signup — zero friction',
+                  'Structured examples an agent can execute',
+                  'Convince-your-human pitch section included',
+                  'llms.txt entry point + deploy in minutes',
                 ].map((feature) => (
                   <li key={feature} className="flex items-start gap-2.5 text-sm">
                     <CheckCircle2 className="w-4 h-4 text-forest flex-shrink-0 mt-0.5" />
@@ -1504,11 +1504,11 @@ export function LandingPage() {
                 className="w-full mt-8 rounded-xl h-11 bg-forest hover:bg-forest-hover text-white"
                 onClick={scrollToAssessment}
               >
-                Get Free Score First
+                Scan First, Then Decide
                 <ArrowRight className="ml-2 w-4 h-4" />
               </Button>
               <p className="text-xs text-center text-muted-foreground mt-3">
-                Run the free scan first. One-shot purchase, no strings attached.
+                Free scan first. One-shot purchase if you want the page built.
               </p>
             </motion.div>
           </div>
@@ -1519,11 +1519,11 @@ export function LandingPage() {
       <section className="py-20 lg:py-24 relative overflow-hidden bg-forest">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif text-3xl md:text-4xl text-white mb-4 tracking-[-0.01em]">
-            When someone asks AI about your industry, do they find you?
+            Does your product have a front door for AI agents?
           </h2>
           <p className="text-white/80 text-lg mb-8 max-w-2xl mx-auto">
-            If your content doesn't follow these 20 rules, AI agents struggle to answer accurately.
-            Worse: they recommend a competitor whose content is better structured.
+            When an AI agent encounters your product, it should have a dedicated page that speaks its language.
+            Without one, agents make their best guess — or skip you entirely.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button
@@ -1531,7 +1531,7 @@ export function LandingPage() {
               onClick={scrollToAssessment}
               className="rounded-xl bg-white text-forest hover:bg-forest-light h-12 px-8 font-semibold"
             >
-              Run Free Assessment
+              Check Agent Readiness — Free
               <ArrowRight className="ml-2 w-4 h-4" />
             </Button>
             <a href="#rules" className="text-white/90 hover:text-white text-sm font-medium flex items-center gap-1.5">
@@ -1553,12 +1553,12 @@ export function LandingPage() {
           <div className="border rounded-xl bg-card divide-y">
             <div className="px-6">
               <FaqItem
-                q="What is the Agent-Readiness Score?"
-                a="We evaluate your content against 20 concrete rules derived from benchmarking 8 major AI agents (Claude, GPT, Gemini, Grok, and others). Each rule checks something specific: are your sections self-contained? Are details in tables or buried in paragraphs? Can AI find what users are looking for? You get a score per rule, per component, and overall."
+                q="What is an /agents page?"
+                a="An /agents page is a dedicated page on your site — typically at yourproduct.com/agents — written specifically for AI agents, not humans. It tells agents what your product is, how to access it, what it can do, and how to onboard autonomously. Monday.com pioneered this format. We build yours, applying all 20 agent-readiness rules so it's complete, machine-readable, and actually useful."
               />
               <FaqItem
-                q="Is this only for developer documentation?"
-                a="Not at all. GrounDocs works for any content that AI agents read: API docs, help centers, knowledge bases, product pages, marketplace listings, FAQ pages. If you're a B2B SaaS, an e-commerce platform, a marketplace, or any business with online documentation, this is for you. AI agents don't just help developers; they help everyone find products and services."
+                q="Do I need an API or developer product?"
+                a="Not necessarily. Any product an agent might recommend, help a user set up, or interact with on their behalf benefits from an /agents page. If you have a signup flow, a free tier, or any kind of programmatic access — you need one. Even if you don't, agents still encounter your product and need a structured way to understand it."
               />
               <FaqItem
                 q="Where do these 20 rules come from?"
@@ -1566,19 +1566,19 @@ export function LandingPage() {
               />
               <FaqItem
                 q="What do I get for free vs. the paid product?"
-                a="The free scan gives you your score and a rule-by-rule breakdown showing exactly what's passing and failing. The paid product ($99 one-time) gives you the actual optimized content files. Every page is individually rewritten applying all 20 rules, plus an llms.txt agent entry point. Download as ZIP and deploy. No subscription, no recurring fees — you pay once."
+                a="The free scan analyzes your site and shows you what agents can't find: missing API context, unclear access paths, content that blocks autonomous use. The paid product ($99 one-time) is your complete /agents page — one deployable HTML and Markdown file that covers everything an agent needs, built from your product's content and structured against all 20 rules."
               />
               <FaqItem
                 q="How is the price calculated?"
-                a="It's a flat $99 (€84) for everyone. No tiers, no per-page pricing, no complexity. Every page gets individually analyzed and rewritten applying all 20 rules. One-time payment — no subscription, no monthly fees, no engagement. You pay once, download your optimized docs, and you're done."
+                a="It's a flat $99 (€84) for everyone — one complete /agents page, no matter how complex your product. No per-page pricing, no tiers, no recurring fees. You pay once, download your page, and deploy it at /agents on your domain."
               />
               <FaqItem
                 q="How long does it take?"
-                a="The free score takes about 60 seconds. After purchase, your optimized content is generated in roughly 5 minutes. You'll get a ZIP file you can download immediately."
+                a="The free scan takes about 60 seconds. After purchase, your /agents page is generated in roughly 5 minutes. You'll get the HTML and Markdown files immediately."
               />
               <FaqItem
-                q="What format are the optimized files in?"
-                a="You get a ZIP containing structured Markdown (.md) files, one per page, rendered HTML previews, an llms.txt agent entry point, and deployment instructions. Works with any content platform: Mintlify, GitBook, ReadMe, Docusaurus, WordPress, Notion, and more."
+                q="What format are the files in?"
+                a="You get your /agents page as an HTML file ready to deploy at /agents on your domain, a Markdown version, and an llms.txt entry point. Works with any platform: static sites, Webflow, Framer, Vercel, Netlify, or any CMS that accepts HTML."
               />
             </div>
           </div>
@@ -1592,11 +1592,11 @@ export function LandingPage() {
             <div>
               <Badge variant="outline" className="mb-4 text-xs">From the blog</Badge>
               <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em]">
-                Master agent-first documentation
+                The agent-first documentation playbook
               </h2>
               <p className="text-muted-foreground mt-3 max-w-xl">
-                Deep guides on the 20 rules — from discoverability to trustability. Learn what
-                AI agents need to recommend your product.
+                Deep guides on what AI agents actually need — from entry points to answerability.
+                Learn how the best products are building for the agent economy.
               </p>
             </div>
             <Link
@@ -1649,14 +1649,14 @@ export function LandingPage() {
       <section className="py-20 lg:py-24 border-t bg-muted/20">
         <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="font-serif text-3xl md:text-4xl tracking-[-0.01em] mb-4">
-            Make AI agents your best sales channel
+            Give AI agents a front door to your product
           </h2>
           <p className="text-muted-foreground text-lg mb-8">
-            The businesses that get this right early will own their category in the agent economy.
+            The products that build for agents first will own the agent economy.
             The rest will wonder why AI stopped recommending them.
           </p>
           <Button size="lg" onClick={scrollToAssessment} className="rounded-xl bg-forest hover:bg-forest-hover text-white h-12 px-8">
-            Run Free Assessment
+            Check Agent Readiness — Free
             <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
