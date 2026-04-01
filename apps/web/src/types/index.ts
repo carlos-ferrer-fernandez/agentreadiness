@@ -98,3 +98,21 @@ export interface AnalysisProgress {
   pageCount?: number
   processedPages?: number
 }
+
+export interface AgentPage {
+  id: string
+  product_name: string
+  company_slug: string
+  docs_url: string
+  email: string
+  status: string
+  payment_status: string
+  created_at: string
+}
+
+export interface AgentPageStatus {
+  status: string
+  payment_status: string
+  has_draft: boolean
+  has_full: boolean
+}

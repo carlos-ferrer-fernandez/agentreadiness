@@ -174,6 +174,34 @@ class Recommendation(Base):
     site: Mapped["Site"] = relationship(back_populates="recommendations")
 
 
+class AgentPage(Base):
+    """Stores agent-ready pages generated from product documentation."""
+    __tablename__ = "agent_pages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    product_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    company_slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    docs_url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    status: Mapped[str] = mapped_column(String(50), default="submitted")  # submitted, crawling, generating, draft_ready, full_generating, full_ready, failed
+    payment_status: Mapped[str] = mapped_column(String(20), default="pending")  # pending, paid
+
+    crawl_scope: Mapped[str] = mapped_column(String(20), default="draft")  # draft, full
+    source_pages: Mapped[list | None] = mapped_column(JSON, nullable=True)  # list of crawled URLs with titles
+
+    draft_content_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)  # structured JSON from OpenAI
+    full_content_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    draft_html: Mapped[str | None] = mapped_column(Text, nullable=True)  # rendered HTML
+    full_html: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)
+
+
 class Assessment(Base):
     """Stores free assessment results and optimization job tracking."""
     __tablename__ = "assessments"

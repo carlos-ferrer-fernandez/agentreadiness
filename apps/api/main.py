@@ -5,15 +5,19 @@ Main entry point with proper lifespan management, database initialization,
 and structured configuration.
 """
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from contextlib import asynccontextmanager
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 import logging
 
 from config import get_settings
-from database import init_db, close_db
+from database import init_db, close_db, get_db
+from models import AgentPage
 from routers import sites, analyses, queries, recommendations, auth, payments, optimizer, assessments, contact, viewer
+from routers import agent_pages
 
 settings = get_settings()
 
@@ -30,6 +34,15 @@ async def lifespan(app: FastAPI):
     logger.info("Starting GrounDocs API...")
     await init_db()
     logger.info("Database initialized")
+
+    # Seed example agent pages
+    from services.seed_examples import seed_example_pages
+    from database import async_session_factory
+    async with async_session_factory() as db:
+        await seed_example_pages(db)
+        await db.commit()
+    logger.info("Example agent pages seeded")
+
     yield
     logger.info("Shutting down GrounDocs API...")
     await close_db()
@@ -56,6 +69,7 @@ app.add_middleware(
 app.include_router(assessments.router, prefix="/api/assessments", tags=["Assessments"])
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(viewer.router, prefix="/api/v", tags=["Viewer"])
+app.include_router(agent_pages.router, prefix="/api/agent-pages", tags=["Agent Pages"])
 app.include_router(contact.router)
 
 # Auth
@@ -67,6 +81,34 @@ app.include_router(analyses.router, prefix="/api/analyses", tags=["Analyses"])
 app.include_router(queries.router, prefix="/api/queries", tags=["Queries"])
 app.include_router(recommendations.router, prefix="/api/recommendations", tags=["Recommendations"])
 app.include_router(optimizer.router, prefix="/api/optimizer", tags=["Optimizer"])
+
+
+@app.get("/agent-pages/{slug}", response_class=HTMLResponse)
+async def serve_agent_page(slug: str, db: AsyncSession = Depends(get_db)):
+    """Serve agent pages as clean HTML at /agent-pages/{slug}."""
+    from services.agent_page_generator import render_generating_html
+
+    result = await db.execute(
+        select(AgentPage).where(AgentPage.company_slug == slug)
+    )
+    agent_page = result.scalar_one_or_none()
+    if not agent_page:
+        raise HTTPException(status_code=404, detail="Agent page not found")
+
+    # Still generating
+    if agent_page.status in ("submitted", "crawling", "generating", "full_generating"):
+        return HTMLResponse(
+            content=render_generating_html(agent_page.product_name, slug),
+            status_code=200,
+        )
+
+    # Serve full HTML if paid and available, otherwise draft
+    if agent_page.payment_status == "paid" and agent_page.full_html:
+        return HTMLResponse(content=agent_page.full_html, status_code=200)
+    elif agent_page.draft_html:
+        return HTMLResponse(content=agent_page.draft_html, status_code=200)
+    else:
+        raise HTTPException(status_code=404, detail="Page not yet generated")
 
 
 @app.get("/api/health")

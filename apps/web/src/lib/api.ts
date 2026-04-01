@@ -127,6 +127,30 @@ export const contactApi = {
     apiClient.post('/api/contact', data),
 }
 
+// --- Agent Pages API ---
+export const agentPagesApi = {
+  generate: (data: { product_name: string; docs_url: string; email: string }) =>
+    apiClient.post('/api/agent-pages/generate', data),
+  getFeatured: () =>
+    apiClient.get('/api/agent-pages/featured/list'),
+  getBySlug: (slug: string) =>
+    apiClient.get(`/api/agent-pages/${slug}`),
+  getStatus: (slug: string) =>
+    apiClient.get(`/api/agent-pages/${slug}/status`),
+  getViewHtml: (slug: string) =>
+    apiClient.get(`/api/agent-pages/${slug}/view`, { responseType: 'text' }),
+  getViewUrl: (slug: string) => {
+    const base = apiClient.defaults.baseURL || ''
+    return `${base}/api/agent-pages/${slug}/view`
+  },
+  unlock: (slug: string, data: { success_url: string; cancel_url: string }) =>
+    apiClient.post(`/api/agent-pages/${slug}/unlock`, data),
+  verifyPayment: (slug: string, sessionId: string) =>
+    apiClient.post(`/api/agent-pages/${slug}/verify-payment`, { session_id: sessionId }),
+  applyPromo: (slug: string, code: string) =>
+    apiClient.post(`/api/agent-pages/${slug}/apply-promo`, { code }),
+}
+
 // --- Health ---
 export const healthApi = {
   check: () => apiClient.get('/api/health'),

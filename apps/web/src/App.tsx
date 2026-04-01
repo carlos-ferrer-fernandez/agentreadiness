@@ -10,6 +10,7 @@ import { Showcase } from '@/sections/Showcase'
 import { Viewer } from '@/sections/Viewer'
 import { Blog } from '@/sections/Blog'
 import { BlogPost } from '@/sections/BlogPost'
+import AgentPageView from '@/sections/AgentPageView'
 import { ToastContainer } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useUIStore } from '@/store'
@@ -60,6 +61,7 @@ function App() {
           <Route path="/showcase" element={<Showcase />} />
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          <Route path="/agent-pages/:slug" element={<AgentPageView />} />
           <Route path="/view/:assessmentId" element={<Viewer />} />
           <Route path="/view/:assessmentId/:fileName" element={<Viewer />} />
         </Routes>
