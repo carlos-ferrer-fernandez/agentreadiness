@@ -201,22 +201,32 @@ export function AssessmentResults() {
     setPromoError(null)
     try {
       const promoResponse = await assessmentsApi.verifyPromo(currentAssessment.id, promoCode)
-      const discountedPrice = promoResponse.data.discounted_price_eur
-      addNotification({
-        type: 'success',
-        message: `Promo code applied! Price reduced to €${discountedPrice}. Redirecting to checkout...`,
-      })
       setPromoCode('')
       setShowPromoInput(false)
       hidePaywallModal()
-      // Redirect to Stripe checkout at the discounted price
-      const response = await paymentsApi.createCheckout({
-        assessment_id: currentAssessment.id,
-        success_url: `${window.location.origin}/assessment`,
-        cancel_url: `${window.location.origin}/assessment`,
-      })
-      if (response.data.url) {
-        window.location.href = response.data.url
+
+      if (promoResponse.data.free) {
+        // 100% off — no Stripe, optimization already queued by backend
+        markAsPaid()
+        addNotification({
+          type: 'success',
+          message: 'Promo applied! Generating your /agents page now...',
+        })
+      } else {
+        // Discounted price — still go through Stripe
+        const discountedPrice = promoResponse.data.discounted_price_eur
+        addNotification({
+          type: 'success',
+          message: `Promo code applied! Price reduced to €${discountedPrice}. Redirecting to checkout...`,
+        })
+        const response = await paymentsApi.createCheckout({
+          assessment_id: currentAssessment.id,
+          success_url: `${window.location.origin}/assessment`,
+          cancel_url: `${window.location.origin}/assessment`,
+        })
+        if (response.data.url) {
+          window.location.href = response.data.url
+        }
       }
     } catch (err: any) {
       setPromoError(err.response?.data?.detail || 'Invalid promo code')

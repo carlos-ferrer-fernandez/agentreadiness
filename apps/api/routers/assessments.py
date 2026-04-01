@@ -181,17 +181,40 @@ async def verify_promo_code(
     if not assessment:
         raise HTTPException(status_code=404, detail="Assessment not found")
 
-    valid_promos = {"AGENT2025", "LAUNCH2025", "BETA2025"}
-    if request.code.upper() not in valid_promos:
+    FREE_CODES = {"FREE100"}
+    DISCOUNT_CODES = {"AGENT2025", "LAUNCH2025", "BETA2025"}
+    code = request.code.upper()
+
+    if code not in FREE_CODES and code not in DISCOUNT_CODES:
         raise HTTPException(status_code=400, detail="Invalid promo code")
 
-    # Set price to €1 — user still goes through Stripe checkout
+    if code in FREE_CODES:
+        # 100% off — bypass Stripe entirely, trigger optimization now
+        from datetime import datetime, timezone
+        assessment.has_paid = True
+        assessment.paid_plan = "promo_free"
+        assessment.optimization_status = "queued"
+        assessment.estimated_price_eur = 0
+        await db.commit()
+
+        from routers.payments import _run_optimization_pipeline
+        background_tasks.add_task(_run_optimization_pipeline, assessment_id, assessment.url)
+
+        return {
+            "success": True,
+            "free": True,
+            "discounted_price_eur": 0,
+            "message": "100% promo applied! Generating your /agents page now...",
+        }
+
+    # Discount code — reduce to €1, user still goes through Stripe
     assessment.estimated_price_eur = 1
     assessment.paid_plan = "promo"
     await db.flush()
 
     return {
         "success": True,
+        "free": False,
         "discounted_price_eur": 1,
         "message": "Promo code applied! Price reduced to €1. Proceed to checkout.",
     }
