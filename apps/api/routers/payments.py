@@ -61,11 +61,17 @@ async def create_checkout_session(
     if assessment.has_paid:
         raise HTTPException(status_code=400, detail="Already purchased")
 
-    price_eur = assessment.estimated_price_eur or 84
+    # Allow overriding price via env var for testing (e.g. STRIPE_TEST_PRICE_EUR=0.50)
+    import os
+    test_price = os.getenv("STRIPE_TEST_PRICE_EUR")
+    if test_price:
+        price_eur = float(test_price)
+    else:
+        price_eur = assessment.estimated_price_eur or 84
     amount_cents = int(price_eur * 100)  # Stripe requires integer cents
 
     if amount_cents < 50:
-        raise HTTPException(status_code=400, detail="Price calculation error")
+        raise HTTPException(status_code=400, detail=f"Price €{price_eur:.2f} is below Stripe minimum (€0.50)")
 
     logger.info(f"Creating checkout: assessment={request.assessment_id}, price=€{price_eur}, cents={amount_cents}")
 
@@ -86,6 +92,7 @@ async def create_checkout_session(
                 "quantity": 1,
             }],
             mode="payment",
+            allow_promotion_codes=True,
             success_url=request.success_url + "?session_id={CHECKOUT_SESSION_ID}",
             cancel_url=request.cancel_url,
             metadata={
