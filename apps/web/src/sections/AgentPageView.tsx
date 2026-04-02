@@ -19,7 +19,7 @@ import { Input } from '@/components/ui/input'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import { agentPagesApi } from '@/lib/api'
-import type { AgentPageStatus } from '@/types'
+// AgentPageStatus type used inline via `any` for flexibility with error_message field
 
 const generatingMessages = [
   'Crawling your documentation...',
@@ -55,17 +55,20 @@ export default function AgentPageView() {
   const pollingRef = useRef<ReturnType<typeof setInterval> | null>(null)
   const messageRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
-  const isGenerating = status === 'submitted' || status === 'crawling' || status === 'generating'
+  const isGenerating = status === 'submitted' || status === 'crawling' || status === 'generating' || status === 'full_generating'
   const isReady = status === 'draft_ready' || status === 'full_ready'
   const isFailed = status === 'failed'
   const isPaid = paymentStatus === 'paid'
   const showDraft = isReady && !isPaid
 
-  const updateStatus = useCallback((s: AgentPageStatus) => {
+  const updateStatus = useCallback((s: any) => {
     setStatus(s.status)
     setPaymentStatus(s.payment_status)
     setHasDraft(s.has_draft)
     setHasFull(s.has_full)
+    if (s.status === 'failed' && s.error_message) {
+      setError(s.error_message)
+    }
   }, [])
 
   // Fetch status on mount

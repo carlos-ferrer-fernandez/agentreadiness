@@ -111,7 +111,14 @@ async def generate(
 
     if existing:
         if existing.email == request.email:
-            # Same user, return existing
+            # Same user — if failed or stuck, allow retry
+            if existing.status in ("failed", "submitted", "crawling", "generating"):
+                existing.status = "submitted"
+                existing.error_message = None
+                existing.docs_url = request.docs_url  # Allow URL update on retry
+                await db.commit()
+                background_tasks.add_task(generate_agent_page, existing.id, "draft")
+                return {"id": existing.id, "slug": existing.company_slug, "status": "submitted"}
             return {"id": existing.id, "slug": existing.company_slug, "status": existing.status}
         else:
             # Different user, append suffix
@@ -125,7 +132,7 @@ async def generate(
         status="submitted",
     )
     db.add(agent_page)
-    await db.flush()
+    await db.commit()
     await db.refresh(agent_page)
 
     page_id = agent_page.id
@@ -198,6 +205,7 @@ async def get_status(slug: str, db: AsyncSession = Depends(get_db)):
         "payment_status": agent_page.payment_status,
         "has_draft": agent_page.draft_html is not None,
         "has_full": agent_page.full_html is not None,
+        "error_message": agent_page.error_message,
     }
 
 

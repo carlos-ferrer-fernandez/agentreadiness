@@ -109,12 +109,20 @@ async def crawl_docs(docs_url: str, mode: str = "draft") -> List[Page]:
     """Crawl documentation pages. Draft = max 5, full = max 20."""
     max_pages = 5 if mode == "draft" else 20
 
-    async with DocumentationCrawler(
-        start_url=docs_url,
-        max_pages=max_pages,
-        delay=0.2,
-    ) as crawler:
-        pages = await asyncio.wait_for(crawler.crawl(), timeout=120)
+    try:
+        async with DocumentationCrawler(
+            start_url=docs_url,
+            max_pages=max_pages,
+            delay=0.2,
+        ) as crawler:
+            pages = await asyncio.wait_for(crawler.crawl(), timeout=120)
+    except asyncio.TimeoutError:
+        raise ValueError(f"Crawl timed out after 120s for {docs_url}. The site may be slow or blocking requests.")
+    except Exception as e:
+        raise ValueError(f"Failed to crawl {docs_url}: {str(e)[:200]}")
+
+    # Filter out pages with no meaningful content
+    pages = [p for p in pages if p.content and len(p.content.strip()) > 50]
 
     return pages
 
