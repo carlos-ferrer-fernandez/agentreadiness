@@ -187,7 +187,7 @@ Return a single valid JSON object matching this schema exactly:
             {"role": "user", "content": user_prompt},
         ],
         temperature=0.3,
-        max_tokens=8000 if mode == "draft" else 16000,
+        max_completion_tokens=8000 if mode == "draft" else 16000,
     )
 
     raw = response.choices[0].message.content.strip()
