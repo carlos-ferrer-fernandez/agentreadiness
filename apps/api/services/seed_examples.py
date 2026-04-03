@@ -1940,34 +1940,41 @@ async def seed_example_pages(db: AsyncSession):
             select(AgentPage).where(AgentPage.company_slug == slug)
         )
         existing = result.scalar_one_or_none()
-        if existing:
-            continue
 
         content_json = example["content_json"]
-        html = render_agent_page_html(
+        full_html = render_agent_page_html(
             content_json=content_json,
             product_name=example["product_name"],
             slug=slug,
             mode="full",
         )
-
-        agent_page = AgentPage(
+        draft_html = render_agent_page_html(
+            content_json=content_json,
             product_name=example["product_name"],
-            company_slug=slug,
-            docs_url=example["docs_url"],
-            email=example["email"],
-            status="full_ready",
-            payment_status="paid",
-            crawl_scope="full",
-            full_content_json=content_json,
-            full_html=html,
-            draft_content_json=content_json,
-            draft_html=render_agent_page_html(
-                content_json=content_json,
-                product_name=example["product_name"],
-                slug=slug,
-                mode="draft",
-            ),
+            slug=slug,
+            mode="draft",
         )
-        db.add(agent_page)
-        logger.info(f"Seeded example agent page: {slug}")
+
+        if existing:
+            # Always re-render HTML to pick up renderer changes
+            existing.full_content_json = content_json
+            existing.full_html = full_html
+            existing.draft_content_json = content_json
+            existing.draft_html = draft_html
+            logger.info(f"Updated example agent page: {slug}")
+        else:
+            agent_page = AgentPage(
+                product_name=example["product_name"],
+                company_slug=slug,
+                docs_url=example["docs_url"],
+                email=example["email"],
+                status="full_ready",
+                payment_status="paid",
+                crawl_scope="full",
+                full_content_json=content_json,
+                full_html=full_html,
+                draft_content_json=content_json,
+                draft_html=draft_html,
+            )
+            db.add(agent_page)
+            logger.info(f"Seeded example agent page: {slug}")
