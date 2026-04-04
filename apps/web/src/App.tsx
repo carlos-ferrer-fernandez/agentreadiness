@@ -11,6 +11,7 @@ import { Viewer } from '@/sections/Viewer'
 import { Blog } from '@/sections/Blog'
 import { BlogPost } from '@/sections/BlogPost'
 import AgentPageView from '@/sections/AgentPageView'
+import PackageView from '@/sections/PackageView'
 import { ToastContainer } from '@/components/ui/toast'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { useUIStore } from '@/store'
@@ -62,6 +63,9 @@ function App() {
           <Route path="/blog" element={<Blog />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="/agent-pages/:slug" element={<AgentPageView />} />
+          <Route path="/packages/:slug" element={<PackageView />} />
+          <Route path="/packages/:slug/:pageSlug" element={<PackageView />} />
+          <Route path="/examples/:slug/:pageSlug" element={<PackageView />} />
           <Route path="/view/:assessmentId" element={<Viewer />} />
           <Route path="/view/:assessmentId/:fileName" element={<Viewer />} />
         </Routes>

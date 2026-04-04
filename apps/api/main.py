@@ -15,9 +15,10 @@ import logging
 
 from config import get_settings
 from database import init_db, close_db, get_db
-from models import AgentPage
+from models import AgentPage, DocPackage
 from routers import sites, analyses, queries, recommendations, auth, payments, optimizer, assessments, contact, viewer
 from routers import agent_pages
+from routers import packages
 
 settings = get_settings()
 
@@ -35,13 +36,15 @@ async def lifespan(app: FastAPI):
     await init_db()
     logger.info("Database initialized")
 
-    # Seed example agent pages
+    # Seed example agent pages and packages
     from services.seed_examples import seed_example_pages
+    from services.seed_packages import seed_example_packages
     from database import async_session_factory
     async with async_session_factory() as db:
         await seed_example_pages(db)
+        await seed_example_packages(db)
         await db.commit()
-    logger.info("Example agent pages seeded")
+    logger.info("Example agent pages and packages seeded")
 
     yield
     logger.info("Shutting down GrounDocs API...")
@@ -70,6 +73,7 @@ app.include_router(assessments.router, prefix="/api/assessments", tags=["Assessm
 app.include_router(payments.router, prefix="/api/payments", tags=["Payments"])
 app.include_router(viewer.router, prefix="/api/v", tags=["Viewer"])
 app.include_router(agent_pages.router, prefix="/api/agent-pages", tags=["Agent Pages"])
+app.include_router(packages.router, prefix="/api/packages", tags=["Packages"])
 app.include_router(contact.router)
 
 # Auth
@@ -109,6 +113,45 @@ async def serve_agent_page(slug: str, db: AsyncSession = Depends(get_db)):
         return HTMLResponse(content=agent_page.draft_html, status_code=200)
     else:
         raise HTTPException(status_code=404, detail="Page not yet generated")
+
+
+@app.get("/packages/{slug}/{page_slug}", response_class=HTMLResponse)
+async def serve_package_page(slug: str, page_slug: str, db: AsyncSession = Depends(get_db)):
+    """Serve package pages as clean HTML at /packages/{slug}/{page_slug}."""
+    from services.package_renderer import render_generating_package_html
+
+    result = await db.execute(
+        select(DocPackage).where(DocPackage.slug == slug)
+    )
+    package = result.scalar_one_or_none()
+    if not package:
+        raise HTTPException(status_code=404, detail="Package not found")
+
+    if package.status in ("submitted", "crawling", "planning", "generating", "full_generating"):
+        return HTMLResponse(
+            content=render_generating_package_html(package.product_name, slug),
+            status_code=200,
+        )
+
+    # Look up page HTML
+    pages = {}
+    if package.payment_status == "paid" and package.full_pages_json:
+        pages = package.full_pages_json
+    if not pages and package.preview_pages_json:
+        pages = package.preview_pages_json
+
+    page_data = pages.get(page_slug)
+    if page_data and page_data.get("html"):
+        return HTMLResponse(content=page_data["html"], status_code=200)
+
+    raise HTTPException(status_code=404, detail="Page not found")
+
+
+@app.get("/packages/{slug}", response_class=HTMLResponse)
+async def serve_package_overview(slug: str, db: AsyncSession = Depends(get_db)):
+    """Redirect to the overview page of a package."""
+    from fastapi.responses import RedirectResponse
+    return RedirectResponse(url=f"/packages/{slug}/overview", status_code=302)
 
 
 @app.get("/api/health")

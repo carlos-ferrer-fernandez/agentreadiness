@@ -238,3 +238,35 @@ class Assessment(Base):
     optimization_completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+
+
+class DocPackage(Base):
+    """Stores multi-page AI-ready documentation packages."""
+    __tablename__ = "doc_packages"
+
+    id: Mapped[str] = mapped_column(String(36), primary_key=True, default=new_uuid)
+    product_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    slug: Mapped[str] = mapped_column(String(255), unique=True, nullable=False, index=True)
+    docs_url: Mapped[str] = mapped_column(String(2048), nullable=False)
+    email: Mapped[str] = mapped_column(String(255), nullable=False)
+
+    # submitted → crawling → planning → generating → preview_ready → full_generating → full_ready | failed
+    status: Mapped[str] = mapped_column(String(50), default="submitted")
+    payment_status: Mapped[str] = mapped_column(String(20), default="unpaid")  # unpaid, paid
+
+    error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+
+    # Page map: list of {page_type, title, slug, tier}
+    page_map_json: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
+    # Preview pages (free tier): {slug: {title, html, content_json}}
+    preview_pages_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    # Full pages (paid tier): {slug: {title, html, content_json}}
+    full_pages_json: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+
+    # Crawled source pages for reference
+    source_pages: Mapped[list | None] = mapped_column(JSON, nullable=True)
+
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow)
+    updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, onupdate=utcnow)

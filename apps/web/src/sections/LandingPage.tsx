@@ -20,7 +20,7 @@ import {
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { agentPagesApi } from '@/lib/api'
+import { packagesApi } from '@/lib/api'
 
 // ------------------------------------------------------------------
 // Fade-in-on-scroll wrapper
@@ -76,12 +76,12 @@ function GenerateForm({ id, buttonLabel = 'Generate Free Preview' }: {
     setError(null)
     setLoading(true)
     try {
-      const res = await agentPagesApi.generate({
+      const res = await packagesApi.generate({
         product_name: productName.trim(),
         docs_url: docsUrl.trim(),
         email: email.trim(),
       })
-      navigate(`/agent-pages/${res.data.slug}`)
+      navigate(`/packages/${res.data.slug}`)
     } catch (err: any) {
       setError(err?.response?.data?.detail || 'Something went wrong. Please try again.')
       setLoading(false)
@@ -147,10 +147,10 @@ const BEST_PRACTICES = [
 // Hardcoded example pages (fallback)
 // ------------------------------------------------------------------
 const EXAMPLE_PAGES = [
-  { slug: 'stripe', product_name: 'Stripe', desc: 'Payment processing APIs structured for agent consumption' },
-  { slug: 'vercel', product_name: 'Vercel', desc: 'Deployment platform with clear agent integration paths' },
-  { slug: 'notion', product_name: 'Notion', desc: 'Workspace API capabilities organized for machine readers' },
-  { slug: 'slack', product_name: 'Slack', desc: 'Messaging platform with structured bot and API references' },
+  { slug: 'stripe', product_name: 'Stripe', desc: 'Payment processing APIs — overview, agent guide, and getting started', page_count: 12 },
+  { slug: 'vercel', product_name: 'Vercel', desc: 'Deployment platform — deploy, domains, and environment workflows', page_count: 10 },
+  { slug: 'notion', product_name: 'Notion', desc: 'Workspace API — pages, databases, and search reference', page_count: 9 },
+  { slug: 'slack', product_name: 'Slack', desc: 'Messaging platform — messages, channels, and bot setup', page_count: 9 },
 ]
 
 // ------------------------------------------------------------------
@@ -161,13 +161,14 @@ export function LandingPage() {
   const [featuredPages, setFeaturedPages] = useState(EXAMPLE_PAGES)
 
   useEffect(() => {
-    agentPagesApi.getFeatured()
+    packagesApi.getExamples()
       .then((res) => {
         if (res.data && res.data.length > 0) {
           const mapped = res.data.slice(0, 4).map((p: any) => ({
-            slug: p.company_slug || p.slug,
+            slug: p.slug,
             product_name: p.product_name,
-            desc: `Agent-optimized page for ${p.product_name}`,
+            desc: `AI-ready documentation package for ${p.product_name}`,
+            page_count: p.page_count || 0,
           }))
           setFeaturedPages(mapped)
         }
@@ -264,12 +265,12 @@ export function LandingPage() {
               transition={{ duration: 0.6, ease: [0, 0, 0.2, 1] }}
             >
               <h1 className="font-serif text-[42px] sm:text-[54px] leading-[1.0] tracking-[-0.02em] mb-5">
-                Turn your docs into an agent-ready page
+                Make your product legible to AI
               </h1>
               <p className="text-lg text-[#71717A] leading-relaxed max-w-[540px]">
-                Most products send AI agents to documentation built for humans.
-                GrounDocs generates a dedicated page that tells agents exactly
-                how to use your product.
+                GrounDocs turns your existing docs into a multi-page AI-ready
+                documentation package &mdash; optimized for Claude, OpenAI, Cursor,
+                and agent builders.
               </p>
             </motion.div>
 
@@ -334,7 +335,7 @@ export function LandingPage() {
         <div className="max-w-[1100px] mx-auto px-4 sm:px-6">
           <FadeIn>
             <h2 className="font-serif text-3xl sm:text-[38px] leading-[1.15] tracking-[-0.01em] text-center mb-4">
-              Three steps to your /agents page
+              Three steps to your AI-ready package
             </h2>
           </FadeIn>
 
@@ -347,13 +348,13 @@ export function LandingPage() {
               },
               {
                 step: '2',
-                title: 'AI generates your page',
-                body: 'Our models extract what agents actually need: endpoints, parameters, auth flows, and examples.',
+                title: 'AI generates your package',
+                body: 'We generate 8-12 optimized pages: overview, agent guide, getting started, auth, workflows, and more.',
               },
               {
                 step: '3',
-                title: 'Preview and publish',
-                body: 'Get a hosted, agent-optimized page in minutes. Review the draft, unlock the full version.',
+                title: 'Preview and unlock',
+                body: 'Preview 3 pages free. Unlock the full package for $99 — hosted pages plus a downloadable ZIP.',
               },
             ].map((item, i) => (
               <FadeIn key={item.step} delay={i * 0.1}>
@@ -381,7 +382,7 @@ export function LandingPage() {
                 See it in action
               </h2>
               <p className="text-[#71717A] text-lg">
-                Agent pages we've built for well-known products
+                Documentation packages we've built for well-known products
               </p>
             </div>
           </FadeIn>
@@ -390,7 +391,7 @@ export function LandingPage() {
             {featuredPages.map((page, i) => (
               <FadeIn key={page.slug} delay={i * 0.08}>
                 <Link
-                  to={`/agent-pages/${page.slug}`}
+                  to={`/packages/${page.slug}/overview`}
                   className="group block bg-white rounded-xl p-6 shadow-[0_1px_3px_rgba(24,24,27,0.06),0_1px_2px_rgba(24,24,27,0.04)] border border-[#E2E2DC] hover:shadow-[0_4px_12px_rgba(24,24,27,0.08),0_2px_4px_rgba(24,24,27,0.04)] hover:border-[#1A7A4C]/30 transition-all duration-200"
                 >
                   <div className="flex items-center gap-3 mb-3">
@@ -405,9 +406,14 @@ export function LandingPage() {
                     <h3 className="font-semibold text-[17px]">{page.product_name}</h3>
                   </div>
                   <p className="text-sm text-[#71717A] mb-4">{page.desc}</p>
-                  <span className="text-sm text-[#1A7A4C] font-medium group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
-                    View Agent Page <ArrowRight className="w-3.5 h-3.5" />
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-[#1A7A4C] font-medium group-hover:translate-x-0.5 transition-transform inline-flex items-center gap-1">
+                      View Package <ArrowRight className="w-3.5 h-3.5" />
+                    </span>
+                    {(page as any).page_count > 0 && (
+                      <span className="text-xs text-[#A1A1AA]">{(page as any).page_count} pages</span>
+                    )}
+                  </div>
                 </Link>
               </FadeIn>
             ))}
@@ -464,23 +470,23 @@ export function LandingPage() {
             {/* Free tier */}
             <FadeIn delay={0}>
               <div className="bg-white rounded-xl p-6 sm:p-8 shadow-[0_1px_3px_rgba(24,24,27,0.06),0_1px_2px_rgba(24,24,27,0.04)] border border-[#E2E2DC]">
-                <h3 className="font-semibold text-[17px] mb-1">Draft Preview</h3>
-                <p className="text-sm text-[#71717A] mb-5">See what your agent page looks like</p>
+                <h3 className="font-semibold text-[17px] mb-1">Free Preview</h3>
+                <p className="text-sm text-[#71717A] mb-5">Preview 3 pages from your package</p>
                 <div className="mb-6">
                   <span className="text-3xl font-serif">$0</span>
                 </div>
                 <ul className="space-y-2.5 text-sm text-[#71717A]">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    Limited analysis of your docs
+                    Overview, Agent Guide, Getting Started
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    Core sections visible
+                    See your full page map
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    Some sections locked
+                    No credit card required
                   </li>
                 </ul>
               </div>
@@ -492,8 +498,8 @@ export function LandingPage() {
                 <div className="absolute -top-3 left-6 bg-[#1A7A4C] text-white text-xs font-medium px-3 py-1 rounded-full">
                   Recommended
                 </div>
-                <h3 className="font-semibold text-[17px] mb-1">Full Agent Page</h3>
-                <p className="text-sm text-[#71717A] mb-5">Complete, hosted, agent-optimized</p>
+                <h3 className="font-semibold text-[17px] mb-1">Full Package</h3>
+                <p className="text-sm text-[#71717A] mb-5">Complete AI-ready documentation</p>
                 <div className="mb-6">
                   <span className="text-3xl font-serif">$99</span>
                   <span className="text-sm text-[#71717A] ml-1">one-time</span>
@@ -501,19 +507,19 @@ export function LandingPage() {
                 <ul className="space-y-2.5 text-sm text-[#71717A]">
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    Complete documentation analysis
+                    8-12 optimized pages
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    All sections unlocked
+                    Hosted package with navigation
                   </li>
                   <li className="flex items-start gap-2">
                     <Check className="w-4 h-4 text-[#1A7A4C] mt-0.5 flex-shrink-0" />
-                    Hosted agent page
+                    Downloadable ZIP with HTML + JSON
                   </li>
                 </ul>
                 <p className="text-xs text-[#A1A1AA] mt-5">
-                  Generate your page to get started
+                  Generate your package to get started
                 </p>
               </div>
             </FadeIn>
@@ -528,7 +534,7 @@ export function LandingPage() {
         <div className="max-w-[520px] mx-auto px-4 sm:px-6">
           <FadeIn>
             <h2 className="font-serif text-3xl sm:text-[38px] leading-[1.15] tracking-[-0.01em] text-center mb-8">
-              Give AI agents a front door to your product
+              Make your product AI-ready today
             </h2>
           </FadeIn>
 

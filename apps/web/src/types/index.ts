@@ -116,3 +116,29 @@ export interface AgentPageStatus {
   has_draft: boolean
   has_full: boolean
 }
+
+export interface PageMapEntry {
+  page_type: string
+  title: string
+  slug: string
+  tier: 'preview' | 'full'
+}
+
+export interface DocPackage {
+  id: string
+  product_name: string
+  slug: string
+  status: string
+  payment_status: string
+  page_map: PageMapEntry[] | null
+  created_at: string
+}
+
+export interface PackageStatus {
+  status: string
+  payment_status: string
+  page_map: PageMapEntry[] | null
+  has_preview: boolean
+  has_full: boolean
+  error_message: string | null
+}

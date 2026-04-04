@@ -151,6 +151,34 @@ export const agentPagesApi = {
     apiClient.post(`/api/agent-pages/${slug}/apply-promo`, { code }),
 }
 
+// --- Packages API ---
+export const packagesApi = {
+  generate: (data: { product_name: string; docs_url: string; email: string }) =>
+    apiClient.post('/api/packages/generate', data),
+  getExamples: () =>
+    apiClient.get('/api/packages/examples'),
+  getBySlug: (slug: string) =>
+    apiClient.get(`/api/packages/${slug}`),
+  getStatus: (slug: string) =>
+    apiClient.get(`/api/packages/${slug}/status`),
+  getPageHtml: (slug: string, pageSlug: string) =>
+    apiClient.get(`/api/packages/${slug}/${pageSlug}`, { responseType: 'text' }),
+  getPageUrl: (slug: string, pageSlug: string) => {
+    const base = apiClient.defaults.baseURL || ''
+    return `${base}/api/packages/${slug}/${pageSlug}`
+  },
+  unlock: (slug: string, data: { success_url: string; cancel_url: string }) =>
+    apiClient.post(`/api/packages/${slug}/unlock`, data),
+  verifyPayment: (slug: string, sessionId: string) =>
+    apiClient.post(`/api/packages/${slug}/verify-payment`, { session_id: sessionId }),
+  applyPromo: (slug: string, code: string) =>
+    apiClient.post(`/api/packages/${slug}/apply-promo`, { code }),
+  getDownloadUrl: (slug: string) => {
+    const base = apiClient.defaults.baseURL || ''
+    return `${base}/api/packages/${slug}/download`
+  },
+}
+
 // --- Health ---
 export const healthApi = {
   check: () => apiClient.get('/api/health'),
