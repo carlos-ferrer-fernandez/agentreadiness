@@ -292,6 +292,39 @@ export function LandingPage() {
       </section>
 
       {/* ============================================================ */}
+      {/*  YC SOCIAL PROOF                                             */}
+      {/* ============================================================ */}
+      <section className="py-16 sm:py-20 border-t border-[#E2E2DC]">
+        <div className="max-w-[900px] mx-auto px-4 sm:px-6">
+          <FadeIn>
+            <div className="text-center mb-8">
+              <p className="text-xs font-semibold tracking-widest uppercase text-[#1A7A4C] mb-3">
+                Why this matters
+              </p>
+              <blockquote className="font-serif text-2xl sm:text-[32px] leading-[1.25] tracking-[-0.01em] text-[#18181B]">
+                &ldquo;Documentation is going to be the front door for all those agents recommending devtools.&rdquo;
+              </blockquote>
+              <p className="mt-4 text-sm text-[#71717A]">
+                Diana Hu, General Partner at Y Combinator
+              </p>
+            </div>
+          </FadeIn>
+
+          <FadeIn delay={0.15}>
+            <div className="relative aspect-video rounded-xl overflow-hidden shadow-[0_8px_32px_rgba(24,24,27,0.12)] border border-[#E2E2DC]">
+              <iframe
+                src="https://www.youtube.com/embed/Q8wVMdwhlh4?start=578"
+                title="Diana Hu on documentation as the front door for AI agents"
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                className="absolute inset-0 w-full h-full"
+              />
+            </div>
+          </FadeIn>
+        </div>
+      </section>
+
+      {/* ============================================================ */}
       {/*  PROBLEM                                                     */}
       {/* ============================================================ */}
       <section className="py-16 sm:py-20 border-t border-[#E2E2DC]">
